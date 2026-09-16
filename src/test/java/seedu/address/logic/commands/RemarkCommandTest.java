@@ -14,10 +14,11 @@ import org.junit.jupiter.api.Test;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Remark;
 
 public class RemarkCommandTest {
-    public static final String VALID_REMARK_AMY = "Like skiing.";
-    public static final String VALID_REMARK_BOB = "Favorite pastime: Eating";
+    public static final Remark VALID_REMARK_AMY = new Remark("Like skiing.");
+    public static final Remark VALID_REMARK_BOB = new Remark("Favorite pastime: Eating");
 
     private Model model;
 
@@ -28,7 +29,7 @@ public class RemarkCommandTest {
 
     @Test
     public void execute() {
-        final String remark = "Some remark";
+        final Remark remark = new Remark("Some remark");
 
         assertCommandFailure(new RemarkCommand(INDEX_FIRST_PERSON, remark), model,
                 String.format(MESSAGE_ARGUMENTS, INDEX_FIRST_PERSON.getOneBased(), remark));
