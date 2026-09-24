@@ -11,24 +11,22 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 ## Project team
 
-### John Doe
+### Kamban Elangovan
 
-<img src="images/johndoe.png" width="200px">
+<img src="images/kamban123.png" width="200px">
 
-[[homepage](http://www.comp.nus.edu.sg/~damithch)]
-[[github](https://github.com/johndoe)]
+[[github](https://github.com/Kamban123)]
+
+* Role: Team Member
+
+### Linus Chin
+
+<img src="images/linux735.png" width="200px">
+
+[[github](http://github.com/Linux735)]
 [[portfolio](team/johndoe.md)]
 
-* Role: Project Advisor
-
-### Jane Doe
-
-<img src="images/johndoe.png" width="200px">
-
-[[github](http://github.com/johndoe)]
-[[portfolio](team/johndoe.md)]
-
-* Role: Team Lead
+* Role: Documentation
 * Responsibilities: UI
 
 ### Vishal
