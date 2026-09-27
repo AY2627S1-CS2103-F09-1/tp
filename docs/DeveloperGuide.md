@@ -285,6 +285,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
 | `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
 | `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
+| `* * *`  | TA                                         | add new student contacts with name, email, class | keep track of who is in each of my classes                |
+| `* * *`  | TA                                         | search for contacts by different keywords (e.g. name/class) | quickly find the information I need         |
+| `* * *`  | TA setting up a new class                  | import my initial students from a file | don't have to manually enter every student                     |
+| `* * *`  | TA                                         | remove contacts easily       | keep my contact list from being cluttered                              |
+| `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
+| `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
+| `* * *`  | TA                                         | view all grades tagged to a student | keep track of the progress of my students                       |
 
 *{More to be added}*
 
