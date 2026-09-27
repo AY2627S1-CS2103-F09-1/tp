@@ -279,12 +279,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …                                    | I want to …                 | So that I can…                                                        |
 |----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
 | `* * *`  | TA                                         | add new student contacts with name, email, class | keep track of who is in each of my classes                |
 | `* * *`  | TA                                         | search for contacts by different keywords (e.g. name/class) | quickly find the information I need         |
 | `* * *`  | TA setting up a new class                  | import my initial students from a file | don't have to manually enter every student                     |
@@ -292,6 +286,26 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
 | `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
 | `* * *`  | TA                                         | view all grades tagged to a student | keep track of the progress of my students                       |
+| `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
+| `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
+| `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
+| `* *`    | TA                                         | identify duplicate student records | not maintain multiple conflicting records for the same student   |
+| `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
+| `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
+| `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
+| `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
+| `* *`    | TA                                         | sort students consistently   | scan through them quickly                                              |
+| `* *`    | TA                                         | favourite certain contacts   | quickly access my most frequent contacts                               |
+| `*`      | TA                                         | distinguish between students of similar names | not use the wrong student's information                |
+| `*`      | TA                                         | view total number of students across my classes | understand my workload                               |
+| `*`      | TA (managing high volume of active contacts) | highlight frequently contacted people | retrieve their details faster                             |
+| `*`      | TA                                         | search through archived contact records separately | quickly recall info relating to past students     |
+| `*`      | TA                                         | generate a breakdown of current students | balance my time commitments                              |
+| `*`      | TA with partner TAs                        | export student records based on tags | maintain student contacts in sync with my partner              |
+| `*`      | TA                                         | identify records with incomplete info | know which record needs attention                             |
+| `*`      | New user                                   | remove sample or experimental data | start with a clean contact list                                  |
+| `*`      | TA                                         | export selected students' records | use the required information                                     |
+| `*`      | TA                                         | archive students from previous semesters and restore them | old records do not clutter my contacts and I can reuse them if I want to |
 
 *{More to be added}*
 
