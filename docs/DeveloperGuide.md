@@ -286,6 +286,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
 | `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
 | `* * *`  | TA                                         | view all grades tagged to a student | keep track of the progress of my students                       |
+| `* * *`  | TA                                         | view a list of all my contacts | see everyone at a glance                                              |
+| `* * *`  | TA                                         | record grades for a specific student | monitor their progress                                          |
+| `* * *`  | TA                                         | view a student's attendance  | review their attendance history                                        |
 | `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
 | `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
 | `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
