@@ -313,32 +313,110 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
-**Use case: Delete a person**
+**Use case: UC01 - View known student's grades**
 
 **MSS**
+1. User requests to view grades of the student.
+2. CM displays grades of the student.
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+   Use case ends. 
+
+**Extensions**
+
+* 1a. The command format is invalid or the student does not exist.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC02 - Track known student's attendance**
+
+**MSS**
+1. User requests to add attendance record for the student.
+2. CM records the attendance for the student.
+
+   Use case ends.
+   
+**Extensions**
+   
+* 1a. The command format is invalid or the attendance of the student has already been recorded. 
+  * 1a1. CM displays an error message. 
+
+    Use case resumes at step 1.
+
+
+**Use case: UC03 - Set up new classes using bulk load**
+
+**Guarantees**
+* Student records will only be updated if all data is in the correct format.
+  
+**MSS**
+1. User requests to load student data from an external CSV file.
+2. CM parses data and adds records of all students in all classes.
+3. User confirms bulk loading.
+4. For each class added or updated, user requests to view students in that class.
+5. CM displays search results for each class. 
+
+    Use case ends.
+   
+**Extensions**
+* 2a. The given CSV file is not formatted correctly. 
+  * 2a1. CM terminates the import and displays an error message. 
+  * 2a2. User externally modifies the CSV file. 
+  
+    Use case resumes from step 1.
+* 3a. User chooses to cancel bulk loading.
+
+    Use case ends.
+
+
+**Use case: UC04 - Add students to groups (by tagging)**
+
+**Guarantees**
+* Specified students will only be grouped if all of them exist.
+
+**MSS**
+1. User requests to add certain students from the class into a group.
+2. CM adds those students to a group and displays a success message. 
+
+    Use case ends.
+   
+**Extensions**
+   
+* 1a. The command format is invalid or one of the students is already in the specified group. 
+  * 1a1. CM terminates the grouping and displays an error message. 
+        
+    Use case resumes from step 3.
+
+
+**Use case: UC05 - Delete a student**
+
+**MSS**
+1. User requests to view all students.
+2. CM displays a list of all students.
+3. User requests to delete a specific student from the list.
+4. If the student has records of grouping or attendance, CM requests for confirmation.
+5. User confirms deletion.
+6. CM deletes the student and displays a success message.
 
     Use case ends.
 
 **Extensions**
-
-* 2a. The list is empty.
+* 2a. The list is empty. 
 
   Use case ends.
-
+   
 * 3a. The given index is invalid.
+  * 3a1. CM displays an error message. 
+    
+    Use case resumes at step 3.
+  
+* 5a. User chooses to cancel the deletion. 
 
-    * 3a1. AddressBook shows an error message.
+    Use case ends.
 
-      Use case resumes at step 2.
-
-*{More to be added}*
 
 ### Non-Functional Requirements
 
