@@ -351,8 +351,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Glossary
 
-* **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **MSS (Main Success Scenario)**: The primary, no-error flow of steps in a use case
+* **Student Contact**: A record containing information about a student, such as their name, email, class, tags, attendance records, and grades
+* **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
+* **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
+* **Tag**: Any label attached to a student contact used for grouping except class
+* **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
+* **Attendance Record**: A single entry marking a student as present/absent/late on a given date
+* **Attendance History**: The collection of a student's or class' attendance records over time
+* **Grade**: A single number between 0 to 100 inclusive representing the percentage
+* **Grade Entry**: A single recorded grade attached to a student contact
+* **Grade History**: The collection of a student's grade entries over time
 
 --------------------------------------------------------------------------------------------------------------------
 
