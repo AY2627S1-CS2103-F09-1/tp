@@ -325,11 +325,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+1. Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
+2. The application should be usable without an installer.
+3. The product should be distributed as a single JAR file, or as a single ZIP file containing the JAR and any necessary files.
+4. Contact, attendance, and grade data should be stored locally in a human-editable text file.
+5. The application should not require a remote server or database.
+6. The application should support one user operating on their own locally stored data.
+7. Common operations should be executable with concise commands.
+8. The GUI should remain usable at screen resolutions of 1280 × 720 and above.
+9. The GUI should work well at 1920 × 1080 and higher, including display scaling of 100% and 125%.
+10. Invalid commands or malformed data should not corrupt existing records.
+11. The application should be usable without requiring user accounts, external services, or a continuous Internet connection.
+12. Core features such as contact management, attendance tracking, and grade tracking should be testable using local sample data.
+13. The application should be developed incrementally, with each major update preserving a working version of the product.
 
 ### Glossary
 
