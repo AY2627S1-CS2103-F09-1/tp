@@ -292,7 +292,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
 | `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
 | `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
-| `* *`    | TA                                         | identify duplicate student records | not maintain multiple conflicting records for the same student   |
 | `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
 | `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
 | `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
