@@ -331,15 +331,13 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 4. Contact, attendance, and grade data should be stored locally in a human-editable text file.
 5. The application should not require a remote server or database.
 6. The application should support one user operating on their own locally stored data.
-7. Users should be able to perform the main operations, such as adding contacts, recording attendance, and viewing grades, using typed commands.
-8. Common operations should be executable with concise commands suitable for users who prefer typing.
-9. The GUI should remain usable at screen resolutions of 1280 × 720 and above.
-10. The GUI should work well at 1920 × 1080 and higher, including display scaling of 100% and 125%.
-11. The application should validate contact, attendance, and grade information before saving it.
-12. Invalid commands or malformed data should not corrupt existing records.
-13. The application should be usable without requiring user accounts, external services, or a continuous Internet connection.
-14. Core features such as contact management, attendance tracking, and grade tracking should be testable using local sample data.
-15. The application should be developed incrementally, with each major update preserving a working version of the product.
+7. Common operations should be executable with concise commands.
+8. The GUI should remain usable at screen resolutions of 1280 × 720 and above.
+9. The GUI should work well at 1920 × 1080 and higher, including display scaling of 100% and 125%.
+10. Invalid commands or malformed data should not corrupt existing records.
+11. The application should be usable without requiring user accounts, external services, or a continuous Internet connection.
+12. Core features such as contact management, attendance tracking, and grade tracking should be testable using local sample data.
+13. The application should be developed incrementally, with each major update preserving a working version of the product.
 
 ### Glossary
 
