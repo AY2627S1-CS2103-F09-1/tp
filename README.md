@@ -5,7 +5,7 @@
 ![Ui](docs/images/Ui.png)
 
 ClassMates is a desktop app to manage student and teaching contact details, optimized for keyboard-driven workflows in the style of a Command Line Interface (CLI) over controls via a Graphical User Interface (GUI).
-For teaching assistants (TAs) who manage multiple classes and enjoy quick typing, ClassMates offers a simpler and faster way to 
+For teaching assistants (TAs) who manage multiple classes and enjoy quick typing, ClassMates offers a simpler and faster way to
 * organize and retrieve contact information of students, co-TAs and other colleagues, as well as
 * manage student grades and attendance.
 
