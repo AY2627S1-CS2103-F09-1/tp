@@ -298,49 +298,39 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 (For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
-**Use case: UC01 - View student grades**
+**Use case: UC01 - View known student's grades**
 
 **MSS**
-1. User requests to search for a student.
-2. CM displays student records with at least partial matches.
-3. User requests to view grades of a specific student.
-4. CM displays grades of the student.
+1. User requests to view grades of the student.
+2. CM displays grades of the student.
 
    Use case ends. 
 
 **Extensions**
 
-* 2a. The search result is empty.
+* 1a. The command format is invalid or the student does not exist.
+  * 1a1. CM displays an error message.
 
-    Use case ends.
-* 3a. The command format is invalid or the student does not exist.
-  * 3a1. CM displays an error message.
-
-    Use case resumes at step 3.
+    Use case resumes at step 1.
 
 
-**Use case: UC02 - Track student attendance**
+**Use case: UC02 - Track known student's attendance**
 
 **MSS**
-1. User requests to search for a student.
-2. CM displays student records with at least partial matches.
-3. User requests to add attendance record for a specific student.
-4. CM records the attendance for the student.
+1. User requests to add attendance record for the student.
+2. CM records the attendance for the student.
 
    Use case ends.
    
 **Extensions**
-* 2a. The search result is empty.
-
-  Use case ends.
    
-* 3a. The command format is invalid or the attendance of the student has already been recorded. 
-  * 3a1. CM displays an error message. 
+* 1a. The command format is invalid or the attendance of the student has already been recorded. 
+  * 1a1. CM displays an error message. 
 
-    Use case resumes at step 3.
+    Use case resumes at step 1.
 
 
-**Use case: UC03 - Add student data in bulk**
+**Use case: UC03 - Set up new classes using bulk load**
 
 **Guarantees**
 * Student records will only be updated if all data is in the correct format.
@@ -348,8 +338,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **MSS**
 1. User requests to load student data from an external CSV file.
 2. CM parses data and adds records of all students in all classes.
-3. For each class added or updated, user requests to view students in that class.
-4. CM displays search results for each class. 
+3. User confirms bulk loading.
+4. For each class added or updated, user requests to view students in that class.
+5. CM displays search results for each class. 
 
     Use case ends.
    
@@ -359,28 +350,26 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
   * 2a2. User externally modifies the CSV file. 
   
     Use case resumes from step 1.
+* 3a. User chooses to cancel bulk loading.
+
+    Use case ends.
 
 
-**Use case: UC04 - Add students to groups (e.g. for tutorials or assignments)**
+**Use case: UC04 - Add students to groups (by tagging)**
 
 **Guarantees**
 * Specified students will only be grouped if all of them exist.
 
 **MSS**
-1. User requests to view students in a certain class.
-2. CM displays search results for the class. 
-3. User requests to add certain students from the class into a group.
-4. CM adds those students to a group and displays a success message. 
+1. User requests to add certain students from the class into a group.
+2. CM adds those students to a group and displays a success message. 
 
     Use case ends.
    
 **Extensions**
-* 2a. The search result is empty. 
-
-    Use case ends.
    
-* 3a. The command format is invalid or one of the students is already in the specified group. 
-  * 3a1. CM terminates the grouping and displays an error message. 
+* 1a. The command format is invalid or one of the students is already in the specified group. 
+  * 1a1. CM terminates the grouping and displays an error message. 
         
     Use case resumes from step 3.
 
