@@ -268,15 +268,9 @@ _{Explain here how the data archiving feature will be implemented}_
 
 ### Product scope
 
-**Target user profile**:
+**Target user profile**: Teaching assistants in universities who prefer desktop apps over other types of applications. They can type fast, prefer typing to mouse interactions, and are reasonably comfortable using CLI apps.
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
-
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: TAs that handle multiple courses and multiple tutorial groups will have many students to manage at the same time, which can make organisation of information difficult. The product can provide fast and organised contact retrieval for TAs.
 
 
 ### User stories
@@ -285,12 +279,35 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …                                    | I want to …                 | So that I can…                                                        |
 |----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
+| `* * *`  | TA                                         | add new student contacts with name, email, class | keep track of who is in each of my classes                |
+| `* * *`  | TA                                         | search for contacts by different keywords (e.g. name/class) | quickly find the information I need         |
+| `* * *`  | TA setting up a new class                  | import my initial students from a file | don't have to manually enter every student                     |
+| `* * *`  | TA                                         | remove contacts easily       | keep my contact list from being cluttered                              |
+| `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
+| `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
+| `* * *`  | TA                                         | view all grades tagged to a student | keep track of the progress of my students                       |
+| `* * *`  | TA                                         | view a list of all my contacts | see everyone at a glance                                              |
+| `* * *`  | TA                                         | record grades for a specific student | monitor their progress                                          |
+| `* * *`  | TA                                         | view a student's attendance  | review their attendance history                                        |
+| `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
+| `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
+| `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
+| `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
+| `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
+| `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
+| `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
+| `* *`    | TA                                         | sort students consistently   | scan through them quickly                                              |
+| `* *`    | TA                                         | favourite certain contacts   | quickly access my most frequent contacts                               |
+| `*`      | TA                                         | distinguish between students of similar names | not use the wrong student's information                |
+| `*`      | TA                                         | view total number of students across my classes | understand my workload                               |
+| `*`      | TA (managing high volume of active contacts) | highlight frequently contacted people | retrieve their details faster                             |
+| `*`      | TA                                         | search through archived contact records separately | quickly recall info relating to past students     |
+| `*`      | TA                                         | generate a breakdown of current students | balance my time commitments                              |
+| `*`      | TA with partner TAs                        | export student records based on tags | maintain student contacts in sync with my partner              |
+| `*`      | TA                                         | identify records with incomplete info | know which record needs attention                             |
+| `*`      | New user                                   | remove sample or experimental data | start with a clean contact list                                  |
+| `*`      | TA                                         | export selected students' records | use the required information                                     |
+| `*`      | TA                                         | archive students from previous semesters and restore them | old records do not clutter my contacts and I can reuse them if I want to |
 
 *{More to be added}*
 
@@ -342,7 +359,17 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **MSS (Main Success Scenario)**: The primary, no-error flow of steps in a use case
+* **Student Contact**: A record containing information about a student, such as their name, email, class, tags, attendance records, and grades
+* **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
+* **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
+* **Tag**: Any label attached to a student contact used for grouping except class
+* **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
+* **Attendance Record**: A single entry marking a student as present/absent/late on a given date
+* **Attendance History**: The collection of a student's or class' attendance records over time
+* **Grade**: A single number between 0 to 100 inclusive representing the percentage
+* **Grade Entry**: A single recorded grade attached to a student contact
+* **Grade History**: The collection of a student's grade entries over time
 
 --------------------------------------------------------------------------------------------------------------------
 
