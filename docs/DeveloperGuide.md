@@ -350,6 +350,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 ### Glossary
 
+* **Mainstream OS**: Windows, Linux, Unix, or macOS
 * **MSS (Main Success Scenario)**: The primary, no-error flow of steps in a use case
 * **Student Contact**: A record containing information about a student, such as their name, email, class, tags, attendance records, and grades
 * **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
