@@ -86,6 +86,9 @@ Adds a person to the address book.
 
 Format: `add /name NAME /phone PHONE_NUMBER /email EMAIL /address ADDRESS [/tag TAG]... `
 
+* `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
+* Names are compared ignoring case and extra spaces. For example, `john  tan` is treated as the same name as `John Tan`.
+
 <box type="tip" seamless>
 
 **Tip:** A person can have any number of tags, including zero.

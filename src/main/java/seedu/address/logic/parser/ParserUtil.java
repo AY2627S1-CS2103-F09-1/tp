@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.Optional;
 import java.util.Set;
 
 import seedu.address.commons.core.index.Index;
@@ -44,8 +45,9 @@ public class ParserUtil {
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
         String trimmedName = name.trim();
-        if (!Name.isValidName(trimmedName)) {
-            throw new ParseException(Name.MESSAGE_CONSTRAINTS);
+        Optional<String> constraintViolation = Name.getConstraintViolation(trimmedName);
+        if (constraintViolation.isPresent()) {
+            throw new ParseException(constraintViolation.get());
         }
         return new Name(trimmedName);
     }

@@ -65,6 +65,30 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseName_emptyValue_throwsParseExceptionWithEmptyMessage() {
+        assertThrows(ParseException.class, Name.MESSAGE_EMPTY, () -> ParserUtil.parseName(""));
+        assertThrows(ParseException.class, Name.MESSAGE_EMPTY, () -> ParserUtil.parseName(WHITESPACE));
+    }
+
+    @Test
+    public void parseName_tooLongValue_throwsParseExceptionWithTooLongMessage() {
+        String tooLongName = "a".repeat(Name.MAX_LENGTH + 1);
+        assertThrows(ParseException.class, Name.MESSAGE_TOO_LONG, () -> ParserUtil.parseName(tooLongName));
+    }
+
+    @Test
+    public void parseName_invalidCharacters_throwsParseExceptionWithConstraintsMessage() {
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseName(INVALID_NAME));
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseName("Rachel 2nd"));
+    }
+
+    @Test
+    public void parseName_validValueWithAllowedSymbols_returnsName() throws Exception {
+        String name = "Rachel O'Neil-Walker Jr. s/o Tan";
+        assertEquals(new Name(name), ParserUtil.parseName(name));
+    }
+
+    @Test
     public void parseName_validValueWithoutWhitespace_returnsName() throws Exception {
         Name expectedName = new Name(VALID_NAME);
         assertEquals(expectedName, ParserUtil.parseName(VALID_NAME));

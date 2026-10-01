@@ -3,6 +3,7 @@ package seedu.address.storage;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -73,8 +74,9 @@ class JsonAdaptedPerson {
         if (name == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName()));
         }
-        if (!Name.isValidName(name)) {
-            throw new IllegalValueException(Name.MESSAGE_CONSTRAINTS);
+        Optional<String> nameConstraintViolation = Name.getConstraintViolation(name);
+        if (nameConstraintViolation.isPresent()) {
+            throw new IllegalValueException(nameConstraintViolation.get());
         }
         final Name modelName = new Name(name);
 
