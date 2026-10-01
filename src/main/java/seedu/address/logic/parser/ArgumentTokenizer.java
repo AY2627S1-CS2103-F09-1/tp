@@ -3,6 +3,9 @@ package seedu.address.logic.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
@@ -17,6 +20,9 @@ import java.util.stream.Collectors;
  */
 public class ArgumentTokenizer {
 
+    /** Matches a whitespace-delimited token that starts with a slash, which is how all prefixes begin. */
+    private static final Pattern PREFIX_LIKE_TOKEN = Pattern.compile("(?<=\\s)/\\S*");
+
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
      * respective argument values. Only the given prefixes will be recognized in the arguments string.
@@ -28,6 +34,34 @@ public class ArgumentTokenizer {
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
         return extractArguments(argsString, positions);
+    }
+
+    /**
+     * Returns the tokens in the arguments string that look like prefixes, i.e. start with a slash and are
+     * preceded by a whitespace, but are not one of the {@code knownPrefixes}. The tokens are returned in the
+     * order they appear, including repeated occurrences. Matching is case-sensitive.
+     *
+     * E.g. if {@code argsString} = " /name John /phone 123 /names" and {@code knownPrefixes} = {"/name"},
+     * this method returns ["/phone", "/names"].
+     *
+     * @param argsString    Arguments string of the form: {@code preamble <prefix> value <prefix> value ...}
+     * @param knownPrefixes Prefixes that are recognized and hence are not reported
+     * @return              List of unrecognized prefix-like tokens, empty if there are none
+     */
+    public static List<String> findUnrecognizedPrefixes(String argsString, Prefix... knownPrefixes) {
+        Set<String> knownPrefixStrings = Arrays.stream(knownPrefixes)
+                .map(Prefix::getPrefix)
+                .collect(Collectors.toSet());
+
+        List<String> unrecognizedPrefixes = new ArrayList<>();
+        Matcher matcher = PREFIX_LIKE_TOKEN.matcher(argsString);
+        while (matcher.find()) {
+            String token = matcher.group();
+            if (!knownPrefixStrings.contains(token)) {
+                unrecognizedPrefixes.add(token);
+            }
+        }
+        return unrecognizedPrefixes;
     }
 
     /**

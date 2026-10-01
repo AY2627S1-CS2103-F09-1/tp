@@ -5,6 +5,8 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.List;
+
 import org.junit.jupiter.api.Test;
 
 public class ArgumentTokenizerTest {
@@ -178,6 +180,78 @@ public class ArgumentTokenizerTest {
         argMultimap = ArgumentTokenizer.tokenize(argsString, slashName);
         assertPreambleEmpty(argMultimap);
         assertArgumentPresent(argMultimap, slashName, "");
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_onlyRecognizedPrefixes_returnsEmpty() {
+        Prefix slashName = new Prefix("/name");
+        Prefix slashClass = new Prefix("/class");
+
+        assertTrue(ArgumentTokenizer.findUnrecognizedPrefixes("", slashName, slashClass).isEmpty());
+        assertTrue(ArgumentTokenizer.findUnrecognizedPrefixes(" /name John /class A1", slashName, slashClass)
+                .isEmpty());
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_unknownPrefix_returnsUnknownPrefixes() {
+        Prefix slashName = new Prefix("/name");
+
+        assertEquals(List.of("/phone"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(" /name John /phone 123", slashName));
+
+        // No known prefixes given, so every prefix-like token is unrecognized
+        assertEquals(List.of("/name", "/phone"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(" /name John /phone 123"));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_multipleUnknownPrefixes_returnsInOrderWithRepeats() {
+        Prefix slashName = new Prefix("/name");
+
+        assertEquals(List.of("/phone", "/address", "/phone"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(
+                        " /phone 1 /name John /address x /phone 2", slashName));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_prefixJoinedToOtherText_returnsWholeToken() {
+        Prefix slashName = new Prefix("/name");
+
+        // Longer token that merely starts with a known prefix
+        assertEquals(List.of("/names"), ArgumentTokenizer.findUnrecognizedPrefixes(" /names John", slashName));
+
+        // Value joined directly to the prefix
+        assertEquals(List.of("/nameJohn"), ArgumentTokenizer.findUnrecognizedPrefixes(" /nameJohn", slashName));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_caseDiffers_returnsToken() {
+        Prefix slashName = new Prefix("/name");
+
+        assertEquals(List.of("/Name"), ArgumentTokenizer.findUnrecognizedPrefixes(" /Name John", slashName));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_loneSlash_returnsToken() {
+        Prefix slashName = new Prefix("/name");
+
+        assertEquals(List.of("/"), ArgumentTokenizer.findUnrecognizedPrefixes(" /name Tan / Kumar", slashName));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_slashNotAtStartOfToken_returnsEmpty() {
+        Prefix slashName = new Prefix("/name");
+
+        assertTrue(ArgumentTokenizer.findUnrecognizedPrefixes(" /name Tan s/o Kumar", slashName).isEmpty());
+        assertTrue(ArgumentTokenizer.findUnrecognizedPrefixes(" /name John/Doe", slashName).isEmpty());
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_nonSpaceWhitespaceBeforeToken_returnsToken() {
+        Prefix slashName = new Prefix("/name");
+
+        assertEquals(List.of("/phone"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(" /name John\t/phone 123", slashName));
     }
 
     @Test
