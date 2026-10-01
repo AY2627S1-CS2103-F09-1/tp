@@ -72,6 +72,14 @@ public class Person {
     }
 
     /**
+     * Returns true if this person has the given name and class, ignoring case and extra whitespace.
+     * The given strings do not need to be valid, in which case they simply do not match.
+     */
+    public boolean hasNameAndClass(String nameToMatch, String classNameToMatch) {
+        return name.matches(nameToMatch) && className.matches(classNameToMatch);
+    }
+
+    /**
      * Returns true if both persons have the same identity and data fields.
      * This defines a stronger notion of equality between two persons.
      */

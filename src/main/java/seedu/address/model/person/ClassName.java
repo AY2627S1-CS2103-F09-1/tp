@@ -69,6 +69,15 @@ public class ClassName {
         return Optional.empty();
     }
 
+    /**
+     * Returns true if {@code test} is the same class name as this class name, ignoring case and extra
+     * whitespace. Unlike the constructor, {@code test} is not required to be a valid class name.
+     */
+    public boolean matches(String test) {
+        requireNonNull(test);
+        return comparisonKey.equals(StringUtil.toComparisonKey(test));
+    }
+
     @Override
     public String toString() {
         return value;
