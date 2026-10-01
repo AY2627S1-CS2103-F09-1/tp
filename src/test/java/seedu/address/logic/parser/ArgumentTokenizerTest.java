@@ -82,7 +82,7 @@ public class ArgumentTokenizerTest {
     @Test
     public void tokenize_multipleArguments() {
         // Only two arguments are present
-        String argsString = "SomePreambleString -t dashT-Value p/pSlash value";
+        String argsString = "SomePreambleString -t dashT-Value p/ pSlash value";
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT, hatQ);
         assertPreamblePresent(argMultimap, "SomePreambleString");
         assertArgumentPresent(argMultimap, pSlash, "pSlash value");
@@ -90,7 +90,7 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, hatQ);
 
         // All three arguments are present
-        argsString = "Different Preamble String ^Q111 -t dashT-Value p/pSlash value";
+        argsString = "Different Preamble String ^Q 111 -t dashT-Value p/ pSlash value";
         argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT, hatQ);
         assertPreamblePresent(argMultimap, "Different Preamble String");
         assertArgumentPresent(argMultimap, pSlash, "pSlash value");
@@ -134,6 +134,50 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, pSlash);
         assertArgumentPresent(argMultimap, dashT, "not joined^Qjoined");
         assertArgumentAbsent(argMultimap, hatQ);
+    }
+
+    @Test
+    public void tokenize_prefixNotFollowedByWhitespace_notRecognized() {
+        Prefix slashName = new Prefix("/name");
+
+        // Prefix is only the start of a longer token
+        String argsString = " /names John";
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, slashName);
+        assertPreamblePresent(argMultimap, "/names John");
+        assertArgumentAbsent(argMultimap, slashName);
+
+        // Value joined directly to the prefix
+        argsString = " /nameJohn";
+        argMultimap = ArgumentTokenizer.tokenize(argsString, slashName);
+        assertPreamblePresent(argMultimap, "/nameJohn");
+        assertArgumentAbsent(argMultimap, slashName);
+    }
+
+    @Test
+    public void tokenize_invalidOccurrenceBeforeValidOccurrence_validOccurrenceRecognized() {
+        Prefix slashName = new Prefix("/name");
+
+        String argsString = " /names Ignored /name John";
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, slashName);
+        assertPreamblePresent(argMultimap, "/names Ignored");
+        assertArgumentPresent(argMultimap, slashName, "John");
+    }
+
+    @Test
+    public void tokenize_prefixFollowedByWhitespaceOrEnd_recognized() {
+        Prefix slashName = new Prefix("/name");
+
+        // Followed by a tab
+        String argsString = " /name\tJohn";
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, slashName);
+        assertPreambleEmpty(argMultimap);
+        assertArgumentPresent(argMultimap, slashName, "John");
+
+        // At the end of the arguments string, with an empty value
+        argsString = " /name";
+        argMultimap = ArgumentTokenizer.tokenize(argsString, slashName);
+        assertPreambleEmpty(argMultimap);
+        assertArgumentPresent(argMultimap, slashName, "");
     }
 
     @Test
