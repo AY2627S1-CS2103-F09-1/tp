@@ -33,6 +33,8 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label id;
     @FXML
+    private Label className;
+    @FXML
     private Label phone;
     @FXML
     private Label address;
@@ -49,11 +51,20 @@ public class PersonCard extends UiPart<Region> {
         this.person = person;
         id.setText(displayedIndex + ". ");
         name.setText(person.getName().fullName);
+        className.setText(person.getClassName().value);
         phone.setText(person.getPhone().value);
         address.setText(person.getAddress().value);
-        email.setText(person.getEmail().value);
+        person.getEmail().ifPresentOrElse(personEmail -> email.setText(personEmail.value), () -> hide(email));
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+    }
+
+    /**
+     * Hides the given {@code label} and stops it from taking up space in the card.
+     */
+    private static void hide(Label label) {
+        label.setVisible(false);
+        label.setManaged(false);
     }
 }

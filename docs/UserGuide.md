@@ -31,7 +31,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `list` : Lists all contacts.
 
-   * `add /name John Doe /phone 98765432 /email johnd@example.com /address John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
+   * `add /name John Doe /class A1 /phone 98765432 /email johnd@example.com /address John street, block 123, #01-01` : Adds a contact named `John Doe` in class `A1` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -84,10 +84,13 @@ Format: `help`
 
 Adds a person to the address book.
 
-Format: `add /name NAME /phone PHONE_NUMBER /email EMAIL /address ADDRESS [/tag TAG]... `
+Format: `add /name NAME /class CLASS /phone PHONE_NUMBER [/email EMAIL] /address ADDRESS [/tag TAG]... `
 
 * `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
-* Names are compared ignoring case and extra spaces. For example, `john  tan` is treated as the same name as `John Tan`.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
+* A person is identified by their name and class together. The same name can be added to different classes, but not twice to the same class.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same person as `John Tan` in class `A1`.
+* The email is optional.
 
 <box type="tip" seamless>
 
@@ -95,8 +98,8 @@ Format: `add /name NAME /phone PHONE_NUMBER /email EMAIL /address ADDRESS [/tag 
 </box>
 
 Examples:
-* `add /name John Doe /phone 98765432 /email johnd@example.com /address John street, block 123, #01-01`
-* `add /name Betsy Crowe /tag friend /email betsycrowe@example.com /address Newgate Prison /phone 1234567 /tag criminal`
+* `add /name John Doe /class A1 /phone 98765432 /email johnd@example.com /address John street, block 123, #01-01`
+* `add /name Betsy Crowe /class A2 /tag friend /address Newgate Prison /phone 1234567 /tag criminal`
 
 ### Listing all persons: `list`
 
@@ -202,7 +205,7 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add /name NAME /phone PHONE_NUMBER /email EMAIL /address ADDRESS [/tag TAG]... ` <br> e.g., `add /name James Ho /phone 22224444 /email jamesho@example.com /address 123, Clementi Rd, 1234665 /tag friend /tag colleague`
+**Add**    | `add /name NAME /class CLASS /phone PHONE_NUMBER [/email EMAIL] /address ADDRESS [/tag TAG]... ` <br> e.g., `add /name James Ho /class A1 /phone 22224444 /email jamesho@example.com /address 123, Clementi Rd, 1234665 /tag friend /tag colleague`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`

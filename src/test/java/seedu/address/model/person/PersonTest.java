@@ -4,6 +4,8 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
@@ -54,6 +56,32 @@ public class PersonTest {
         String nameWithRepeatedSpaces = VALID_NAME_BOB.replace(" ", "   ");
         editedBob = new PersonBuilder(BOB).withName(nameWithRepeatedSpaces).build();
         assertTrue(BOB.isSamePerson(editedBob));
+
+        // same name, different class, all other attributes same -> returns false
+        editedBob = new PersonBuilder(BOB).withClassName(VALID_CLASS_AMY).build();
+        assertFalse(BOB.isSamePerson(editedBob));
+
+        // same name, class differs in case, all other attributes same -> returns true
+        editedBob = new PersonBuilder(BOB).withClassName(VALID_CLASS_BOB.toLowerCase()).build();
+        assertTrue(BOB.isSamePerson(editedBob));
+
+        // same name and class, no email, all other attributes same -> returns true
+        editedBob = new PersonBuilder(BOB).withoutEmail().build();
+        assertTrue(BOB.isSamePerson(editedBob));
+    }
+
+    @Test
+    public void getEmail_personWithoutEmail_returnsEmptyOptional() {
+        Person personWithoutEmail = new PersonBuilder().withoutEmail().build();
+        assertTrue(personWithoutEmail.getEmail().isEmpty());
+        assertTrue(new PersonBuilder().build().getEmail().isPresent());
+    }
+
+    @Test
+    public void constructor_nullEmailOptional_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> new Person(person.getName(), person.getClassName(),
+                person.getPhone(), null, person.getAddress(), person.getTags()));
     }
 
     @Test
@@ -78,6 +106,10 @@ public class PersonTest {
         Person editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
+        // different class -> returns false
+        editedAlice = new PersonBuilder(ALICE).withClassName(VALID_CLASS_BOB).build();
+        assertFalse(ALICE.equals(editedAlice));
+
         // different phone -> returns false
         editedAlice = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
@@ -85,6 +117,15 @@ public class PersonTest {
         // different email -> returns false
         editedAlice = new PersonBuilder(ALICE).withEmail(VALID_EMAIL_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // email removed -> returns false
+        editedAlice = new PersonBuilder(ALICE).withoutEmail().build();
+        assertFalse(ALICE.equals(editedAlice));
+
+        // both without email -> returns true
+        Person aliceWithoutEmail = new PersonBuilder(ALICE).withoutEmail().build();
+        assertTrue(aliceWithoutEmail.equals(new PersonBuilder(ALICE).withoutEmail().build()));
+        assertEquals(aliceWithoutEmail.hashCode(), new PersonBuilder(ALICE).withoutEmail().build().hashCode());
 
         // different address -> returns false
         editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).build();
@@ -97,8 +138,9 @@ public class PersonTest {
 
     @Test
     public void toStringMethod() {
-        String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
-                + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
+        String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", className="
+                + ALICE.getClassName() + ", phone=" + ALICE.getPhone() + ", email=" + ALICE.getEmail().get()
+                + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
         assertEquals(expected, ALICE.toString());
     }
 }

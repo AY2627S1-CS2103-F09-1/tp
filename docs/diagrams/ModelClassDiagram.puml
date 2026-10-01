@@ -15,6 +15,7 @@ Class UserPrefs
 Class UniquePersonList
 Class Person
 Class Address
+Class ClassName
 Class Email
 Class Name
 Class Phone
@@ -38,15 +39,17 @@ UserPrefs .up.|> ReadOnlyUserPrefs
 AddressBook *--> "1" UniquePersonList
 UniquePersonList --> "~* all" Person
 Person *--> Name
+Person *--> ClassName
 Person *--> Phone
-Person *--> Email
+Person *--> "0..1" Email
 Person *--> Address
 Person *--> "*" Tag
 
 Person -[hidden]up--> I
 UniquePersonList -[hidden]right-> I
 
-Name -[hidden]right-> Phone
+Name -[hidden]right-> ClassName
+ClassName -[hidden]right-> Phone
 Phone -[hidden]right-> Address
 Address -[hidden]right-> Email
 

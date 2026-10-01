@@ -39,11 +39,12 @@ public class Messages {
     public static String format(Person person) {
         final StringBuilder builder = new StringBuilder();
         builder.append(person.getName())
+                .append("; Class: ")
+                .append(person.getClassName())
                 .append("; Phone: ")
-                .append(person.getPhone())
-                .append("; Email: ")
-                .append(person.getEmail())
-                .append("; Address: ")
+                .append(person.getPhone());
+        person.getEmail().ifPresent(email -> builder.append("; Email: ").append(email));
+        builder.append("; Address: ")
                 .append(person.getAddress())
                 .append("; Tags: ");
         person.getTags().forEach(builder::append);
