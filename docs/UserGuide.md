@@ -31,7 +31,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `list` : Lists all contacts.
 
-   * `add /name John Doe /class A1 /phone 98765432 /email johnd@example.com /address John street, block 123, #01-01` : Adds a contact named `John Doe` in class `A1` to the Address Book.
+   * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -63,7 +63,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `[/tag TAG]... ` may be omitted, or written as `/tag friend` or `/tag friend /tag family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `/name NAME /phone PHONE_NUMBER`, `/phone PHONE_NUMBER /name NAME` is also acceptable.
+  For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
 
 * Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
@@ -84,7 +84,7 @@ Format: `help`
 
 Adds a person to the address book.
 
-Format: `add /name NAME /class CLASS /phone PHONE_NUMBER [/email EMAIL] /address ADDRESS [/tag TAG]... `
+Format: `add /name NAME /class CLASS [/email EMAIL] [/tag TAG]... `
 
 * `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
 * `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
@@ -98,8 +98,8 @@ Format: `add /name NAME /class CLASS /phone PHONE_NUMBER [/email EMAIL] /address
 </box>
 
 Examples:
-* `add /name John Doe /class A1 /phone 98765432 /email johnd@example.com /address John street, block 123, #01-01`
-* `add /name Betsy Crowe /class A2 /tag friend /address Newgate Prison /phone 1234567 /tag criminal`
+* `add /name John Doe /class A1 /email johnd@example.com`
+* `add /name Betsy Crowe /class A2 /tag friend /tag criminal`
 
 ### Listing all persons: `list`
 
@@ -178,6 +178,7 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 
 **Caution:**
 If your changes make the data file invalid, ClassMates starts with an empty address book at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
+Data files from earlier versions of ClassMates, which do not record a class for each person, are also treated as invalid.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
@@ -205,7 +206,7 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add /name NAME /class CLASS /phone PHONE_NUMBER [/email EMAIL] /address ADDRESS [/tag TAG]... ` <br> e.g., `add /name James Ho /class A1 /phone 22224444 /email jamesho@example.com /address 123, Clementi Rd, 1234665 /tag friend /tag colleague`
+**Add**    | `add /name NAME /class CLASS [/email EMAIL] [/tag TAG]... ` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com /tag friend /tag colleague`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`

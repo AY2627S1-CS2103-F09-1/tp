@@ -11,20 +11,18 @@ public class MessagesTest {
 
     @Test
     public void format_personWithAllFields_showsAllFields() {
-        Person person = new PersonBuilder().withName("Amy Bee").withClassName("A1").withPhone("85355255")
-                .withEmail("amy@gmail.com").withAddress("123 Jurong West").withTags("friends").build();
+        Person person = new PersonBuilder().withName("Amy Bee").withClassName("A1")
+                .withEmail("amy@gmail.com").withTags("friends").build();
 
-        String expected = "Amy Bee; Class: A1; Phone: 85355255; Email: amy@gmail.com; Address: 123 Jurong West; "
-                + "Tags: [friends]";
+        String expected = "Amy Bee; Class: A1; Email: amy@gmail.com; Tags: [friends]";
         assertEquals(expected, Messages.format(person));
     }
 
     @Test
     public void format_personWithoutEmail_omitsEmail() {
-        Person person = new PersonBuilder().withName("Amy Bee").withClassName("A1").withPhone("85355255")
-                .withoutEmail().withAddress("123 Jurong West").build();
+        Person person = new PersonBuilder().withName("Amy Bee").withClassName("A1").withoutEmail().build();
 
-        String expected = "Amy Bee; Class: A1; Phone: 85355255; Address: 123 Jurong West; Tags: ";
+        String expected = "Amy Bee; Class: A1; Tags: ";
         assertEquals(expected, Messages.format(person));
     }
 }

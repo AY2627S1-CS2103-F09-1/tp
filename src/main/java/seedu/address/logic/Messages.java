@@ -40,13 +40,9 @@ public class Messages {
         final StringBuilder builder = new StringBuilder();
         builder.append(person.getName())
                 .append("; Class: ")
-                .append(person.getClassName())
-                .append("; Phone: ")
-                .append(person.getPhone());
+                .append(person.getClassName());
         person.getEmail().ifPresent(email -> builder.append("; Email: ").append(email));
-        builder.append("; Address: ")
-                .append(person.getAddress())
-                .append("; Tags: ");
+        builder.append("; Tags: ");
         person.getTags().forEach(builder::append);
         return builder.toString();
     }

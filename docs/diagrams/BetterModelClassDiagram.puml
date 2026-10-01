@@ -16,7 +16,5 @@ Person -up-> "*" Tag
 
 Person *--> Name
 Person *--> ClassName
-Person *--> Phone
 Person *--> "0..1" Email
-Person *--> Address
 @enduml

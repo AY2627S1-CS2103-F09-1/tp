@@ -23,22 +23,17 @@ public class Person {
     private final ClassName className;
 
     // Data fields
-    private final Phone phone;
     private final Email email; // null if the person has no email
-    private final Address address;
     private final Set<Tag> tags = new HashSet<>();
 
     /**
      * Every field must be present and not null. The {@code email} may be an empty {@code Optional}.
      */
-    public Person(Name name, ClassName className, Phone phone, Optional<Email> email, Address address,
-            Set<Tag> tags) {
-        requireAllNonNull(name, className, phone, email, address, tags);
+    public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags) {
+        requireAllNonNull(name, className, email, tags);
         this.name = name;
         this.className = className;
-        this.phone = phone;
         this.email = email.orElse(null);
-        this.address = address;
         this.tags.addAll(tags);
     }
 
@@ -50,16 +45,8 @@ public class Person {
         return className;
     }
 
-    public Phone getPhone() {
-        return phone;
-    }
-
     public Optional<Email> getEmail() {
         return Optional.ofNullable(email);
-    }
-
-    public Address getAddress() {
-        return address;
     }
 
     /**
@@ -101,16 +88,14 @@ public class Person {
 
         return name.equals(otherPerson.name)
                 && className.equals(otherPerson.className)
-                && phone.equals(otherPerson.phone)
                 && Objects.equals(email, otherPerson.email)
-                && address.equals(otherPerson.address)
                 && tags.equals(otherPerson.tags);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, className, phone, email, address, tags);
+        return Objects.hash(name, className, email, tags);
     }
 
     @Override
@@ -118,9 +103,7 @@ public class Person {
         return new ToStringBuilder(this)
                 .add("name", name)
                 .add("className", className)
-                .add("phone", phone)
                 .add("email", email)
-                .add("address", address)
                 .add("tags", tags)
                 .toString();
     }
