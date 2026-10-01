@@ -1,5 +1,8 @@
 package seedu.address.logic.commands;
 
+import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
+import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
 
@@ -11,9 +14,12 @@ public abstract class DeleteCommand extends Command {
     public static final String COMMAND_WORD = "delete";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
-            + ": Deletes the person identified by the index number used in the displayed person list.\n"
-            + "Parameters: INDEX (must be a positive integer)\n"
-            + "Example: " + COMMAND_WORD + " 1";
+            + ": Deletes a person identified either by the index number used in the displayed person list "
+            + "or by name and class.\n"
+            + "Parameters: INDEX (must be a positive integer) or "
+            + PREFIX_NAME + " NAME " + PREFIX_CLASS + " CLASS\n"
+            + "Examples: " + COMMAND_WORD + " 1, "
+            + COMMAND_WORD + " " + PREFIX_NAME + " John Tan " + PREFIX_CLASS + " A1";
 
     public static final String MESSAGE_DELETE_PERSON_SUCCESS = "%1$s in class %2$s has been deleted";
 
