@@ -3,8 +3,9 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
-import java.util.Locale;
 import java.util.Optional;
+
+import seedu.address.commons.util.StringUtil;
 
 /**
  * Represents a Person's name in the address book.
@@ -27,8 +28,6 @@ public class Name {
      */
     public static final String VALIDATION_REGEX = "[A-Za-z](?:[A-Za-z '.\\-]|(?<=[A-Za-z])/(?=[A-Za-z]))*";
 
-    private static final String WHITESPACE_REGEX = "\\s+";
-
     public final String fullName;
 
     private final String comparisonKey;
@@ -42,7 +41,7 @@ public class Name {
         requireNonNull(name);
         checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
         fullName = name;
-        comparisonKey = toComparisonKey(name);
+        comparisonKey = StringUtil.toComparisonKey(name);
     }
 
     /**
@@ -68,14 +67,6 @@ public class Name {
             return Optional.of(MESSAGE_CONSTRAINTS);
         }
         return Optional.empty();
-    }
-
-    /**
-     * Returns {@code name} in lower case with leading and trailing whitespace removed and repeated whitespace
-     * collapsed, so that names that only differ in these respects have the same key.
-     */
-    private static String toComparisonKey(String name) {
-        return name.trim().replaceAll(WHITESPACE_REGEX, " ").toLowerCase(Locale.ROOT);
     }
 
     @Override
