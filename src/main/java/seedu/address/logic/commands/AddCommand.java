@@ -4,10 +4,8 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
 
 import seedu.address.commons.util.ToStringBuilder;
-import seedu.address.logic.Messages;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Person;
@@ -23,17 +21,14 @@ public class AddCommand extends Command {
             + "Parameters: "
             + PREFIX_NAME + " NAME "
             + PREFIX_CLASS + " CLASS "
-            + "[" + PREFIX_EMAIL + " EMAIL] "
-            + "[" + PREFIX_TAG + " TAG]...\n"
+            + "[" + PREFIX_EMAIL + " EMAIL]\n"
             + "Example: " + COMMAND_WORD + " "
             + PREFIX_NAME + " John Doe "
             + PREFIX_CLASS + " A1 "
-            + PREFIX_EMAIL + " johnd@example.com "
-            + PREFIX_TAG + " friends "
-            + PREFIX_TAG + " owesMoney";
+            + PREFIX_EMAIL + " johnd@example.com";
 
-    public static final String MESSAGE_SUCCESS = "New person added: %1$s";
-    public static final String MESSAGE_DUPLICATE_PERSON = "This person already exists in the address book.";
+    public static final String MESSAGE_SUCCESS = "%1$s added to contacts";
+    public static final String MESSAGE_DUPLICATE_PERSON = "%1$s already exists in class %2$s";
 
     private final Person toAdd;
 
@@ -50,11 +45,12 @@ public class AddCommand extends Command {
         requireNonNull(model);
 
         if (model.hasPerson(toAdd)) {
-            throw new CommandException(MESSAGE_DUPLICATE_PERSON);
+            throw new CommandException(
+                    String.format(MESSAGE_DUPLICATE_PERSON, toAdd.getName(), toAdd.getClassName()));
         }
 
         model.addPerson(toAdd);
-        return new CommandResult(String.format(MESSAGE_SUCCESS, Messages.format(toAdd)));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd.getName()));
     }
 
     @Override

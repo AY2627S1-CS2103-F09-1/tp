@@ -57,7 +57,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.
 
 * Items in square brackets are optional.<br>
-  For example, `/name NAME [/tag TAG]` can be used as `/name John Doe /tag friend` or as `/name John Doe`.
+  For example, `/name NAME [/email EMAIL]` can be used as `/name John Doe /email johnd@example.com` or as `/name John Doe`.
 
 * Items followed by `...` can appear zero or more times.<br>
   For example, `[/tag TAG]... ` may be omitted, or written as `/tag friend` or `/tag friend /tag family`.
@@ -84,22 +84,35 @@ Format: `help`
 
 Adds a person to the address book.
 
-Format: `add /name NAME /class CLASS [/email EMAIL] [/tag TAG]... `
+Format: `add /name NAME /class CLASS [/email EMAIL]`
 
 * `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
 * `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
 * A person is identified by their name and class together. The same name can be added to different classes, but not twice to the same class.
 * Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same person as `John Tan` in class `A1`.
 * The email is optional.
+* Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 
-<box type="tip" seamless>
+If the command cannot be carried out, ClassMates shows one of these messages:
 
-**Tip:** A person can have any number of tags, including zero.
-</box>
+Problem | Message
+--------|--------
+A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` | `Unknown parameter. Use /name, /class or /email`
+A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `add John /class A1` | `Invalid command format!` followed by the usage of `add`
+`/name` is missing | `Command requires a name`
+`/class` is missing | `Command requires a class`
+The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
+The email is not valid, including `/email` with nothing after it | A description of the valid email format
+The same name already exists in the same class | `NAME already exists in class CLASS`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `NAME added to contacts`.
 
 Examples:
 * `add /name John Doe /class A1 /email johnd@example.com`
-* `add /name Betsy Crowe /class A2 /tag friend /tag criminal`
+* `add /name Betsy Crowe /class A2`
 
 ### Listing all persons: `list`
 
@@ -206,7 +219,7 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add /name NAME /class CLASS [/email EMAIL] [/tag TAG]... ` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com /tag friend /tag colleague`
+**Add**    | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`
 **Clear**  | `clear`
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`

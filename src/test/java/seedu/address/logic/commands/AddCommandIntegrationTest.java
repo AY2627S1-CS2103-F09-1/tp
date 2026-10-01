@@ -8,7 +8,6 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -35,7 +34,7 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPerson)),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
                 expectedModel);
     }
 
@@ -47,15 +46,16 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPerson)),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
                 expectedModel);
     }
 
     @Test
     public void execute_duplicatePerson_throwsCommandException() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
-        assertCommandFailure(new AddCommand(personInList), model,
-                AddCommand.MESSAGE_DUPLICATE_PERSON);
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, personInList.getName(),
+                personInList.getClassName());
+        assertCommandFailure(new AddCommand(personInList), model, expectedMessage);
     }
 
     @Test
@@ -65,7 +65,9 @@ public class AddCommandIntegrationTest {
                 .withName(personInList.getName().toString().toUpperCase())
                 .withClassName(personInList.getClassName().toString().toLowerCase())
                 .build();
-        assertCommandFailure(new AddCommand(duplicatePerson), model, AddCommand.MESSAGE_DUPLICATE_PERSON);
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
+                duplicatePerson.getClassName());
+        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
     }
 
     @Test
@@ -77,7 +79,7 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(samePersonInOtherClass);
 
         assertCommandSuccess(new AddCommand(samePersonInOtherClass), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(samePersonInOtherClass)),
+                String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName()),
                 expectedModel);
     }
 

@@ -32,9 +32,6 @@ public class PersonUtil {
         sb.append(PREFIX_NAME + " " + person.getName().fullName + " ");
         sb.append(PREFIX_CLASS + " " + person.getClassName().value + " ");
         person.getEmail().ifPresent(email -> sb.append(PREFIX_EMAIL + " " + email.value + " "));
-        person.getTags().stream().forEach(
-            s -> sb.append(PREFIX_TAG + " " + s.tagName + " ")
-        );
         return sb.toString();
     }
 
