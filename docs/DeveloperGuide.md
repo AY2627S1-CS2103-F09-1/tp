@@ -271,15 +271,9 @@ _{Explain here how the data archiving feature will be implemented}_
 
 ### Product scope
 
-**Target user profile**:
+**Target user profile**: Teaching assistants in universities who prefer desktop apps over other types of applications. They can type fast, prefer typing to mouse interactions, and are reasonably comfortable using CLI apps.
 
-* has a need to manage a significant number of contacts
-* prefers desktop apps over other types of applications
-* can type fast
-* prefers typing to mouse interactions
-* is reasonably comfortable using CLI apps
-
-**Value proposition**: Manage contacts faster than with a typical mouse-driven GUI application.
+**Value proposition**: TAs that handle multiple courses and multiple tutorial groups will have many students to manage at the same time, which can make organisation of information difficult. The product can provide fast and organised contact retrieval for TAs.
 
 
 ### User stories
@@ -288,56 +282,175 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 | Priority | As a …                                    | I want to …                 | So that I can…                                                        |
 |----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | new user                                   | see usage instructions       | refer to instructions when I forget how to use the App                 |
-| `* * *`  | user                                       | add a new person             |                                                                        |
-| `* * *`  | user                                       | delete a person              | remove entries that I no longer need                                   |
-| `* * *`  | user                                       | find a person by name        | locate details of persons without having to go through the entire list |
-| `* *`    | user                                       | hide private contact details | minimize chance of someone else seeing them by accident                |
-| `*`      | user with many persons in the address book | sort persons by name         | locate a person easily                                                 |
+| `* * *`  | TA                                         | add new student contacts with name, email, class | keep track of who is in each of my classes                |
+| `* * *`  | TA                                         | search for contacts by different keywords (e.g. name/class) | quickly find the information I need         |
+| `* * *`  | TA setting up a new class                  | import my initial students from a file | don't have to manually enter every student                     |
+| `* * *`  | TA                                         | remove contacts easily       | keep my contact list from being cluttered                              |
+| `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
+| `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
+| `* * *`  | TA                                         | view all grades tagged to a student | keep track of the progress of my students                       |
+| `* * *`  | TA                                         | view a list of all my contacts | see everyone at a glance                                              |
+| `* * *`  | TA                                         | record grades for a specific student | monitor their progress                                          |
+| `* * *`  | TA                                         | view a student's attendance  | review their attendance history                                        |
+| `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
+| `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
+| `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
+| `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
+| `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
+| `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
+| `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
+| `* *`    | TA                                         | sort students consistently   | scan through them quickly                                              |
+| `* *`    | TA                                         | favourite certain contacts   | quickly access my most frequent contacts                               |
+| `*`      | TA                                         | distinguish between students of similar names | not use the wrong student's information                |
+| `*`      | TA                                         | view total number of students across my classes | understand my workload                               |
+| `*`      | TA (managing high volume of active contacts) | highlight frequently contacted people | retrieve their details faster                             |
+| `*`      | TA                                         | search through archived contact records separately | quickly recall info relating to past students     |
+| `*`      | TA                                         | generate a breakdown of current students | balance my time commitments                              |
+| `*`      | TA with partner TAs                        | export student records based on tags | maintain student contacts in sync with my partner              |
+| `*`      | TA                                         | identify records with incomplete info | know which record needs attention                             |
+| `*`      | New user                                   | remove sample or experimental data | start with a clean contact list                                  |
+| `*`      | TA                                         | export selected students' records | use the required information                                     |
+| `*`      | TA                                         | archive students from previous semesters and restore them | old records do not clutter my contacts and I can reuse them if I want to |
 
 *{More to be added}*
 
 ### Use cases
 
-(For all use cases below, the **System** is the `AddressBook` and the **Actor** is the `user`, unless specified otherwise)
+(For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
-**Use case: Delete a person**
+**Use case: UC01 - View known student's grades**
 
 **MSS**
+1. User requests to view grades of the student.
+2. CM displays grades of the student.
 
-1.  User requests to list persons
-2.  AddressBook shows a list of persons
-3.  User requests to delete a specific person in the list
-4.  AddressBook deletes the person
+   Use case ends. 
+
+**Extensions**
+
+* 1a. The command format is invalid or the student does not exist.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC02 - Track known student's attendance**
+
+**MSS**
+1. User requests to add attendance record for the student.
+2. CM records the attendance for the student.
+
+   Use case ends.
+   
+**Extensions**
+   
+* 1a. The command format is invalid or the attendance of the student has already been recorded. 
+  * 1a1. CM displays an error message. 
+
+    Use case resumes at step 1.
+
+
+**Use case: UC03 - Set up new classes using bulk load**
+
+**Guarantees**
+* Student records will only be updated if all data is in the correct format.
+  
+**MSS**
+1. User requests to load student data from an external CSV file.
+2. CM parses data and adds records of all students in all classes.
+3. User confirms bulk loading.
+4. For each class added or updated, user requests to view students in that class.
+5. CM displays search results for each class. 
+
+    Use case ends.
+   
+**Extensions**
+* 2a. The given CSV file is not formatted correctly. 
+  * 2a1. CM terminates the import and displays an error message. 
+  * 2a2. User externally modifies the CSV file. 
+  
+    Use case resumes from step 1.
+* 3a. User chooses to cancel bulk loading.
+
+    Use case ends.
+
+
+**Use case: UC04 - Add students to groups (by tagging)**
+
+**Guarantees**
+* Specified students will only be grouped if all of them exist.
+
+**MSS**
+1. User requests to add certain students from the class into a group.
+2. CM adds those students to a group and displays a success message. 
+
+    Use case ends.
+   
+**Extensions**
+   
+* 1a. The command format is invalid or one of the students is already in the specified group. 
+  * 1a1. CM terminates the grouping and displays an error message. 
+        
+    Use case resumes from step 3.
+
+
+**Use case: UC05 - Delete a student**
+
+**MSS**
+1. User requests to view all students.
+2. CM displays a list of all students.
+3. User requests to delete a specific student from the list.
+4. If the student has records of grouping or attendance, CM requests for confirmation.
+5. User confirms deletion.
+6. CM deletes the student and displays a success message.
 
     Use case ends.
 
 **Extensions**
-
-* 2a. The list is empty.
+* 2a. The list is empty. 
 
   Use case ends.
-
+   
 * 3a. The given index is invalid.
+  * 3a1. CM displays an error message. 
+    
+    Use case resumes at step 3.
+  
+* 5a. User chooses to cancel the deletion. 
 
-    * 3a1. AddressBook shows an error message.
+    Use case ends.
 
-      Use case resumes at step 2.
-
-*{More to be added}*
 
 ### Non-Functional Requirements
 
-1.  Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
-2.  Should be able to hold up to 1000 persons without noticeable sluggishness in performance for typical usage.
-3.  A user with above average typing speed for regular English text (i.e. not code, not system admin commands) should be able to accomplish most of the tasks faster using commands than using the mouse.
-
-*{More to be added}*
+1. Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
+2. The application should be usable without an installer.
+3. The product should be distributed as a single JAR file, or as a single ZIP file containing the JAR and any necessary files.
+4. Contact, attendance, and grade data should be stored locally in a human-editable text file.
+5. The application should not require a remote server or database.
+6. The application should support one user operating on their own locally stored data.
+7. Common operations should be executable with concise commands.
+8. The GUI should remain usable at screen resolutions of 1280 × 720 and above.
+9. The GUI should work well at 1920 × 1080 and higher, including display scaling of 100% and 125%.
+10. Invalid commands or malformed data should not corrupt existing records.
+11. The application should be usable without requiring user accounts, external services, or a continuous Internet connection.
+12. Core features such as contact management, attendance tracking, and grade tracking should be testable using local sample data.
+13. The application should be developed incrementally, with each major update preserving a working version of the product.
 
 ### Glossary
 
 * **Mainstream OS**: Windows, Linux, Unix, or macOS
-* **Private contact detail**: A contact detail that is not meant to be shared with others
+* **MSS (Main Success Scenario)**: The primary, no-error flow of steps in a use case
+* **Student Contact**: A record containing information about a student, such as their name, email, class, tags, attendance records, and grades
+* **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
+* **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
+* **Tag**: Any label attached to a student contact used for grouping except class
+* **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
+* **Attendance Record**: A single entry marking a student as present/absent/late on a given date
+* **Attendance History**: The collection of a student's or class' attendance records over time
+* **Grade**: A single number between 0 to 100 inclusive representing the percentage
+* **Grade Entry**: A single recorded grade attached to a student contact
+* **Grade History**: The collection of a student's grade entries over time
 
 --------------------------------------------------------------------------------------------------------------------
 
