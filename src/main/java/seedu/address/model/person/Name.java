@@ -14,9 +14,12 @@ import seedu.address.commons.util.StringUtil;
  */
 public class Name {
 
+    /** The maximum number of characters in a name. */
     public static final int MAX_LENGTH = 80;
 
+    /** Message for a name that is empty or blank. */
     public static final String MESSAGE_EMPTY = "Name cannot be empty";
+    /** Message for a name that has more than {@link #MAX_LENGTH} characters. */
     public static final String MESSAGE_TOO_LONG = "Name is too long";
     /** Message for a name that contains a character, or starts with a character, that is not allowed. */
     public static final String MESSAGE_CONSTRAINTS = "Name must start with a letter and can only contain letters, "

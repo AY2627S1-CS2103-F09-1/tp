@@ -45,6 +45,9 @@ public class Person {
         return className;
     }
 
+    /**
+     * Returns the email of this person, or an empty {@code Optional} if this person has no email.
+     */
     public Optional<Email> getEmail() {
         return Optional.ofNullable(email);
     }

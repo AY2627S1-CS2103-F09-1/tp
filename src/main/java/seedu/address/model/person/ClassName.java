@@ -14,9 +14,12 @@ import seedu.address.commons.util.StringUtil;
  */
 public class ClassName {
 
+    /** The maximum number of characters in a class name. */
     public static final int MAX_LENGTH = 80;
 
+    /** Message for a class name that is empty or blank. */
     public static final String MESSAGE_EMPTY = "Class name cannot be empty";
+    /** Message for a class name that has more than {@link #MAX_LENGTH} characters. */
     public static final String MESSAGE_TOO_LONG = "Class name is too long";
     /** Message for a class name that contains a character, or starts with a character, that is not allowed. */
     public static final String MESSAGE_CONSTRAINTS = "Class name must start with a letter or digit and can only "
