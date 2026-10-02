@@ -356,7 +356,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 1. User requests to load student data from an external CSV file.
 2. CM parses data and adds records of all students in all classes.
 3. User confirms bulk loading.
-4. For each class added or updated, user requests to view students in that class.
+4. For each class added or updated, user requests to <u>search for student contacts</u> (UC08) using the class as the keyword.
 5. CM displays search results for each class. 
 
     Use case ends.
@@ -394,7 +394,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **Use case: UC05 - Delete a student**
 
 **MSS**
-1. User requests to view all students.
+1. User requests to <u>search for student contacts</u> (UC08) with no keyword, to view all students.
 2. CM displays a list of all students.
 3. User requests to delete a specific student from the list.
 4. If the student has records of grouping or attendance, CM requests for confirmation.
@@ -414,6 +414,58 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     Use case resumes at step 3.
   
 * 5a. User chooses to cancel the deletion. 
+
+    Use case ends.
+
+
+**Use case: UC06 - Add a new student contact**
+
+**MSS**
+1. User requests to add a student contact, providing a name and class (and optionally an email).
+2. CM adds the new student contact and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. A required field is missing, or a provided field is invalid (e.g. name contains symbols, email malformed).
+  * 1a1. CM displays an error message describing the problem.
+
+    Use case resumes at step 1.
+* 1b. The given name already exists.
+  * 1b1. CM displays an error message stating the name already exists.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC07 - Record grades for a known student**
+
+**MSS**
+1. User requests to record a grade for an assessment for the student.
+2. CM records the grade and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid, the student does not exist, or the score is out of range (not between 0 and 100).
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC08 - Search for student contacts**
+
+**MSS**
+1. User requests to search for student contacts matching a keyword.
+2. CM displays all student contacts whose name, class, or tags match the keyword.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. No student contact matches the given keyword.
+  * 2a1. CM displays an empty list.
 
     Use case ends.
 
