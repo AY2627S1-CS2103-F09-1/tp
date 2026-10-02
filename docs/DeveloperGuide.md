@@ -448,7 +448,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **Extensions**
 
-* 1a. The command format is invalid, the student does not exist, or the score is out of range (not between 0 and 100).
+* 1a. The command format is invalid, the student does not exist, or the grade is out of range (not between 0 and 100).
   * 1a1. CM displays an error message.
 
     Use case resumes at step 1.
@@ -494,9 +494,11 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
 * **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
 * **Tag**: Any label attached to a student contact used for grouping except class
+* **Group**: A set of students sharing a common tag, created by tagging students together (see Tag)
 * **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
 * **Attendance Record**: A single entry marking a student as present/absent/late on a given date
 * **Attendance History**: The collection of a student's or class' attendance records over time
+* **Assessment**: A named piece of work (e.g. "Assignment 1", "Midterm") that a grade is recorded against for a student
 * **Grade**: A single number between 0 to 100 inclusive representing the percentage
 * **Grade Entry**: A single recorded grade attached to a student contact
 * **Grade History**: The collection of a student's grade entries over time
