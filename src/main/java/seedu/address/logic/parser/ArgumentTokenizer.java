@@ -3,17 +3,25 @@ package seedu.address.logic.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 /**
- * Tokenizes arguments string of the form: {@code preamble <prefix>value <prefix>value ...}<br>
- *     e.g. {@code some preamble text t/ 11.00 t/12.00 k/ m/ July}  where prefixes are {@code t/ k/ m/}.<br>
- * 1. An argument's value can be an empty string e.g. the value of {@code k/} in the above example.<br>
+ * Tokenizes arguments string of the form: {@code preamble <prefix> value <prefix> value ...}<br>
+ *     e.g. {@code some preamble text /t 11.00 /t 12.00 /k /m July}  where prefixes are {@code /t /k /m}.<br>
+ * 1. An argument's value can be an empty string e.g. the value of {@code /k} in the above example.<br>
  * 2. Leading and trailing whitespaces of an argument value will be discarded.<br>
- * 3. An argument may be repeated and all its values will be accumulated e.g. the value of {@code t/}
+ * 3. An argument may be repeated and all its values will be accumulated e.g. the value of {@code /t}
  *    in the above example.<br>
+ * 4. A prefix is only recognized if it is preceded by a whitespace and followed by a whitespace or the end of
+ *    the arguments string e.g. {@code /classroom} is not recognized as the prefix {@code /class}.<br>
  */
 public class ArgumentTokenizer {
+
+    /** Matches a whitespace-delimited token that starts with a slash, which is how all prefixes begin. */
+    private static final Pattern PREFIX_LIKE_TOKEN = Pattern.compile("(?<=\\s)/\\S*");
 
     /**
      * Tokenizes an arguments string and returns an {@code ArgumentMultimap} object that maps prefixes to their
@@ -26,6 +34,34 @@ public class ArgumentTokenizer {
     public static ArgumentMultimap tokenize(String argsString, Prefix... prefixes) {
         List<PrefixPosition> positions = findAllPrefixPositions(argsString, prefixes);
         return extractArguments(argsString, positions);
+    }
+
+    /**
+     * Returns the tokens in the arguments string that look like prefixes, i.e. start with a slash and are
+     * preceded by a whitespace, but are not one of the {@code knownPrefixes}. The tokens are returned in the
+     * order they appear, including repeated occurrences. Matching is case-sensitive.
+     *
+     * E.g. if {@code argsString} = " /name John /phone 123 /names" and {@code knownPrefixes} = {"/name"},
+     * this method returns ["/phone", "/names"].
+     *
+     * @param argsString    Arguments string of the form: {@code preamble <prefix> value <prefix> value ...}
+     * @param knownPrefixes Prefixes that are recognized and hence are not reported
+     * @return              List of unrecognized prefix-like tokens, empty if there are none
+     */
+    public static List<String> findUnrecognizedPrefixes(String argsString, Prefix... knownPrefixes) {
+        Set<String> knownPrefixStrings = Arrays.stream(knownPrefixes)
+                .map(Prefix::getPrefix)
+                .collect(Collectors.toSet());
+
+        List<String> unrecognizedPrefixes = new ArrayList<>();
+        Matcher matcher = PREFIX_LIKE_TOKEN.matcher(argsString);
+        while (matcher.find()) {
+            String token = matcher.group();
+            if (!knownPrefixStrings.contains(token)) {
+                unrecognizedPrefixes.add(token);
+            }
+        }
+        return unrecognizedPrefixes;
     }
 
     /**
@@ -60,19 +96,35 @@ public class ArgumentTokenizer {
     /**
      * Returns the index of the first occurrence of {@code prefix} in
      * {@code argsString} starting from index {@code fromIndex}. An occurrence
-     * is valid if there is a whitespace before {@code prefix}. Returns -1 if no
-     * such occurrence can be found.
+     * is valid if there is a whitespace before {@code prefix} and a whitespace
+     * or the end of {@code argsString} after it. Returns -1 if no such
+     * occurrence can be found.
      *
-     * E.g if {@code argsString} = "e/hip/900", {@code prefix} = "p/" and
+     * E.g if {@code argsString} = "e/hip/ 900", {@code prefix} = "p/" and
      * {@code fromIndex} = 0, this method returns -1 as there are no valid
-     * occurrences of "p/" with whitespace before it. However, if
-     * {@code argsString} = "e/hi p/900", {@code prefix} = "p/" and
-     * {@code fromIndex} = 0, this method returns 5.
+     * occurrences of "p/" with whitespace before it. Similarly, if
+     * {@code argsString} = "e/hi /names", {@code prefix} = "/name" and
+     * {@code fromIndex} = 0, this method returns -1 as "/name" is not followed
+     * by whitespace. However, if {@code argsString} = "e/hi p/ 900",
+     * {@code prefix} = "p/" and {@code fromIndex} = 0, this method returns 5.
      */
     private static int findPrefixPosition(String argsString, String prefix, int fromIndex) {
         int prefixIndex = argsString.indexOf(" " + prefix, fromIndex);
-        return prefixIndex == -1 ? -1
-                : prefixIndex + 1; // +1 as offset for whitespace
+        while (prefixIndex != -1) {
+            int prefixPosition = prefixIndex + 1; // +1 as offset for whitespace
+            if (isEndOfToken(argsString, prefixPosition + prefix.length())) {
+                return prefixPosition;
+            }
+            prefixIndex = argsString.indexOf(" " + prefix, prefixPosition);
+        }
+        return -1;
+    }
+
+    /**
+     * Returns true if {@code index} is the end of {@code argsString} or points to a whitespace.
+     */
+    private static boolean isEndOfToken(String argsString, int index) {
+        return index == argsString.length() || Character.isWhitespace(argsString.charAt(index));
     }
 
     /**
