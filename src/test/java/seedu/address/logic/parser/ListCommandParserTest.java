@@ -1,35 +1,31 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
-import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.ListCommand;
-import seedu.address.logic.parser.exceptions.ParseException;
 
 public class ListCommandParserTest {
 
     private final ListCommandParser parser = new ListCommandParser();
 
     @Test
-    public void parse_noArgument_returnsListCommand() throws ParseException {
+    public void parse_noArgument_returnsListCommand() {
         assertTrue(parser.parse("") instanceof ListCommand);
         assertTrue(parser.parse("     ") instanceof ListCommand);
     }
 
     @Test
-    public void parse_singleArgument_returnsListCommand() throws ParseException {
+    public void parse_singleWordArgument_returnsListCommand() {
         assertTrue(parser.parse("John") instanceof ListCommand);
         assertTrue(parser.parse(" \n John \t ") instanceof ListCommand);
     }
 
     @Test
-    public void parse_multipleArguments_throwsParseException() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ListCommand.MESSAGE_USAGE);
-        assertParseFailure(parser, "John Doe", expectedMessage);
-        assertParseFailure(parser, " John \t Doe  Lee ", expectedMessage);
+    public void parse_multiWordArgument_returnsListCommand() {
+        assertTrue(parser.parse("John Doe") instanceof ListCommand);
+        assertTrue(parser.parse(" John \t Doe  Lee ") instanceof ListCommand);
     }
 
 }
