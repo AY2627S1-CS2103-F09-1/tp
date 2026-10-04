@@ -118,6 +118,13 @@ How the parsing works:
 * Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can use `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)` to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser` does this, and reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
 * `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
 
+#### Tag command
+The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups.
+
+* `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
+* `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The displayed list is left as it was, so the indices stay valid.
+* The success message lists the linked contacts in the order the indices were given, and shows the group name as it was typed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
+
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
 
@@ -381,20 +388,29 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **Use case: UC04 - Add students to groups (by tagging)**
 
 **Guarantees**
-* Specified students will only be grouped if all of them exist.
+* Specified students will only be grouped if all of them exist and none of them is already in the group.
+* If grouping fails, no student is changed.
 
 **MSS**
-1. User requests to add certain students from the class into a group.
-2. CM adds those students to a group and displays a success message. 
+1. User requests to add certain students from the displayed list into a group, e.g. `tag /group Group A /members 1,3`.
+2. CM adds those students to a group and displays a success message listing the students. 
 
     Use case ends.
    
 **Extensions**
    
-* 1a. The command format is invalid or one of the students is already in the specified group. 
-  * 1a1. CM terminates the grouping and displays an error message. 
+* 1a. The command format is invalid, e.g. the group name or the members are missing or repeated, the group name is invalid, or a member is not a positive integer or is given twice.
+  * 1a1. CM terminates the grouping and displays an error message naming the problem. 
         
-    Use case resumes from step 3.
+    Use case resumes from step 1.
+* 1b. One of the indices does not refer to a student in the displayed list.
+  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found. 
+        
+    Use case resumes from step 1.
+* 1c. One or more of the students are already in the specified group. Group names are compared ignoring case and extra spaces.
+  * 1c1. CM terminates the grouping and displays an error message listing those students. 
+        
+    Use case resumes from step 1.
 
 
 **Use case: UC05 - Delete a student**
