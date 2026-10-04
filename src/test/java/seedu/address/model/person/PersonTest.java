@@ -12,8 +12,11 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
@@ -22,6 +25,56 @@ public class PersonTest {
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
+    }
+
+    @Test
+    public void hasTag() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+
+        // null tag -> throws exception
+        assertThrows(NullPointerException.class, () -> person.hasTag(null));
+
+        // tag present -> returns true
+        assertTrue(person.hasTag(new Tag("team-1")));
+
+        // tag present with different casing and spacing -> returns true
+        assertTrue(person.hasTag(new Tag("  gROUP   a ")));
+
+        // tag absent -> returns false
+        assertFalse(person.hasTag(new Tag("Group B")));
+
+        // person without tags -> returns false
+        assertFalse(new PersonBuilder().withTags().build().hasTag(new Tag("Group A")));
+    }
+
+    @Test
+    public void withTag() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        // null tag -> throws exception
+        assertThrows(NullPointerException.class, () -> person.withTag(null));
+
+        // new tag -> existing tags kept, tag added, other fields unchanged
+        Person tagged = person.withTag(new Tag("Group B"));
+        assertEquals(new PersonBuilder(person).withTags("Group A", "Group B").build(), tagged);
+
+        // original person is not modified
+        assertEquals(Set.of(new Tag("Group A")), person.getTags());
+
+        // person without an email keeps having no email
+        Person withoutEmail = new PersonBuilder().withoutEmail().withTags().build();
+        assertEquals(new PersonBuilder(withoutEmail).withTags("Group A").build(),
+                withoutEmail.withTag(new Tag("Group A")));
+    }
+
+    @Test
+    public void withTag_tagAlreadyPresent_keepsExistingTag() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person tagged = person.withTag(new Tag("group a"));
+
+        assertEquals(1, tagged.getTags().size());
+        assertEquals("Group A", tagged.getTags().iterator().next().tagName);
     }
 
     @Test
