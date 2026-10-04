@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.util.Comparator;
+import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -8,6 +9,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 
 /**
  * A UI component that displays information of a {@code Person}.
@@ -49,9 +51,16 @@ public class PersonCard extends UiPart<Region> {
         name.setText(person.getName().fullName);
         className.setText(person.getClassName().value);
         person.getEmail().ifPresentOrElse(personEmail -> email.setText(personEmail.value), () -> hide(email));
-        person.getTags().stream()
-                .sorted(Comparator.comparing(tag -> tag.tagName))
-                .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+        getSortedTags(person).forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+    }
+
+    /**
+     * Returns the tags of {@code person} in alphabetical order, ignoring case.
+     */
+    static List<Tag> getSortedTags(Person person) {
+        return person.getTags().stream()
+                .sorted(Comparator.comparing(tag -> tag.tagName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
     }
 
     /**
