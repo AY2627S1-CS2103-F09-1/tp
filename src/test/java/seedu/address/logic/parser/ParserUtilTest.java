@@ -2,7 +2,11 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_DUPLICATE_MEMBER_INDEX;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_EMPTY_MEMBER;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_GROUP_NAME;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_MEMBER_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
@@ -11,6 +15,7 @@ import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.core.index.Index;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
@@ -202,5 +207,102 @@ public class ParserUtilTest {
         Set<Tag> expectedTagSet = Set.of(new Tag(VALID_TAG_1), new Tag(VALID_TAG_2));
 
         assertEquals(expectedTagSet, actualTagSet);
+    }
+
+    @Test
+    public void parseGroupName_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseGroupName(null));
+    }
+
+    @Test
+    public void parseGroupName_invalidValue_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () -> ParserUtil.parseGroupName(""));
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupName(WHITESPACE));
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupName("Group!"));
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupName("Group\tA"));
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupName("a".repeat(Tag.MAX_LENGTH + 1)));
+    }
+
+    @Test
+    public void parseGroupName_validValue_returnsTagWithTypedCasing() throws Exception {
+        assertEquals("Group A", ParserUtil.parseGroupName("Group A").tagName);
+        assertEquals("a".repeat(Tag.MAX_LENGTH), ParserUtil.parseGroupName("a".repeat(Tag.MAX_LENGTH)).tagName);
+
+        // a name made only of digits is fine since the group is introduced by its prefix
+        assertEquals("123", ParserUtil.parseGroupName("123").tagName);
+    }
+
+    @Test
+    public void parseGroupName_valueWithExtraWhitespace_returnsTrimmedAndCollapsedTag() throws Exception {
+        Tag actual = ParserUtil.parseGroupName(WHITESPACE + "Group    A" + WHITESPACE);
+        assertEquals("Group A", actual.tagName);
+        assertEquals(new Tag("group a"), actual);
+    }
+
+    @Test
+    public void parseMemberIndices_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseMemberIndices(null));
+    }
+
+    @Test
+    public void parseMemberIndices_validValues_returnsIndicesInOrderGiven() throws Exception {
+        assertEquals(List.of(Index.fromOneBased(1)), ParserUtil.parseMemberIndices("1"));
+        assertEquals(List.of(Index.fromOneBased(5), Index.fromOneBased(1), Index.fromOneBased(3)),
+                ParserUtil.parseMemberIndices("5,1,3"));
+    }
+
+    @Test
+    public void parseMemberIndices_whitespaceAroundEntries_ignored() throws Exception {
+        List<Index> expected = List.of(Index.fromOneBased(1), Index.fromOneBased(3), Index.fromOneBased(5));
+        assertEquals(expected, ParserUtil.parseMemberIndices("1, 3 ,5"));
+        assertEquals(expected, ParserUtil.parseMemberIndices(WHITESPACE + "1 ,\t3,  5" + WHITESPACE));
+    }
+
+    @Test
+    public void parseMemberIndices_emptyEntry_throwsParseException() {
+        // blank, leading comma, trailing comma, and consecutive commas
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices(""));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices(WHITESPACE));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices(",1"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1,3,"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1,,3"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1, ,3"));
+    }
+
+    @Test
+    public void parseMemberIndices_entryNotPositiveInteger_throwsParseExceptionNamingEntry() {
+        for (String invalid : List.of("0", "-1", "1.5", "abc", "+1", "1 3", "99999999999")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_INVALID_MEMBER_INDEX, invalid), () ->
+                    ParserUtil.parseMemberIndices("2," + invalid + ",4"));
+        }
+    }
+
+    @Test
+    public void parseMemberIndices_multipleInvalidEntries_reportsFirstInvalidEntry() {
+        assertThrows(ParseException.class, String.format(MESSAGE_INVALID_MEMBER_INDEX, "x"), () ->
+                ParserUtil.parseMemberIndices("1,x,,y"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1,,x"));
+    }
+
+    @Test
+    public void parseMemberIndices_repeatedIndex_throwsParseExceptionNamingIndex() {
+        assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_MEMBER_INDEX, "1"), () ->
+                ParserUtil.parseMemberIndices("1,1"));
+        assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_MEMBER_INDEX, "3"), () ->
+                ParserUtil.parseMemberIndices("3,1,3 , 3"));
+
+        // every repeated index is reported once, in the order it is first repeated
+        assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_MEMBER_INDEX, "2, 1"), () ->
+                ParserUtil.parseMemberIndices("1,2,2,1,1"));
+    }
+
+    @Test
+    public void parseMemberIndices_invalidEntryAndRepeatedIndex_reportsInvalidEntryFirst() {
+        assertThrows(ParseException.class, String.format(MESSAGE_INVALID_MEMBER_INDEX, "x"), () ->
+                ParserUtil.parseMemberIndices("1,1,x"));
     }
 }
