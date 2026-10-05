@@ -40,6 +40,13 @@ public class TagCommandTest {
     }
 
     @Test
+    public void constructor_duplicateIndices_throwsAssertionError() {
+        List<Index> indicesWithDuplicate =
+                List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON, INDEX_FIRST_PERSON);
+        assertThrows(AssertionError.class, () -> new TagCommand(GROUP_A, indicesWithDuplicate));
+    }
+
+    @Test
     public void execute_nullModel_throwsNullPointerException() {
         TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
         assertThrows(NullPointerException.class, () -> tagCommand.execute(null));
@@ -159,7 +166,8 @@ public class TagCommandTest {
     @Test
     public void execute_missingIndexAndAlreadyInGroup_reportsMissingIndexFirst() {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
-        TagCommand tagCommand = new TagCommand(new Tag("friends"), List.of(INDEX_FIRST_PERSON, outOfBoundIndex));
+        TagCommand tagCommand = new TagCommand(new Tag("friends"),
+                List.of(INDEX_FIRST_PERSON, outOfBoundIndex));
 
         assertCommandFailure(tagCommand, model,
                 String.format(TagCommand.MESSAGE_INDEX_NOT_FOUND, outOfBoundIndex.getOneBased()));
@@ -167,7 +175,8 @@ public class TagCommandTest {
 
     @Test
     public void equals() {
-        TagCommand tagFirstCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
+        TagCommand tagFirstCommand = new TagCommand(GROUP_A,
+                List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
 
         // same object -> returns true
         assertTrue(tagFirstCommand.equals(tagFirstCommand));

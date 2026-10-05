@@ -46,6 +46,10 @@ public class Tag {
         return normalize(test).matches(VALIDATION_REGEX);
     }
 
+    /**
+     * Returns {@code tagName} without leading and trailing whitespace and with repeated spaces collapsed into
+     * a single space. The casing is kept.
+     */
     private static String normalize(String tagName) {
         return tagName.trim().replaceAll(REPEATED_SPACES_REGEX, " ");
     }

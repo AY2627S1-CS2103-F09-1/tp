@@ -41,13 +41,21 @@ public class TagCommand extends Command {
 
     /**
      * Creates a {@code TagCommand} to link the contacts at {@code memberIndices} to {@code group}.
-     * The indices must not contain duplicates.
+     * The indices must not contain duplicates, as a contact can only be changed once by a command.
      */
     public TagCommand(Tag group, List<Index> memberIndices) {
         requireNonNull(group);
         requireNonNull(memberIndices);
+        assert hasNoDuplicates(memberIndices) : "memberIndices must not contain duplicates";
         this.group = group;
         this.memberIndices = List.copyOf(memberIndices);
+    }
+
+    /**
+     * Returns true if no index appears more than once in {@code indices}.
+     */
+    private static boolean hasNoDuplicates(List<Index> indices) {
+        return indices.stream().map(Index::getOneBased).distinct().count() == indices.size();
     }
 
     @Override
@@ -94,7 +102,8 @@ public class TagCommand extends Command {
                 .filter(member -> member.hasTag(group))
                 .toList();
         if (!alreadyInGroup.isEmpty()) {
-            throw new CommandException(String.format(MESSAGE_ALREADY_IN_GROUP, formatContacts(alreadyInGroup)));
+            throw new CommandException(
+                    String.format(MESSAGE_ALREADY_IN_GROUP, formatContacts(alreadyInGroup)));
         }
     }
 

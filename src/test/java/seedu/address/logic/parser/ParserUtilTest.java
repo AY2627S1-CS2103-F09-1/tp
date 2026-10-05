@@ -230,7 +230,8 @@ public class ParserUtilTest {
     @Test
     public void parseGroupName_validValue_returnsTagWithTypedCasing() throws Exception {
         assertEquals("Group A", ParserUtil.parseGroupName("Group A").tagName);
-        assertEquals("a".repeat(Tag.MAX_LENGTH), ParserUtil.parseGroupName("a".repeat(Tag.MAX_LENGTH)).tagName);
+        String longestName = "a".repeat(Tag.MAX_LENGTH);
+        assertEquals(longestName, ParserUtil.parseGroupName(longestName).tagName);
 
         // a name made only of digits is fine since the group is introduced by its prefix
         assertEquals("123", ParserUtil.parseGroupName("123").tagName);
@@ -266,11 +267,13 @@ public class ParserUtilTest {
     public void parseMemberIndices_emptyEntry_throwsParseException() {
         // blank, leading comma, trailing comma, and consecutive commas
         assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices(""));
-        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices(WHITESPACE));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () ->
+                ParserUtil.parseMemberIndices(WHITESPACE));
         assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices(",1"));
         assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1,3,"));
         assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1,,3"));
-        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () -> ParserUtil.parseMemberIndices("1, ,3"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_MEMBER, () ->
+                ParserUtil.parseMemberIndices("1, ,3"));
     }
 
     @Test

@@ -58,7 +58,8 @@ public class TagCommandParserTest {
     @Test
     public void parse_membersKeptInOrderGiven_success() {
         assertParseSuccess(parser, GROUP_DESC + " /members 3,1,2",
-                new TagCommand(GROUP_A, List.of(INDEX_THIRD_PERSON, INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)));
+                new TagCommand(GROUP_A,
+                        List.of(INDEX_THIRD_PERSON, INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)));
     }
 
     @Test
@@ -81,7 +82,8 @@ public class TagCommandParserTest {
                 new TagCommand(new Tag("team-1_Alpha 2"), FIRST_AND_THIRD));
 
         // a group name made only of digits is fine since it follows its prefix
-        assertParseSuccess(parser, " /group 123" + MEMBERS_DESC, new TagCommand(new Tag("123"), FIRST_AND_THIRD));
+        assertParseSuccess(parser, " /group 123" + MEMBERS_DESC,
+                new TagCommand(new Tag("123"), FIRST_AND_THIRD));
 
         // longest allowed name
         String longestName = "a".repeat(Tag.MAX_LENGTH);
@@ -152,7 +154,8 @@ public class TagCommandParserTest {
     @Test
     public void parse_repeatedParameter_failure() {
         // multiple groups
-        assertParseFailure(parser, " /group Group B" + GROUP_DESC + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, " /group Group B" + GROUP_DESC + MEMBERS_DESC,
+                MESSAGE_DUPLICATE_PARAMETERS);
 
         // multiple members
         assertParseFailure(parser, GROUP_DESC + " /members 2" + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);

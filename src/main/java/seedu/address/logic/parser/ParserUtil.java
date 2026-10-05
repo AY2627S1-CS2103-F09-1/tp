@@ -29,10 +29,14 @@ public class ParserUtil {
             + Tag.MAX_LENGTH + " characters long and can only contain letters, digits, spaces, hyphens, "
             + "and underscores";
     public static final String MESSAGE_EMPTY_MEMBER = "Members cannot contain empty entries";
-    public static final String MESSAGE_INVALID_MEMBER_INDEX = "Contact index must be a positive integer: %1$s";
+    public static final String MESSAGE_INVALID_MEMBER_INDEX =
+            "Contact index must be a positive integer: %1$s";
     public static final String MESSAGE_DUPLICATE_MEMBER_INDEX = "Duplicate contact index: %1$s";
 
     private static final String MEMBER_SEPARATOR = ",";
+
+    /** Passed to {@code String#split} so that empty entries at the end, such as in "1,3,", are kept. */
+    private static final int KEEP_TRAILING_EMPTY_ENTRIES = -1;
 
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
@@ -146,13 +150,18 @@ public class ParserUtil {
     public static List<Index> parseMemberIndices(String members) throws ParseException {
         requireNonNull(members);
         List<Index> indices = new ArrayList<>();
-        for (String member : members.split(MEMBER_SEPARATOR, -1)) {
+        for (String member : members.split(MEMBER_SEPARATOR, KEEP_TRAILING_EMPTY_ENTRIES)) {
             indices.add(parseMemberIndex(member.trim()));
         }
         requireNoDuplicateIndices(indices);
         return indices;
     }
 
+    /**
+     * Parses a single, already trimmed {@code String member} into an {@code Index}.
+     *
+     * @throws ParseException if {@code member} is empty or is not a positive integer.
+     */
     private static Index parseMemberIndex(String member) throws ParseException {
         if (member.isEmpty()) {
             throw new ParseException(MESSAGE_EMPTY_MEMBER);
@@ -163,6 +172,10 @@ public class ParserUtil {
         return Index.fromOneBased(Integer.parseInt(member));
     }
 
+    /**
+     * Throws a {@code ParseException} naming every index that appears more than once in {@code indices}.
+     * Each repeated index is named once, in the order in which it is first found to be repeated.
+     */
     private static void requireNoDuplicateIndices(List<Index> indices) throws ParseException {
         Set<Integer> seenIndices = new HashSet<>();
         Set<Integer> duplicateIndices = new LinkedHashSet<>();
