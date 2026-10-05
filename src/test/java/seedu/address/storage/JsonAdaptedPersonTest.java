@@ -8,6 +8,7 @@ import static seedu.address.testutil.TypicalPersons.BENSON;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 import org.junit.jupiter.api.Test;
@@ -17,6 +18,7 @@ import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
@@ -118,6 +120,40 @@ public class JsonAdaptedPersonTest {
         invalidTags.add(new JsonAdaptedTag(INVALID_TAG));
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, invalidTags);
         assertThrows(IllegalValueException.class, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_tooLongTag_throwsIllegalValueException() {
+        List<JsonAdaptedTag> tooLongTags = List.of(new JsonAdaptedTag("a".repeat(Tag.MAX_LENGTH + 1)));
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tooLongTags);
+        assertThrows(IllegalValueException.class, Tag.MESSAGE_CONSTRAINTS, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_tagsWithSpacesAndMixedCasing_returnsPersonWithTagsAsTyped() throws Exception {
+        Person personWithGroups =
+                new PersonBuilder(BENSON).withTags("Group A", "team-1_Alpha", "gROUP b").build();
+
+        Person restoredPerson = new JsonAdaptedPerson(personWithGroups).toModelType();
+
+        assertEquals(personWithGroups, restoredPerson);
+        Set<String> restoredTagNames = restoredPerson.getTags().stream()
+                .map(tag -> tag.tagName)
+                .collect(Collectors.toSet());
+        assertEquals(Set.of("Group A", "team-1_Alpha", "gROUP b"), restoredTagNames);
+    }
+
+    @Test
+    public void toModelType_tagWithExtraSpacesInFile_returnsNormalizedTag() throws Exception {
+        List<JsonAdaptedTag> tagsWithExtraSpaces = List.of(new JsonAdaptedTag("  Group    A "));
+        JsonAdaptedPerson person =
+                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tagsWithExtraSpaces);
+
+        Set<Tag> tags = person.toModelType().getTags();
+
+        assertEquals(1, tags.size());
+        assertEquals("Group A", tags.iterator().next().tagName);
     }
 
 }
