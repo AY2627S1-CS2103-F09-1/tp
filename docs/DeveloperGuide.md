@@ -397,22 +397,22 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 **MSS**
 1. User requests to add certain students from the displayed list into a group, e.g. `tag /group Group A /members 1,3`.
-2. CM adds those students to a group and displays a success message listing the students. 
+2. CM adds those students to a group and displays a success message listing the students.
 
     Use case ends.
    
 **Extensions**
    
 * 1a. The command format is invalid, e.g. the group name or the members are missing or repeated, the group name is invalid, or a member is not a positive integer or is given twice.
-  * 1a1. CM terminates the grouping and displays an error message naming the problem. 
-        
+  * 1a1. CM terminates the grouping and displays an error message naming the problem.
+
     Use case resumes from step 1.
 * 1b. One of the indices does not refer to a student in the displayed list.
-  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found. 
-        
+  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found.
+
     Use case resumes from step 1.
 * 1c. One or more of the students are already in the specified group. Group names are compared ignoring case and extra spaces.
-  * 1c1. CM terminates the grouping and displays an error message listing those students. 
+  * 1c1. CM terminates the grouping and displays an error message listing those students.
         
     Use case resumes from step 1.
 
