@@ -57,6 +57,45 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void requireNoUnrecognizedPrefixes_null_throwsNullPointerException() {
+        Prefix slashName = new Prefix("/name");
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(null, "error", slashName));
+        assertThrows(NullPointerException.class, () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /name John", null, slashName));
+    }
+
+    @Test
+    public void requireNoUnrecognizedPrefixes_onlyKnownPrefixes_doesNotThrow() throws Exception {
+        Prefix slashName = new Prefix("/name");
+        Prefix slashClass = new Prefix("/class");
+
+        ParserUtil.requireNoUnrecognizedPrefixes("", "error", slashName, slashClass);
+        ParserUtil.requireNoUnrecognizedPrefixes(" /name John /class A1", "error", slashName, slashClass);
+
+        // a slash that is not at the start of a token is not a prefix
+        ParserUtil.requireNoUnrecognizedPrefixes(" /name Tan s/o Kumar", "error", slashName);
+    }
+
+    @Test
+    public void requireNoUnrecognizedPrefixes_unknownPrefix_throwsParseExceptionWithGivenMessage() {
+        Prefix slashName = new Prefix("/name");
+
+        assertThrows(ParseException.class, "error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /name John /phone 123", "error", slashName));
+
+        // matching is case-sensitive and needs the whole token to match
+        assertThrows(ParseException.class, "error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /Name John", "error", slashName));
+        assertThrows(ParseException.class, "error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /names John", "error", slashName));
+
+        // no known prefixes means that every prefix-like token is unknown
+        assertThrows(ParseException.class, "error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /name John", "error"));
+    }
+
+    @Test
     public void parseName_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseName((String) null));
     }

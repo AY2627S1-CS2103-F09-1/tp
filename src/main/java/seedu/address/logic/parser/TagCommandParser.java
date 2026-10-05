@@ -30,7 +30,8 @@ public class TagCommandParser implements Parser<TagCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public TagCommand parse(String args) throws ParseException {
-        requireNoUnrecognizedPrefixes(args);
+        ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
+                PREFIX_GROUP, PREFIX_MEMBERS);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_GROUP, PREFIX_MEMBERS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_GROUP, PREFIX_MEMBERS);
@@ -39,12 +40,8 @@ public class TagCommandParser implements Parser<TagCommand> {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, TagCommand.MESSAGE_USAGE));
         }
 
-        String groupValue = argMultimap.getValue(PREFIX_GROUP)
-                .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParseException(MESSAGE_MISSING_GROUP));
-        String membersValue = argMultimap.getValue(PREFIX_MEMBERS)
-                .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParseException(MESSAGE_MISSING_MEMBERS));
+        String groupValue = getNonBlankValue(argMultimap, PREFIX_GROUP, MESSAGE_MISSING_GROUP);
+        String membersValue = getNonBlankValue(argMultimap, PREFIX_MEMBERS, MESSAGE_MISSING_MEMBERS);
 
         Tag group = ParserUtil.parseGroupName(groupValue);
         List<Index> memberIndices = ParserUtil.parseMemberIndices(membersValue);
@@ -53,15 +50,15 @@ public class TagCommandParser implements Parser<TagCommand> {
     }
 
     /**
-     * Throws a {@code ParseException} if {@code args} contains a prefix-like token that the tag command does
-     * not accept.
+     * Returns the value of {@code prefix} in {@code argMultimap}.
+     *
+     * @throws ParseException with {@code missingMessage} if the prefix is absent or its value is blank.
      */
-    private static void requireNoUnrecognizedPrefixes(String args) throws ParseException {
-        List<String> unrecognizedPrefixes =
-                ArgumentTokenizer.findUnrecognizedPrefixes(args, PREFIX_GROUP, PREFIX_MEMBERS);
-        if (!unrecognizedPrefixes.isEmpty()) {
-            throw new ParseException(MESSAGE_UNKNOWN_PARAMETER);
-        }
+    private static String getNonBlankValue(ArgumentMultimap argMultimap, Prefix prefix, String missingMessage)
+            throws ParseException {
+        return argMultimap.getValue(prefix)
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParseException(missingMessage));
     }
 
 }

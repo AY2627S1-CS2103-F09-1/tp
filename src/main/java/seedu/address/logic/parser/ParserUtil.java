@@ -52,6 +52,19 @@ public class ParserUtil {
     }
 
     /**
+     * Throws a {@code ParseException} with {@code errorMessage} if {@code args} contains a prefix-like token
+     * that is not one of {@code knownPrefixes}. See {@link ArgumentTokenizer#findUnrecognizedPrefixes}.
+     */
+    public static void requireNoUnrecognizedPrefixes(
+            String args, String errorMessage, Prefix... knownPrefixes) throws ParseException {
+        requireNonNull(args);
+        requireNonNull(errorMessage);
+        if (!ArgumentTokenizer.findUnrecognizedPrefixes(args, knownPrefixes).isEmpty()) {
+            throw new ParseException(errorMessage);
+        }
+    }
+
+    /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed.
      *
