@@ -28,43 +28,67 @@ public class PersonTest {
     }
 
     @Test
-    public void hasTag() {
-        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
-
-        // null tag -> throws exception
+    public void hasTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
         assertThrows(NullPointerException.class, () -> person.hasTag(null));
-
-        // tag present -> returns true
-        assertTrue(person.hasTag(new Tag("team-1")));
-
-        // tag present with different casing and spacing -> returns true
-        assertTrue(person.hasTag(new Tag("  gROUP   a ")));
-
-        // tag absent -> returns false
-        assertFalse(person.hasTag(new Tag("Group B")));
-
-        // person without tags -> returns false
-        assertFalse(new PersonBuilder().withTags().build().hasTag(new Tag("Group A")));
     }
 
     @Test
-    public void withTag() {
+    public void hasTag_tagPresent_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertTrue(person.hasTag(new Tag("team-1")));
+    }
+
+    @Test
+    public void hasTag_tagPresentWithDifferentCasingAndSpacing_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertTrue(person.hasTag(new Tag("  gROUP   a ")));
+    }
+
+    @Test
+    public void hasTag_tagAbsent_returnsFalse() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertFalse(person.hasTag(new Tag("Group B")));
+    }
+
+    @Test
+    public void hasTag_personWithoutTags_returnsFalse() {
+        Person person = new PersonBuilder().withTags().build();
+        assertFalse(person.hasTag(new Tag("Group A")));
+    }
+
+    @Test
+    public void withTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> person.withTag(null));
+    }
+
+    @Test
+    public void withTag_newTag_keepsExistingTagsAndOtherFields() {
         Person person = new PersonBuilder().withTags("Group A").build();
 
-        // null tag -> throws exception
-        assertThrows(NullPointerException.class, () -> person.withTag(null));
-
-        // new tag -> existing tags kept, tag added, other fields unchanged
         Person tagged = person.withTag(new Tag("Group B"));
+
         assertEquals(new PersonBuilder(person).withTags("Group A", "Group B").build(), tagged);
+    }
 
-        // original person is not modified
+    @Test
+    public void withTag_newTag_doesNotModifyOriginalPerson() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        person.withTag(new Tag("Group B"));
+
         assertEquals(Set.of(new Tag("Group A")), person.getTags());
+    }
 
-        // person without an email keeps having no email
-        Person withoutEmail = new PersonBuilder().withoutEmail().withTags().build();
-        assertEquals(new PersonBuilder(withoutEmail).withTags("Group A").build(),
-                withoutEmail.withTag(new Tag("Group A")));
+    @Test
+    public void withTag_personWithoutEmail_returnsPersonWithoutEmail() {
+        Person person = new PersonBuilder().withoutEmail().withTags().build();
+
+        Person tagged = person.withTag(new Tag("Group A"));
+
+        assertEquals(new PersonBuilder(person).withTags("Group A").build(), tagged);
+        assertTrue(tagged.getEmail().isEmpty());
     }
 
     @Test

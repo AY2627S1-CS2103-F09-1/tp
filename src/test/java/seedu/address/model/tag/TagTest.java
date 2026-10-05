@@ -66,31 +66,39 @@ public class TagTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_sameObject_returnsTrue() {
         Tag tag = new Tag("Group A");
-
-        // same object -> returns true
         assertTrue(tag.equals(tag));
+    }
 
-        // same values -> returns true
-        assertTrue(tag.equals(new Tag("Group A")));
+    @Test
+    public void equals_sameName_returnsTrue() {
+        assertTrue(new Tag("Group A").equals(new Tag("Group A")));
+    }
 
-        // different casing -> returns true
-        assertTrue(tag.equals(new Tag("gROUP a")));
+    @Test
+    public void equals_nameDiffersInCasing_returnsTrue() {
+        assertTrue(new Tag("Group A").equals(new Tag("gROUP a")));
+    }
 
-        // different surrounding or repeated spaces -> returns true
-        assertTrue(tag.equals(new Tag("  Group    A ")));
+    @Test
+    public void equals_nameDiffersInSurroundingAndRepeatedSpaces_returnsTrue() {
+        assertTrue(new Tag("Group A").equals(new Tag("  Group    A ")));
+    }
 
-        // null -> returns false
+    @Test
+    public void equals_nullOrDifferentType_returnsFalse() {
+        Tag tag = new Tag("Group A");
         assertFalse(tag.equals(null));
-
-        // different type -> returns false
         assertFalse(tag.equals(5));
+    }
 
-        // different name -> returns false
+    @Test
+    public void equals_differentName_returnsFalse() {
+        Tag tag = new Tag("Group A");
         assertFalse(tag.equals(new Tag("Group B")));
 
-        // no space versus a space -> returns false
+        // a missing space makes it a different name
         assertFalse(tag.equals(new Tag("GroupA")));
     }
 

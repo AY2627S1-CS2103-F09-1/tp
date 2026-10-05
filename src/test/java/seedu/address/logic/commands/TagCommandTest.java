@@ -174,41 +174,56 @@ public class TagCommandTest {
     }
 
     @Test
-    public void equals() {
-        TagCommand tagFirstCommand = new TagCommand(GROUP_A,
-                List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
-
-        // same object -> returns true
-        assertTrue(tagFirstCommand.equals(tagFirstCommand));
-
-        // same values -> returns true
-        assertTrue(tagFirstCommand.equals(
-                new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON))));
-
-        // group differing only in casing -> returns true
-        assertTrue(tagFirstCommand.equals(
-                new TagCommand(new Tag("group a"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON))));
-
-        // different types -> returns false
-        assertFalse(tagFirstCommand.equals(1));
-
-        // null -> returns false
-        assertFalse(tagFirstCommand.equals(null));
-
-        // different group -> returns false
-        assertFalse(tagFirstCommand.equals(
-                new TagCommand(new Tag("Group B"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON))));
-
-        // different indices -> returns false
-        assertFalse(tagFirstCommand.equals(new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON))));
-
-        // same indices in a different order -> returns false
-        assertFalse(tagFirstCommand.equals(
-                new TagCommand(GROUP_A, List.of(INDEX_SECOND_PERSON, INDEX_FIRST_PERSON))));
+    public void equals_sameObject_returnsTrue() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
+        assertTrue(tagCommand.equals(tagCommand));
     }
 
     @Test
-    public void toStringMethod() {
+    public void equals_sameGroupAndIndices_returnsTrue() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
+        TagCommand sameCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
+        assertTrue(tagCommand.equals(sameCommand));
+    }
+
+    @Test
+    public void equals_groupDiffersInCasing_returnsTrue() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
+        TagCommand lowerCaseCommand = new TagCommand(new Tag("group a"), List.of(INDEX_FIRST_PERSON));
+        assertTrue(tagCommand.equals(lowerCaseCommand));
+    }
+
+    @Test
+    public void equals_nullOrDifferentType_returnsFalse() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
+        assertFalse(tagCommand.equals(null));
+        assertFalse(tagCommand.equals(1));
+    }
+
+    @Test
+    public void equals_differentGroup_returnsFalse() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
+        TagCommand otherGroupCommand = new TagCommand(new Tag("Group B"), List.of(INDEX_FIRST_PERSON));
+        assertFalse(tagCommand.equals(otherGroupCommand));
+    }
+
+    @Test
+    public void equals_differentIndices_returnsFalse() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
+        TagCommand fewerIndicesCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
+        assertFalse(tagCommand.equals(fewerIndicesCommand));
+    }
+
+    @Test
+    public void equals_sameIndicesInDifferentOrder_returnsFalse() {
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON));
+        TagCommand reorderedCommand =
+                new TagCommand(GROUP_A, List.of(INDEX_SECOND_PERSON, INDEX_FIRST_PERSON));
+        assertFalse(tagCommand.equals(reorderedCommand));
+    }
+
+    @Test
+    public void toString_validCommand_showsGroupAndIndices() {
         List<Index> indices = List.of(INDEX_FIRST_PERSON);
         TagCommand tagCommand = new TagCommand(GROUP_A, indices);
         String expected = TagCommand.class.getCanonicalName() + "{group=" + GROUP_A
