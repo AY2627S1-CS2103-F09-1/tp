@@ -118,31 +118,31 @@ Examples:
 * `add /name John Doe /class A1 /email johnd@example.com`
 * `add /name Betsy Crowe /class A2`
 
-### Listing and searching persons: `list`
+### Listing and searching contacts: `list`
 
-Shows a list of all persons in the address book, or only the persons that match a keyword.
+Shows a list of all contacts in the address book, or only the contacts that match a keyword.
 
 Format: `list [KEYWORD]`
 
-* If `KEYWORD` is omitted, all persons are shown and the message `Listed all persons.` is displayed.
-* If `KEYWORD` is given, only the persons whose name, class or tags contain it are shown, and the message shows how many persons were listed, for example `2 person(s) listed!`.
+* If `KEYWORD` is omitted, all contacts are shown.
+* If `KEYWORD` is given, only the contacts whose name, class or tags contain it are shown, and the message shows how many contacts were listed.
 * The search is case-insensitive; for example, `john` matches `John`.
 * Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
 * The characters of `KEYWORD` must appear next to each other; for example, `ric` does not match the tag `friend`.
-* A person is shown if the keyword matches any one of their name, class or tags. Email is not searched.
+* A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
 * A keyword with several words can match a name or a class, but not a tag, as tags are a single word.
 * The keyword must match within a single field; for example, it cannot match the end of a name and the start of a class.
-* The search always covers all persons in the address book, even if a previous search is still displayed.
-* If no person matches, an empty list is shown with the message `0 person(s) listed!`.
-* Persons are currently shown in the order they were added.
+* The search always covers all contacts in the address book, even if a previous search is still displayed.
+* If no contact matches, an empty list is shown.
+* Contacts are currently shown in the order they were added.
 
 Examples:
-* `list` shows all persons.
-* `list John` shows `John Doe` and any person in a class or with a tag containing `john`.
-* `list CS2103` shows all persons in a class containing `CS2103`.
-* `list friend` shows all persons with a tag containing `friend`.
-* `list John Doe` shows persons whose name or class contains `John Doe`.
+* `list` shows all contacts.
+* `list John` shows `John Doe` and any contact in a class or with a tag containing `john`.
+* `list CS2103` shows all contacts in a class containing `CS2103`.
+* `list friend` shows all contacts with a tag containing `friend`.
+* `list John Doe` shows contacts whose name or class contains `John Doe`.
 
 ### Editing a person: `edit`
 
