@@ -31,6 +31,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `list` : Lists all contacts.
 
+   * `list John` : Lists the contacts whose name, class or tags contain `John`.
+
    * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
@@ -65,7 +67,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 * Parameters can be in any order.<br>
   For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -114,11 +116,31 @@ Examples:
 * `add /name John Doe /class A1 /email johnd@example.com`
 * `add /name Betsy Crowe /class A2`
 
-### Listing all persons: `list`
+### Listing and searching persons: `list`
 
-Shows a list of all persons in the address book.
+Shows a list of all persons in the address book, or only the persons that match a keyword.
 
-Format: `list`
+Format: `list [KEYWORD]`
+
+* If `KEYWORD` is omitted, all persons are shown and the message `Listed all persons.` is displayed.
+* If `KEYWORD` is given, only the persons whose name, class or tags contain it are shown, and the message shows how many persons were listed, for example `2 person(s) listed!`.
+* The search is case-insensitive; for example, `john` matches `John`.
+* Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
+* The characters of `KEYWORD` must appear next to each other; for example, `ric` does not match the tag `friend`.
+* A person is shown if the keyword matches any one of their name, class or tags. Email is not searched.
+* Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
+* A keyword with several words can match a name or a class, but not a tag, as tags are a single word.
+* The keyword must match within a single field; for example, it cannot match the end of a name and the start of a class.
+* The search always covers all persons in the address book, even if a previous search is still displayed.
+* If no person matches, an empty list is shown with the message `0 person(s) listed!`.
+* Persons are currently shown in the order they were added.
+
+Examples:
+* `list` shows all persons.
+* `list John` shows `John Doe` and any person in a class or with a tag containing `john`.
+* `list CS2103` shows all persons in a class containing `CS2103`.
+* `list friend` shows all persons with a tag containing `friend`.
+* `list John Doe` shows persons whose name or class contains `John Doe`.
 
 ### Editing a person: `edit`
 
@@ -224,5 +246,5 @@ Action     | Format, Examples
 **Delete** | `delete INDEX`<br> e.g., `delete 3`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list`
+**List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Help**   | `help`
