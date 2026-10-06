@@ -35,6 +35,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
+   * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
+
    * `clear` : Deletes all contacts.
 
    * `exit` : Exits the app.
@@ -157,15 +159,37 @@ Examples:
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX`
+Format: `delete INDEX` or `delete /name NAME /class CLASS`
 
-* Deletes the person at the specified `INDEX`.
-* The index refers to the index number shown in the displayed person list.
-* The index **must be a positive integer** 1, 2, 3, ...
+* `delete INDEX` deletes the person at the specified `INDEX`.
+  * The index refers to the index number shown in the displayed person list.
+  * The index **must be a positive integer** 1, 2, 3, ...
+* `delete /name NAME /class CLASS` deletes the person with that name in that class.
+  * Both the name and the class must match, because the same name can exist in different classes.
+  * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
+  * The whole address book is searched, even if only some persons are displayed, for example after a `find`.
+  * The name and class are not checked against the rules for adding a person. If nothing matches, ClassMates shows `No contact found`.
+* An index cannot be combined with `/name` or `/class` in the same command.
+* On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/name` or `/class` is given, such as `/phone` | `Unknown parameter. Use /name or /class`
+A parameter is given more than once | `Each parameter can only be specified once`
+No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
+`/name` is missing or has no value | `Command requires a name`
+`/class` is missing or has no value | `Command requires a class`
+No person has the given name and class | `No contact found`
+The index is larger than the number of persons displayed | `The person index provided is invalid.`
+
+If more than one problem applies, only the first one in the table above is reported.
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+* `find Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `find` command.
 
 ### Clearing all entries: `clear`
 
@@ -221,7 +245,7 @@ Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **Add**    | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`
 **Clear**  | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
+**Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **List**   | `list`
