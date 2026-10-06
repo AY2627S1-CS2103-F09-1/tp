@@ -1,12 +1,13 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
 import java.util.Collections;
-import java.util.List;
 import java.util.Optional;
 
 import seedu.address.logic.commands.AddCommand;
@@ -21,8 +22,6 @@ import seedu.address.model.person.Person;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
-    public static final String MESSAGE_MISSING_NAME = "Command requires a name";
-    public static final String MESSAGE_MISSING_CLASS = "Command requires a class";
     public static final String MESSAGE_UNKNOWN_PARAMETER =
             "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
 
@@ -34,7 +33,8 @@ public class AddCommandParser implements Parser<AddCommand> {
      * @throws ParseException if the user input does not conform to the expected format
      */
     public AddCommand parse(String args) throws ParseException {
-        requireNoUnrecognizedPrefixes(args);
+        ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
+                PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL);
 
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL);
@@ -57,18 +57,6 @@ public class AddCommandParser implements Parser<AddCommand> {
         Person person = new Person(name, className, email, Collections.emptySet());
 
         return new AddCommand(person);
-    }
-
-    /**
-     * Throws a {@code ParseException} if {@code args} contains a prefix-like token that the add command does
-     * not accept.
-     */
-    private static void requireNoUnrecognizedPrefixes(String args) throws ParseException {
-        List<String> unrecognizedPrefixes =
-                ArgumentTokenizer.findUnrecognizedPrefixes(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL);
-        if (!unrecognizedPrefixes.isEmpty()) {
-            throw new ParseException(MESSAGE_UNKNOWN_PARAMETER);
-        }
     }
 
     /**

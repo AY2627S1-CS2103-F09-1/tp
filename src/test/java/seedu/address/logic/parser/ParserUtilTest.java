@@ -52,6 +52,20 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void requireNoUnrecognizedPrefixes_onlyKnownPrefixes_doesNotThrow() throws Exception {
+        ParserUtil.requireNoUnrecognizedPrefixes("", "error", CliSyntax.PREFIX_NAME);
+        ParserUtil.requireNoUnrecognizedPrefixes(" /name John /class A1", "error",
+                CliSyntax.PREFIX_NAME, CliSyntax.PREFIX_CLASS);
+    }
+
+    @Test
+    public void requireNoUnrecognizedPrefixes_unrecognizedPrefix_throwsParseExceptionWithGivenMessage() {
+        assertThrows(ParseException.class, "custom error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /name John /phone 123", "custom error",
+                        CliSyntax.PREFIX_NAME));
+    }
+
+    @Test
     public void parseName_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseName((String) null));
     }
