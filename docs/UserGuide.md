@@ -204,7 +204,7 @@ No index or parameters are given, the index is not a positive integer, or an ind
 `/name` is missing or has no value | `Command requires a name`
 `/class` is missing or has no value | `Command requires a class`
 No person has the given name and class | `No contact found`
-The index is larger than the number of persons displayed | `The person index provided is invalid.`
+The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 
 If more than one problem applies, only the first one in the table above is reported.
 

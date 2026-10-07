@@ -12,26 +12,26 @@ import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonMatchesKeyword;
 
 /**
- * Lists persons in the address book to the user.
- * All persons are listed unless a keyword is given, in which case only the persons matching it are listed.
+ * Lists contacts in the address book to the user.
+ * All contacts are listed unless a keyword is given, in which case only the contacts matching it are listed.
  */
 public class ListCommand extends Command {
 
     public static final String COMMAND_WORD = "list";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists all persons in the address book. "
-            + "If a keyword is given, lists only the persons whose name, class or tags contain it "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists all contacts in the address book. "
+            + "If a keyword is given, lists only the contacts whose name, class or tags contain it "
             + "(case-insensitive).\n"
             + "Parameters: [KEYWORD]\n"
             + "Example: " + COMMAND_WORD + " John";
 
-    public static final String MESSAGE_SUCCESS = "Listed all persons.";
+    public static final String MESSAGE_SUCCESS = "Listed all contacts.";
 
     private final Predicate<Person> predicate;
     private final boolean isFiltered;
 
     /**
-     * Creates a {@code ListCommand} that lists all persons.
+     * Creates a {@code ListCommand} that lists all contacts.
      */
     public ListCommand() {
         predicate = PREDICATE_SHOW_ALL_PERSONS;
@@ -39,7 +39,7 @@ public class ListCommand extends Command {
     }
 
     /**
-     * Creates a {@code ListCommand} that lists only the persons accepted by {@code predicate}.
+     * Creates a {@code ListCommand} that lists only the contacts accepted by {@code predicate}.
      */
     public ListCommand(PersonMatchesKeyword predicate) {
         requireNonNull(predicate);
