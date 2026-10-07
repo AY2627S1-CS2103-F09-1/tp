@@ -12,8 +12,11 @@ public class ListCommand extends Command {
 
     public static final String COMMAND_WORD = "list";
 
-    public static final String MESSAGE_SUCCESS = "Listed all contacts.";
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists all contacts in the address book.\n"
+            + "Parameters: [KEYWORD]\n"
+            + "Example: " + COMMAND_WORD;
 
+    public static final String MESSAGE_SUCCESS = "Listed all contacts.";
 
     @Override
     public CommandResult execute(Model model) {

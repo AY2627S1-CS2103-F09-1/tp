@@ -52,11 +52,14 @@ public class ParserUtil {
     }
 
     /**
-     * Throws a {@code ParseException} with {@code errorMessage} if {@code args} contains a prefix-like token
-     * that is not one of {@code knownPrefixes}. See {@link ArgumentTokenizer#findUnrecognizedPrefixes}.
+     * Checks that {@code args} contains no prefix-like token, i.e. a token that starts with a slash, other
+     * than the {@code knownPrefixes}.
+     *
+     * @throws ParseException with {@code errorMessage} if {@code args} contains such a token.
+     * @see ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)
      */
-    public static void requireNoUnrecognizedPrefixes(
-            String args, String errorMessage, Prefix... knownPrefixes) throws ParseException {
+    public static void requireNoUnrecognizedPrefixes(String args, String errorMessage,
+            Prefix... knownPrefixes) throws ParseException {
         requireNonNull(args);
         requireNonNull(errorMessage);
         if (!ArgumentTokenizer.findUnrecognizedPrefixes(args, knownPrefixes).isEmpty()) {

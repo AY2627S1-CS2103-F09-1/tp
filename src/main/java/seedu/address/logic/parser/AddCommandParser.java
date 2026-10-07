@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -20,8 +22,6 @@ import seedu.address.model.person.Person;
  */
 public class AddCommandParser implements Parser<AddCommand> {
 
-    public static final String MESSAGE_MISSING_NAME = "Command requires a name";
-    public static final String MESSAGE_MISSING_CLASS = "Command requires a class";
     public static final String MESSAGE_UNKNOWN_PARAMETER =
             "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
 

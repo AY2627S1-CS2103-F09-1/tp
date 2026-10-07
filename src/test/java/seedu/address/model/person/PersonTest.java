@@ -6,6 +6,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -142,6 +143,42 @@ public class PersonTest {
         // same name and class, no email, all other attributes same -> returns true
         editedBob = new PersonBuilder(BOB).withoutEmail().build();
         assertTrue(BOB.isSamePerson(editedBob));
+    }
+
+    @Test
+    public void hasNameAndClass() {
+        // exact name and class -> returns true
+        assertTrue(BOB.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_BOB));
+
+        // name and class differ in case -> returns true
+        assertTrue(BOB.hasNameAndClass(VALID_NAME_BOB.toUpperCase(), VALID_CLASS_BOB.toLowerCase()));
+
+        // name and class have extra spaces -> returns true
+        String nameWithExtraSpaces = "  " + VALID_NAME_BOB.replace(" ", "   ") + " ";
+        assertTrue(BOB.hasNameAndClass(nameWithExtraSpaces, " " + VALID_CLASS_BOB));
+
+        // person without email is matched in the same way -> returns true
+        Person bobWithoutEmail = new PersonBuilder(BOB).withoutEmail().build();
+        assertTrue(bobWithoutEmail.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_BOB));
+
+        // right name, wrong class -> returns false
+        assertFalse(BOB.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_AMY));
+
+        // wrong name, right class -> returns false
+        assertFalse(BOB.hasNameAndClass(VALID_NAME_AMY, VALID_CLASS_BOB));
+
+        // name and class swapped -> returns false
+        assertFalse(BOB.hasNameAndClass(VALID_CLASS_BOB, VALID_NAME_BOB));
+
+        // empty or invalid values do not match and do not throw
+        assertFalse(BOB.hasNameAndClass("", ""));
+        assertFalse(BOB.hasNameAndClass("R@chel", "A1/B2"));
+    }
+
+    @Test
+    public void hasNameAndClass_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> BOB.hasNameAndClass(null, VALID_CLASS_BOB));
+        assertThrows(NullPointerException.class, () -> BOB.hasNameAndClass(VALID_NAME_BOB, null));
     }
 
     @Test

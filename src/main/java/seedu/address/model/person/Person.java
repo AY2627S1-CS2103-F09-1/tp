@@ -46,6 +46,9 @@ public class Person {
         return className;
     }
 
+    /**
+     * Returns the email of this person, or an empty {@code Optional} if this person has no email.
+     */
     public Optional<Email> getEmail() {
         return Optional.ofNullable(email);
     }
@@ -89,6 +92,14 @@ public class Person {
         return otherPerson != null
                 && otherPerson.getName().equals(getName())
                 && otherPerson.getClassName().equals(getClassName());
+    }
+
+    /**
+     * Returns true if this person has the given name and class, ignoring case and extra whitespace.
+     * The given strings do not need to be valid, in which case they simply do not match.
+     */
+    public boolean hasNameAndClass(String nameToMatch, String classNameToMatch) {
+        return name.matches(nameToMatch) && className.matches(classNameToMatch);
     }
 
     /**
