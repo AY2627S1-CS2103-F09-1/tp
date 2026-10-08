@@ -22,6 +22,7 @@ import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.NameContainsKeywordsPredicate;
@@ -95,6 +96,20 @@ public class AddressBookParserTest {
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD) instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3") instanceof ListCommand);
         assertTrue(parser.parseCommand(ListCommand.COMMAND_WORD + " 3 4") instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_import() throws Exception {
+        ImportCommand command = (ImportCommand) parser.parseCommand(
+                ImportCommand.COMMAND_WORD + " students.csv");
+
+        assertEquals(new ImportCommand("students.csv"), command);
+    }
+
+    @Test
+    public void parseCommand_importWithoutPath_throwsParseException() {
+        assertThrows(ParseException.class, "Specify file path", () ->
+                parser.parseCommand(ImportCommand.COMMAND_WORD));
     }
 
     @Test
