@@ -162,6 +162,9 @@ public class JsonAdaptedPersonTest {
 
         assertEquals(1, tags.size());
         assertEquals("Group A", tags.iterator().next().tagName);
+    }
+
+    @Test
     public void toModelType_personWithAttendance_returnsPersonWithAttendance() throws Exception {
         Attendance record = new Attendance(
             LocalDate.of(2026, 9, 16),
