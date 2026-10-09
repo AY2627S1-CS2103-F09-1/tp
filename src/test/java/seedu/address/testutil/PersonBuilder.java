@@ -1,9 +1,12 @@
 package seedu.address.testutil;
 
+import java.util.ArrayList;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 
+import seedu.address.model.person.Attendance;
 import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
@@ -24,6 +27,7 @@ public class PersonBuilder {
     private ClassName className;
     private Email email; // null if the person has no email
     private Set<Tag> tags;
+    private List<Attendance> attendanceRecords;
 
     /**
      * Creates a {@code PersonBuilder} with the default details.
@@ -33,6 +37,7 @@ public class PersonBuilder {
         className = new ClassName(DEFAULT_CLASS_NAME);
         email = new Email(DEFAULT_EMAIL);
         tags = new HashSet<>();
+        attendanceRecords = new ArrayList<>();
     }
 
     /**
@@ -43,6 +48,7 @@ public class PersonBuilder {
         className = personToCopy.getClassName();
         email = personToCopy.getEmail().orElse(null);
         tags = new HashSet<>(personToCopy.getTags());
+        attendanceRecords = new ArrayList<>(personToCopy.getAttendanceRecords());
     }
 
     /**
@@ -86,7 +92,7 @@ public class PersonBuilder {
     }
 
     public Person build() {
-        return new Person(name, className, Optional.ofNullable(email), tags);
+        return new Person(name, className, Optional.ofNullable(email), tags, attendanceRecords);
     }
 
 }

@@ -12,5 +12,7 @@ public class CliSyntax {
     public static final Prefix PREFIX_TAG = new Prefix("/tag");
     public static final Prefix PREFIX_GROUP = new Prefix("/group");
     public static final Prefix PREFIX_MEMBERS = new Prefix("/members");
+    public static final Prefix PREFIX_DATE = new Prefix("/date");
+    public static final Prefix PREFIX_STATUS = new Prefix("/status");
 
 }
