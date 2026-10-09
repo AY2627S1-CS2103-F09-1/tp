@@ -19,7 +19,9 @@ import seedu.address.model.person.Attendance;
  */
 public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
-    private static final String MESSAGE_MISSING_ATTENDANCE_INFO = "Missing attendance information";
+    private static final String MESSAGE_MISSING_INDEX = "Missing index. Please provide the index of the person.";
+    private static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
+    private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
     private static final String MESSAGE_INVALID_DATE =
         "Invalid date format. Please use the format DD-MM-YYYY.";
     private static final String MESSAGE_INVALID_STATUS =
@@ -34,8 +36,14 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         String dateArgument = argMultimap.getValue(PREFIX_DATE).orElse("").trim();
         String statusArgument = argMultimap.getValue(PREFIX_STATUS).orElse("").trim();
 
-        if (indexArgument.isBlank() || dateArgument.isBlank() || statusArgument.isBlank()) {
-            throw new ParseException(MESSAGE_MISSING_ATTENDANCE_INFO);
+        if (indexArgument.isBlank()) {
+            throw new ParseException(MESSAGE_MISSING_INDEX);
+        }
+        if (dateArgument.isBlank()) {
+            throw new ParseException(MESSAGE_MISSING_DATE);
+        }
+        if (statusArgument.isBlank()) {
+            throw new ParseException(MESSAGE_MISSING_STATUS);
         }
         if (argMultimap.getAllValues(PREFIX_DATE).size() > 1 || argMultimap.getAllValues(PREFIX_STATUS).size() > 1) {
             throw new ParseException(MESSAGE_DUPLICATE_PARAMETERS);
@@ -51,6 +59,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         }
 
         Attendance.Status status;
+        
         try {
             status = Attendance.Status.fromString(statusArgument);
         } catch (IllegalArgumentException e) {

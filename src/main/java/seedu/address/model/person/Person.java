@@ -65,17 +65,17 @@ public class Person {
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
     }
-    
+
     /**
      * Returns an immutable view of the attendance records.
      */
     public List<Attendance> getAttendanceRecords() {
         return Collections.unmodifiableList(attendanceRecords);
     }
-    
+
     /**
      * Returns a new Person with the given attendance record added.
-     * 
+     *
      * @throws IllegalArgumentException if a record already exists for that date
      * @param attendance
      * @return a new Person with the given attendance record added

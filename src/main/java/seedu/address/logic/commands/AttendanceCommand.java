@@ -95,4 +95,5 @@ public class AttendanceCommand extends Command {
                 .add("status", status)
                 .toString();
     }
+    
 }

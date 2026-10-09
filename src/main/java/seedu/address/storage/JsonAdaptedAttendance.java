@@ -12,7 +12,7 @@ import seedu.address.model.person.Attendance;
  * Jackson-friendly version of {@link Attendance}.
  */
 class JsonAdaptedAttendance {
-    
+
     private final String date;
     private final String status;
 
@@ -46,7 +46,7 @@ class JsonAdaptedAttendance {
         if (status == null) {
             throw new IllegalValueException("Attendance status is missing.");
         }
-        
+
         try {
             LocalDate modelDate = LocalDate.parse(date);
             Attendance.Status modelStatus = Attendance.Status.fromString(status);
