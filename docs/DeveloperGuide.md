@@ -82,6 +82,8 @@ The `UI` component,
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
 * depends on some classes in the `Model` component because it displays `Person` objects from the model.
 
+Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
@@ -115,6 +117,17 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 How the parsing works:
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
+* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser` and `TagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
+* `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
+* A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages.
+* A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
+
+#### Tag command
+The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups.
+
+* `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
+* `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The constructor of `TagCommand` asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. `TagCommandParser` guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
+* The success message lists the linked contacts in the order the indices were given, and shows the group name as it was typed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -125,6 +138,10 @@ How the parsing works:
 The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
+* identifies a `Person` by its `Name` and `ClassName` (see `Person#isSamePerson(Person)`). Both are compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
+* compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
+* keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, and `Person#hasTag(Tag)` checks whether the contact is already in it.
+* treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the person has no email.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
@@ -147,6 +164,7 @@ The `Model` component,
 The `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
+* saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -158,6 +176,54 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Listing and searching contacts feature
+
+#### Implementation
+
+The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
+
+* `ListCommandParser#parse(String)` trims the argument. If it is empty, it returns `new ListCommand()`. Otherwise, it returns `new ListCommand(new PersonMatchesKeyword(keyword))`, where `keyword` is the whole trimmed argument, so a full name or class with spaces is one keyword.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields are checked separately, so a keyword cannot match across two fields. Email is not checked.
+* `ListCommand` holds a `Predicate<Person>`, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with it. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search.
+* Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
+* `ListCommand` does not modify the address book, so it does not call `Model#commitAddressBook()`.
+
+Contacts are displayed in the order they were added. Sorting them alphabetically is not implemented yet.
+
+#### Design considerations
+
+**Aspect: How a keyword is matched**
+
+* **Alternative 1 (current choice):** Case-insensitive substring match on the name, class and tags.
+  * Pros: Supports partial matches, such as `jo` for `John` or `2103` for `CS2103`, with one simple predicate.
+  * Cons: A short keyword, such as `a`, matches many contacts.
+* **Alternative 2:** Whole-word match, like the `find` command.
+  * Pros: More precise results.
+  * Cons: Cannot find a contact from part of a name or class, which the search is meant to support.
+
+**Aspect: How the argument is split into keywords**
+
+* **Alternative 1 (current choice):** The whole argument is one keyword.
+  * Pros: A full name or a class with spaces, such as `Tutorial 1`, can be searched.
+  * Cons: Cannot search for several separate keywords at once. A keyword with several words cannot match a tag, because tags are a single word.
+* **Alternative 2:** Split the argument on whitespace and match any keyword, like the `find` command.
+  * Pros: Allows searching for several keywords at once.
+  * Cons: A full name or a class with spaces can no longer be searched as a phrase.
+
+**Aspect: What the search is applied to**
+
+* **Alternative 1 (current choice):** Always search the whole address book.
+  * Pros: Predictable, as the result does not depend on the earlier command.
+  * Cons: Cannot narrow down the previous result by searching again.
+* **Alternative 2:** Search only the contacts currently displayed.
+  * Pros: Allows narrowing down a result step by step.
+  * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
+
+<box type="info" seamless>
+
+**Note:** The earlier `find` command overlaps with this feature and is planned to be removed.
+</box>
 
 ### \[Proposed\] Undo/redo feature
 
@@ -181,7 +247,7 @@ Step 2. The user executes `delete 5` command to delete the 5th person in the add
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
-Step 3. The user executes `add n/David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+Step 3. The user executes `add /name David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
 
 <puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
 
@@ -225,7 +291,7 @@ Step 5. The user then decides to execute the command `list`. Commands that do no
 
 <puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
 
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add n/David …` command. This is the behavior that most modern desktop applications follow.
+Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add /name David …` command. This is the behavior that most modern desktop applications follow.
 
 <puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
 
@@ -375,20 +441,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **Use case: UC04 - Add students to groups (by tagging)**
 
 **Guarantees**
-* Specified students will only be grouped if all of them exist.
+* Specified students will only be grouped if all of them exist and none of them is already in the group.
+* If grouping fails, no student is changed.
+* There is no separate step to create a group. A group is just the students that have the same tag, so it exists as soon as one student is given the tag.
 
 **MSS**
-1. User requests to add certain students from the class into a group.
-2. CM adds those students to a group and displays a success message. 
+1. User requests to add certain students from the displayed list into a group, e.g. `tag /group Group A /members 1,3`.
+2. CM adds those students to a group and displays a success message listing the students.
 
     Use case ends.
    
 **Extensions**
    
-* 1a. The command format is invalid or one of the students is already in the specified group. 
-  * 1a1. CM terminates the grouping and displays an error message. 
+* 1a. The command format is invalid, e.g. the group name or the members are missing or repeated, the group name is invalid, or a member is not a positive integer or is given twice.
+  * 1a1. CM terminates the grouping and displays an error message naming the problem.
+
+    Use case resumes from step 1.
+* 1b. One of the indices does not refer to a student in the displayed list.
+  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found.
+
+    Use case resumes from step 1.
+* 1c. One or more of the students are already in the specified group. Group names are compared ignoring case and extra spaces.
+  * 1c1. CM terminates the grouping and displays an error message listing those students.
         
-    Use case resumes from step 3.
+    Use case resumes from step 1.
 
 
 **Use case: UC05 - Delete a student**
@@ -533,11 +609,51 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
+### Listing and searching contacts
+
+1. Listing all contacts
+
+   1. Prerequisites: The app contains the sample data (Alex Yeoh, Bernice Yu, Charlotte Oliveiro, David Li, Irfan Ibrahim and Roy Balakrishnan).
+
+   1. Test case: `list`<br>
+      Expected: All six contacts are shown.
+
+   1. Test case: `list yeoh`, followed by `list`<br>
+      Expected: After `list yeoh`, only Alex Yeoh is shown. After `list`, all six contacts are shown again.
+
+1. Searching contacts by keyword
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `list ALEX`<br>
+      Expected: Only Alex Yeoh is shown. The status message shows that 1 contact is listed. The search ignores case.
+
+   1. Test case: `list li`<br>
+      Expected: Charlotte Oliveiro and David Li are shown. A keyword matches part of a name.
+
+   1. Test case: `list a2`<br>
+      Expected: Charlotte Oliveiro and David Li are shown. A keyword matches a class.
+
+   1. Test case: `list friend`<br>
+      Expected: Alex Yeoh and Bernice Yu are shown. A keyword matches a tag.
+
+   1. Test case: `list alex   yeoh`<br>
+      Expected: Only Alex Yeoh is shown. The whole argument is one keyword and extra spaces are ignored.
+
+   1. Test case: `list ric`<br>
+      Expected: No contact is shown. The characters of the keyword must appear next to each other, so it does not match the tag `friends`.
+
+   1. Test case: `list zzz`<br>
+      Expected: No contact is shown, and the status message shows that 0 contacts are listed.
+
+   1. Test case: `list yeoh`, followed by `list david`<br>
+      Expected: After `list david`, only David Li is shown. The second search covers all contacts, not only the earlier result.
+
 ### Deleting a person
 
 1. Deleting a person while all persons are being shown
 
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Prerequisites: List all contacts using the `list` command, with multiple contacts in the list.
 
    1. Test case: `delete 1`<br>
       Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.

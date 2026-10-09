@@ -3,17 +3,23 @@ package seedu.address.model.person;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_PHONE_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.time.LocalDate;
+import java.util.Collections;
+import java.util.Set;
+
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
@@ -25,6 +31,80 @@ public class PersonTest {
     }
 
     @Test
+    public void hasTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> person.hasTag(null));
+    }
+
+    @Test
+    public void hasTag_tagPresent_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertTrue(person.hasTag(new Tag("team-1")));
+    }
+
+    @Test
+    public void hasTag_tagPresentWithDifferentCasingAndSpacing_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertTrue(person.hasTag(new Tag("  gROUP   a ")));
+    }
+
+    @Test
+    public void hasTag_tagAbsent_returnsFalse() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertFalse(person.hasTag(new Tag("Group B")));
+    }
+
+    @Test
+    public void hasTag_personWithoutTags_returnsFalse() {
+        Person person = new PersonBuilder().withTags().build();
+        assertFalse(person.hasTag(new Tag("Group A")));
+    }
+
+    @Test
+    public void withTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> person.withTag(null));
+    }
+
+    @Test
+    public void withTag_newTag_keepsExistingTagsAndOtherFields() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person tagged = person.withTag(new Tag("Group B"));
+
+        assertEquals(new PersonBuilder(person).withTags("Group A", "Group B").build(), tagged);
+    }
+
+    @Test
+    public void withTag_newTag_doesNotModifyOriginalPerson() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        person.withTag(new Tag("Group B"));
+
+        assertEquals(Set.of(new Tag("Group A")), person.getTags());
+    }
+
+    @Test
+    public void withTag_personWithoutEmail_returnsPersonWithoutEmail() {
+        Person person = new PersonBuilder().withoutEmail().withTags().build();
+
+        Person tagged = person.withTag(new Tag("Group A"));
+
+        assertEquals(new PersonBuilder(person).withTags("Group A").build(), tagged);
+        assertTrue(tagged.getEmail().isEmpty());
+    }
+
+    @Test
+    public void withTag_tagAlreadyPresent_keepsExistingTag() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person tagged = person.withTag(new Tag("group a"));
+
+        assertEquals(1, tagged.getTags().size());
+        assertEquals("Group A", tagged.getTags().iterator().next().tagName);
+    }
+
+    @Test
     public void isSamePerson() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));
@@ -32,23 +112,89 @@ public class PersonTest {
         // null -> returns false
         assertFalse(ALICE.isSamePerson(null));
 
-        // same name, all other attributes different -> returns true
-        Person editedAlice = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).withEmail(VALID_EMAIL_BOB)
-                .withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND).build();
+        // same name and class, all other attributes different -> returns true
+        Person editedAlice = new PersonBuilder(ALICE).withEmail(VALID_EMAIL_BOB).withTags(VALID_TAG_HUSBAND).build();
         assertTrue(ALICE.isSamePerson(editedAlice));
 
         // different name, all other attributes same -> returns false
         editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
         assertFalse(ALICE.isSamePerson(editedAlice));
 
-        // name differs in case, all other attributes same -> returns false
+        // name differs in case, all other attributes same -> returns true
         Person editedBob = new PersonBuilder(BOB).withName(VALID_NAME_BOB.toLowerCase()).build();
-        assertFalse(BOB.isSamePerson(editedBob));
+        assertTrue(BOB.isSamePerson(editedBob));
 
-        // name has trailing spaces, all other attributes same -> returns false
+        // name has trailing spaces, all other attributes same -> returns true
         String nameWithTrailingSpaces = VALID_NAME_BOB + " ";
         editedBob = new PersonBuilder(BOB).withName(nameWithTrailingSpaces).build();
+        assertTrue(BOB.isSamePerson(editedBob));
+
+        // name has repeated spaces, all other attributes same -> returns true
+        String nameWithRepeatedSpaces = VALID_NAME_BOB.replace(" ", "   ");
+        editedBob = new PersonBuilder(BOB).withName(nameWithRepeatedSpaces).build();
+        assertTrue(BOB.isSamePerson(editedBob));
+
+        // same name, different class, all other attributes same -> returns false
+        editedBob = new PersonBuilder(BOB).withClassName(VALID_CLASS_AMY).build();
         assertFalse(BOB.isSamePerson(editedBob));
+
+        // same name, class differs in case, all other attributes same -> returns true
+        editedBob = new PersonBuilder(BOB).withClassName(VALID_CLASS_BOB.toLowerCase()).build();
+        assertTrue(BOB.isSamePerson(editedBob));
+
+        // same name and class, no email, all other attributes same -> returns true
+        editedBob = new PersonBuilder(BOB).withoutEmail().build();
+        assertTrue(BOB.isSamePerson(editedBob));
+    }
+
+    @Test
+    public void hasNameAndClass() {
+        // exact name and class -> returns true
+        assertTrue(BOB.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_BOB));
+
+        // name and class differ in case -> returns true
+        assertTrue(BOB.hasNameAndClass(VALID_NAME_BOB.toUpperCase(), VALID_CLASS_BOB.toLowerCase()));
+
+        // name and class have extra spaces -> returns true
+        String nameWithExtraSpaces = "  " + VALID_NAME_BOB.replace(" ", "   ") + " ";
+        assertTrue(BOB.hasNameAndClass(nameWithExtraSpaces, " " + VALID_CLASS_BOB));
+
+        // person without email is matched in the same way -> returns true
+        Person bobWithoutEmail = new PersonBuilder(BOB).withoutEmail().build();
+        assertTrue(bobWithoutEmail.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_BOB));
+
+        // right name, wrong class -> returns false
+        assertFalse(BOB.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_AMY));
+
+        // wrong name, right class -> returns false
+        assertFalse(BOB.hasNameAndClass(VALID_NAME_AMY, VALID_CLASS_BOB));
+
+        // name and class swapped -> returns false
+        assertFalse(BOB.hasNameAndClass(VALID_CLASS_BOB, VALID_NAME_BOB));
+
+        // empty or invalid values do not match and do not throw
+        assertFalse(BOB.hasNameAndClass("", ""));
+        assertFalse(BOB.hasNameAndClass("R@chel", "A1/B2"));
+    }
+
+    @Test
+    public void hasNameAndClass_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> BOB.hasNameAndClass(null, VALID_CLASS_BOB));
+        assertThrows(NullPointerException.class, () -> BOB.hasNameAndClass(VALID_NAME_BOB, null));
+    }
+
+    @Test
+    public void getEmail_personWithoutEmail_returnsEmptyOptional() {
+        Person personWithoutEmail = new PersonBuilder().withoutEmail().build();
+        assertTrue(personWithoutEmail.getEmail().isEmpty());
+        assertTrue(new PersonBuilder().build().getEmail().isPresent());
+    }
+
+    @Test
+    public void constructor_nullEmailOptional_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () ->
+                new Person(person.getName(), person.getClassName(), null, person.getTags()));
     }
 
     @Test
@@ -73,17 +219,22 @@ public class PersonTest {
         Person editedAlice = new PersonBuilder(ALICE).withName(VALID_NAME_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
-        // different phone -> returns false
-        editedAlice = new PersonBuilder(ALICE).withPhone(VALID_PHONE_BOB).build();
+        // different class -> returns false
+        editedAlice = new PersonBuilder(ALICE).withClassName(VALID_CLASS_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
         // different email -> returns false
         editedAlice = new PersonBuilder(ALICE).withEmail(VALID_EMAIL_BOB).build();
         assertFalse(ALICE.equals(editedAlice));
 
-        // different address -> returns false
-        editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).build();
+        // email removed -> returns false
+        editedAlice = new PersonBuilder(ALICE).withoutEmail().build();
         assertFalse(ALICE.equals(editedAlice));
+
+        // both without email -> returns true
+        Person aliceWithoutEmail = new PersonBuilder(ALICE).withoutEmail().build();
+        assertTrue(aliceWithoutEmail.equals(new PersonBuilder(ALICE).withoutEmail().build()));
+        assertEquals(aliceWithoutEmail.hashCode(), new PersonBuilder(ALICE).withoutEmail().build().hashCode());
 
         // different tags -> returns false
         editedAlice = new PersonBuilder(ALICE).withTags(VALID_TAG_HUSBAND).build();
@@ -92,8 +243,47 @@ public class PersonTest {
 
     @Test
     public void toStringMethod() {
-        String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", phone=" + ALICE.getPhone()
-                + ", email=" + ALICE.getEmail() + ", address=" + ALICE.getAddress() + ", tags=" + ALICE.getTags() + "}";
+        String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", className="
+                + ALICE.getClassName() + ", email=" + ALICE.getEmail().get() + ", tags=" + ALICE.getTags()
+                + ", attendanceRecords=" + ALICE.getAttendanceRecords() + "}";
         assertEquals(expected, ALICE.toString());
+    }
+
+    @Test
+    public void withAttendance_addsRecord() {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Attendance record = new Attendance(date, Attendance.Status.PRESENT);
+
+        Person updatedPerson = new PersonBuilder().build().withAttendance(record);
+
+        assertEquals(Collections.singletonList(record), updatedPerson.getAttendanceRecords());
+    }
+
+    @Test
+    public void withAttendance_duplicateDate_throwsIllegalArgumentException() {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Person person = new PersonBuilder().build()
+            .withAttendance(new Attendance(date, Attendance.Status.PRESENT));
+
+        assertThrows(IllegalArgumentException.class, () ->
+            person.withAttendance(new Attendance(date, Attendance.Status.ABSENT)));
+    }
+
+    @Test
+    public void attendanceRecords_modifyList_throwsUnsupportedOperationException() {
+        Person person = new PersonBuilder().build()
+            .withAttendance(new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT));
+
+        assertThrows(UnsupportedOperationException.class, () -> person.getAttendanceRecords().add(
+            new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.ABSENT)));
+    }
+
+    @Test
+    public void equals_differentAttendanceRecords_returnsFalse() {
+        Person personWithoutAttendance = new PersonBuilder().build();
+        Person personWithAttendance = personWithoutAttendance.withAttendance(
+            new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT));
+
+        assertFalse(personWithoutAttendance.equals(personWithAttendance));
     }
 }

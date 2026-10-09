@@ -31,9 +31,15 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `list` : Lists all contacts.
 
-   * `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01` : Adds a contact named `John Doe` to the Address Book.
+   * `list John` : Lists the contacts whose name, class or tags contain `John`.
+
+   * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to the Address Book.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
+
+   * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
+
+   * `tag /group Group A /members 1,2` : Links the 1st and 2nd contacts shown in the current list to the group `Group A`.
 
    * `clear` : Deletes all contacts.
 
@@ -50,18 +56,22 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 **Notes about the command format:**<br>
 
 * Words in `UPPER_CASE` are the parameters to be supplied by the user.<br>
-  For example, in `add n/NAME`, replace `NAME` with a value such as `John Doe`.
+  For example, in `add /name NAME`, replace `NAME` with a value such as `John Doe`.
+
+* Each parameter is introduced by a prefix that starts with `/`, such as `/name`.<br>
+  The prefix must be separated from the value, and from the preceding parameter, by a space.<br>
+  For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.
 
 * Items in square brackets are optional.<br>
-  For example, `n/NAME [t/TAG]` can be used as `n/John Doe t/friend` or as `n/John Doe`.
+  For example, `/name NAME [/email EMAIL]` can be used as `/name John Doe /email johnd@example.com` or as `/name John Doe`.
 
 * Items followed by `...` can appear zero or more times.<br>
-  For example, `[t/TAG]... ` may be omitted, or written as `t/friend` or `t/friend t/family`.
+  For example, `[/tag TAG]... ` may be omitted, or written as `/tag friend` or `/tag friend /tag family`.
 
 * Parameters can be in any order.<br>
-  For example, if the command specifies `n/NAME p/PHONE_NUMBER`, `p/PHONE_NUMBER n/NAME` is also acceptable.
+  For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `list`, `exit`, and `clear`, are ignored.<br>
+* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
   For example, `help 123` is interpreted as `help`.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
@@ -80,22 +90,61 @@ Format: `help`
 
 Adds a person to the address book.
 
-Format: `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]... `
+Format: `add /name NAME /class CLASS [/email EMAIL]`
 
-<box type="tip" seamless>
+* `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
+* A person is identified by their name and class together. The same name can be added to different classes, but not twice to the same class.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same person as `John Tan` in class `A1`.
+* The email is optional.
+* Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 
-**Tip:** A person can have any number of tags, including zero.
-</box>
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` | `Unknown parameter. Use /name, /class or /email`
+A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `add John /class A1` | `Invalid command format!` followed by the usage of `add`
+`/name` is missing | `Command requires a name`
+`/class` is missing | `Command requires a class`
+The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
+The email is not valid, including `/email` with nothing after it | A description of the valid email format
+The same name already exists in the same class | `NAME already exists in class CLASS`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `NAME added to contacts`.
 
 Examples:
-* `add n/John Doe p/98765432 e/johnd@example.com a/John street, block 123, #01-01`
-* `add n/Betsy Crowe t/friend e/betsycrowe@example.com a/Newgate Prison p/1234567 t/criminal`
+* `add /name John Doe /class A1 /email johnd@example.com`
+* `add /name Betsy Crowe /class A2`
 
-### Listing all persons: `list`
+### Listing and searching contacts: `list`
 
-Shows a list of all persons in the address book.
+Shows a list of all contacts in the address book, or only the contacts that match a keyword.
 
-Format: `list`
+Format: `list [KEYWORD]`
+
+* If `KEYWORD` is omitted, all contacts are shown.
+* If `KEYWORD` is given, only the contacts whose name, class or tags contain it are shown, and the message shows how many contacts were listed.
+* The search is case-insensitive; for example, `john` matches `John`.
+* Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
+* The characters of `KEYWORD` must appear next to each other; for example, `ric` does not match the tag `friend`.
+* A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
+* Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
+* A keyword with several words can match a name or a class, but not a tag, as tags are a single word.
+* The keyword must match within a single field; for example, it cannot match the end of a name and the start of a class.
+* The search always covers all contacts in the address book, even if a previous search is still displayed.
+* If no contact matches, an empty list is shown.
+* Contacts are currently shown in the order they were added.
+
+Examples:
+* `list` shows all contacts.
+* `list John` shows `John Doe` and any contact in a class or with a tag containing `john`.
+* `list CS2103` shows all contacts in a class containing `CS2103`.
+* `list friend` shows all contacts with a tag containing `friend`.
+* `list John Doe` shows contacts whose name or class contains `John Doe`.
 
 ### Editing a person: `edit`
 
@@ -134,15 +183,77 @@ Examples:
 
 Deletes the specified person from the address book.
 
-Format: `delete INDEX`
+Format: `delete INDEX` or `delete /name NAME /class CLASS`
 
-* Deletes the person at the specified `INDEX`.
-* The index refers to the index number shown in the displayed person list.
-* The index **must be a positive integer** 1, 2, 3, ...
+* `delete INDEX` deletes the person at the specified `INDEX`.
+  * The index refers to the index number shown in the displayed person list.
+  * The index **must be a positive integer** 1, 2, 3, ...
+* `delete /name NAME /class CLASS` deletes the person with that name in that class.
+  * Both the name and the class must match, because the same name can exist in different classes.
+  * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
+  * The whole address book is searched, even if only some persons are displayed, for example after a `find`.
+  * The name and class are not checked against the rules for adding a person. If nothing matches, ClassMates shows `No contact found`.
+* An index cannot be combined with `/name` or `/class` in the same command.
+* On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/name` or `/class` is given, such as `/phone` | `Unknown parameter. Use /name or /class`
+A parameter is given more than once | `Each parameter can only be specified once`
+No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
+`/name` is missing or has no value | `Command requires a name`
+`/class` is missing or has no value | `Command requires a class`
+No person has the given name and class | `No contact found`
+The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+
+If more than one problem applies, only the first one in the table above is reported.
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
 * `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
+* `find Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `find` command.
+
+### Linking contacts to a group: `tag`
+
+Links one or more contacts to a group, so that you can tell which contacts belong together, such as the members of a team.
+
+Format: `tag /group GROUP_NAME /members INDEX[,INDEX]...`
+
+* `GROUP_NAME` must be 1 to 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, hyphens and underscores, as in `Group A` or `team-1_alpha`.
+* Spaces at the start and end of `GROUP_NAME` are ignored, and repeated spaces inside it are treated as a single space.
+* Group names are compared ignoring case, so `Group A` and `group  a` are the same group. Each contact shows the group name as you typed it when you linked that contact.
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `find`, it refers to the contacts in the results. Each index **must be a positive integer** 1, 2, 3, ...
+* The indices are separated by commas, and spaces around a comma are ignored, so `1,3,5` and `1, 3, 5` are the same. A comma at the start or end, or two commas in a row, is not allowed, and each index can be given only once.
+* The group is shown as a label on each linked contact, in alphabetical order ignoring case.
+* A contact can be in several groups, but cannot be linked to the same group twice.
+* The command is all or nothing. If any problem is found, none of the contacts are linked.
+* Only `/group` and `/members` are accepted, and each can be given at most once.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/group` or `/members` is given, such as `/name` | `Unknown parameter. Use /group or /members`
+A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `tag GroupA 1 3` | `Invalid command format!` followed by the usage of `tag`
+`/group` is missing or has nothing after it | `Missing group name`
+`/members` is missing or has nothing after it | `Missing members`
+The group name is empty, too long or has characters that are not allowed | `Invalid group name.` followed by a description of the allowed characters
+An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
+An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
+The same index is given more than once | `Duplicate contact index: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+One or more of the contacts are already in the group | `One or more contacts are already in this group: NAME (CLASS)`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+If several indices are repeated or not found, or several contacts are already in the group, all of them are listed in the message, separated by commas.<br>
+On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given.
+
+Examples:
+* `tag /group Group A /members 1,3,5` links the 1st, 3rd and 5th contacts in the displayed list to `Group A`.
+* `find Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `find` command to `Team 2`.
 
 ### Clearing all entries: `clear`
 
@@ -168,6 +279,7 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 
 **Caution:**
 If your changes make the data file invalid, ClassMates starts with an empty address book at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
+Data files from earlier versions of ClassMates, which do not record a class for each person, are also treated as invalid.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
@@ -195,10 +307,11 @@ _Details coming soon ..._
 
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add n/NAME p/PHONE_NUMBER e/EMAIL a/ADDRESS [t/TAG]... ` <br> e.g., `add n/James Ho p/22224444 e/jamesho@example.com a/123, Clementi Rd, 1234665 t/friend t/colleague`
+**Add**    | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`
 **Clear**  | `clear`
-**Delete** | `delete INDEX`<br> e.g., `delete 3`
+**Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
-**List**   | `list`
+**Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
+**List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Help**   | `help`

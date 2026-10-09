@@ -67,12 +67,11 @@ public class ArgumentMultimap {
      * once among the arguments.
      */
     public void verifyNoDuplicatePrefixesFor(Prefix... prefixes) throws ParseException {
-        Prefix[] duplicatedPrefixes = Stream.of(prefixes).distinct()
-                .filter(prefix -> argMultimap.containsKey(prefix) && argMultimap.get(prefix).size() > 1)
-                .toArray(Prefix[]::new);
+        boolean hasDuplicatePrefix = Stream.of(prefixes)
+                .anyMatch(prefix -> argMultimap.containsKey(prefix) && argMultimap.get(prefix).size() > 1);
 
-        if (duplicatedPrefixes.length > 0) {
-            throw new ParseException(Messages.getErrorMessageForDuplicatePrefixes(duplicatedPrefixes));
+        if (hasDuplicatePrefix) {
+            throw new ParseException(Messages.MESSAGE_DUPLICATE_PARAMETERS);
         }
     }
 }
