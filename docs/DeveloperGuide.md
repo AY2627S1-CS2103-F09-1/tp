@@ -140,6 +140,7 @@ The `Model` component,
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
 * identifies a `Person` by its `Name` and `ClassName` (see `Person#isSamePerson(Person)`). Both are compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
 * compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
+* keeps the `Person` objects in the order they are displayed, which is from the most recently added to the oldest (see [Order of contacts](#order-of-contacts-feature)).
 * keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, and `Person#hasTag(Tag)` checks whether the contact is already in it.
 * treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the person has no email.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
@@ -165,6 +166,7 @@ The `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
+* saves the contacts in the order they are displayed, and keeps that order when it reads them back (see `JsonSerializableAddressBook#toModelType()`).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -189,7 +191,7 @@ The `list` command shows all contacts, or, when it is given a keyword, only the 
 * Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
 * `ListCommand` does not modify the address book, so it does not call `Model#commitAddressBook()`.
 
-Contacts are displayed in the order they were added. Sorting them alphabetically is not implemented yet.
+The contacts that match a keyword are displayed in the same order as in the whole list, from the most recently added to the oldest, because a filter only hides contacts (see [Order of contacts](#order-of-contacts-feature)).
 
 #### Design considerations
 
@@ -224,6 +226,32 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 
 **Note:** The earlier `find` command overlaps with this feature and is planned to be removed.
 </box>
+
+### Order of contacts feature
+
+#### Implementation
+
+The contacts are displayed from the most recently added to the oldest. The order is kept in the list itself, so the displayed order, the order in memory and the order in the data file are all the same.
+
+* `UniquePersonList#add(Person)` inserts the person at index 0 instead of at the end. `AddCommand#execute(Model)` reaches it through `Model#addPerson(Person)` and `AddressBook#addPerson(Person)`.
+* `ModelManager#addPerson(Person)` also calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, so the new contact is visible at the top even if a search was displayed.
+* A filter only hides contacts and never reorders them, so search results are also shown from the most recently added to the oldest.
+* `Model#setPerson(Person, Person)` replaces a contact in place, so `edit` and `tag` do not change the position of a contact.
+* Code that builds an address book from a whole list must not add the contacts one by one, as that would reverse their order. `JsonSerializableAddressBook#toModelType()`, `SampleDataUtil#getSampleAddressBook()` and `TypicalPersons#getTypicalAddressBook()` use `AddressBook#setPersons(List)`, which keeps the given order.
+
+#### Design considerations
+
+**Aspect: Where the order is kept**
+
+* **Alternative 1 (current choice):** The list is stored in the displayed order, and `add` inserts at the front.
+  * Pros: Simple, with no extra state. Indices, filters, saving and loading all see the same order.
+  * Cons: Every place that builds a list from several contacts must keep the given order, as described above.
+* **Alternative 2:** Store the contacts in the order they were added and display them in reverse.
+  * Pros: `add` keeps appending, and loading needs no change.
+  * Cons: JavaFX has no reversed `ObservableList`, so the displayed list would need its own sorting or mapping. Indices would then refer to a different order from the stored list.
+* **Alternative 3:** Give each `Person` a timestamp and sort the displayed list by it.
+  * Pros: The order survives any change to the stored order.
+  * Cons: Adds a field to `Person` and to the data file, and data files from before the change have no timestamps.
 
 ### \[Proposed\] Undo/redo feature
 
