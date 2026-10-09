@@ -37,7 +37,7 @@ public class UniquePersonList implements Iterable<Person> {
     }
 
     /**
-     * Adds a person to the list.
+     * Adds a person to the top of the list.
      * The person must not already exist in the list.
      */
     public void add(Person toAdd) {
@@ -45,7 +45,7 @@ public class UniquePersonList implements Iterable<Person> {
         if (contains(toAdd)) {
             throw new DuplicatePersonException();
         }
-        internalList.add(toAdd);
+        internalList.add(0, toAdd);
     }
 
     /**
