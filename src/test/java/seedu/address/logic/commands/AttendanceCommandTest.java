@@ -1,5 +1,8 @@
 package seedu.address.logic.commands;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
@@ -66,6 +69,36 @@ public class AttendanceCommandTest {
         AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.ABSENT);
 
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE);
+    }
+
+    @Test
+    public void equals() {
+        Index index = Index.fromOneBased(1);
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.PRESENT);
+
+        assertTrue(command.equals(command));
+        assertTrue(command.equals(new AttendanceCommand(index, date, Attendance.Status.PRESENT)));
+
+        assertFalse(command.equals(null));
+        assertFalse(command.equals("not an AttendanceCommand"));
+        assertFalse(command.equals(new AttendanceCommand(
+            Index.fromOneBased(2), date, Attendance.Status.PRESENT)));
+        assertFalse(command.equals(new AttendanceCommand(
+            index, date.plusDays(1), Attendance.Status.PRESENT)));
+        assertFalse(command.equals(new AttendanceCommand(
+            index, date, Attendance.Status.ABSENT)));
+    }
+
+    @Test
+    public void toStringMethod() {
+        Index index = Index.fromOneBased(1);
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.PRESENT);
+
+        String expected = AttendanceCommand.class.getCanonicalName()
+            + "{index=" + index + ", date=" + date + ", status=PRESENT}";
+        assertEquals(expected, command.toString());
     }
 
 }
