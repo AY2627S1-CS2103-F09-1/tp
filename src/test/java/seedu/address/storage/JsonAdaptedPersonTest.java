@@ -134,7 +134,7 @@ public class JsonAdaptedPersonTest {
     public void toModelType_tooLongTag_throwsIllegalValueException() {
         List<JsonAdaptedTag> tooLongTags = List.of(new JsonAdaptedTag("a".repeat(Tag.MAX_LENGTH + 1)));
         JsonAdaptedPerson person =
-                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tooLongTags);
+                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tooLongTags, List.of());
         assertThrows(IllegalValueException.class, Tag.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
@@ -156,7 +156,7 @@ public class JsonAdaptedPersonTest {
     public void toModelType_tagWithExtraSpacesInFile_returnsNormalizedTag() throws Exception {
         List<JsonAdaptedTag> tagsWithExtraSpaces = List.of(new JsonAdaptedTag("  Group    A "));
         JsonAdaptedPerson person =
-                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tagsWithExtraSpaces);
+                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tagsWithExtraSpaces, List.of());
 
         Set<Tag> tags = person.toModelType().getTags();
 
