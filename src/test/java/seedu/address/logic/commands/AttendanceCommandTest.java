@@ -67,4 +67,5 @@ public class AttendanceCommandTest {
 
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE);
     }
+
 }

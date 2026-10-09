@@ -144,5 +144,5 @@ public class Person {
                 .add("attendanceRecords", attendanceRecords)
                 .toString();
     }
-    
+
 }

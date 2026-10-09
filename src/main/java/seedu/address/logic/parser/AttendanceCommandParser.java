@@ -59,7 +59,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         }
 
         Attendance.Status status;
-        
+
         try {
             status = Attendance.Status.fromString(statusArgument);
         } catch (IllegalArgumentException e) {
@@ -68,4 +68,5 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
         return new AttendanceCommand(index, date, status);
     }
+
 }
