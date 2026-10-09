@@ -39,6 +39,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
 
+   * `tag /group Group A /members 1,2` : Links the 1st and 2nd contacts shown in the current list to the group `Group A`.
+
    * `clear` : Deletes all contacts.
 
    * `exit` : Exits the app.
@@ -213,6 +215,46 @@ Examples:
 * `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
 * `find Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `find` command.
 
+### Linking contacts to a group: `tag`
+
+Links one or more contacts to a group, so that you can tell which contacts belong together, such as the members of a team.
+
+Format: `tag /group GROUP_NAME /members INDEX[,INDEX]...`
+
+* `GROUP_NAME` must be 1 to 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, hyphens and underscores, as in `Group A` or `team-1_alpha`.
+* Spaces at the start and end of `GROUP_NAME` are ignored, and repeated spaces inside it are treated as a single space.
+* Group names are compared ignoring case, so `Group A` and `group  a` are the same group. Each contact shows the group name as you typed it when you linked that contact.
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `find`, it refers to the contacts in the results. Each index **must be a positive integer** 1, 2, 3, ...
+* The indices are separated by commas, and spaces around a comma are ignored, so `1,3,5` and `1, 3, 5` are the same. A comma at the start or end, or two commas in a row, is not allowed, and each index can be given only once.
+* The group is shown as a label on each linked contact, in alphabetical order ignoring case.
+* A contact can be in several groups, but cannot be linked to the same group twice.
+* The command is all or nothing. If any problem is found, none of the contacts are linked.
+* Only `/group` and `/members` are accepted, and each can be given at most once.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/group` or `/members` is given, such as `/name` | `Unknown parameter. Use /group or /members`
+A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `tag GroupA 1 3` | `Invalid command format!` followed by the usage of `tag`
+`/group` is missing or has nothing after it | `Missing group name`
+`/members` is missing or has nothing after it | `Missing members`
+The group name is empty, too long or has characters that are not allowed | `Invalid group name.` followed by a description of the allowed characters
+An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
+An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
+The same index is given more than once | `Duplicate contact index: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+One or more of the contacts are already in the group | `One or more contacts are already in this group: NAME (CLASS)`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+If several indices are repeated or not found, or several contacts are already in the group, all of them are listed in the message, separated by commas.<br>
+On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given.
+
+Examples:
+* `tag /group Group A /members 1,3,5` links the 1st, 3rd and 5th contacts in the displayed list to `Group A`.
+* `find Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `find` command to `Team 2`.
+
 ### Clearing all entries: `clear`
 
 Clears all entries from the address book.
@@ -270,5 +312,6 @@ Action     | Format, Examples
 **Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
 **Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
+**Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Help**   | `help`

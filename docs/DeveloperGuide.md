@@ -82,6 +82,8 @@ The `UI` component,
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
 * depends on some classes in the `Model` component because it displays `Person` objects from the model.
 
+Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
@@ -115,9 +117,17 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 How the parsing works:
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
-* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can use `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)` to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser` does this, and reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
+* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser` and `TagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
+* `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
+
+#### Tag command
+The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups.
+
+* `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
+* `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The constructor of `TagCommand` asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. `TagCommandParser` guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
+* The success message lists the linked contacts in the order the indices were given, and shows the group name as it was typed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -129,6 +139,8 @@ The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
 * identifies a `Person` by its `Name` and `ClassName` (see `Person#isSamePerson(Person)`). Both are compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
+* compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
+* keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, and `Person#hasTag(Tag)` checks whether the contact is already in it.
 * treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the person has no email.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
@@ -152,6 +164,7 @@ The `Model` component,
 The `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
+* saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -428,20 +441,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 **Use case: UC04 - Add students to groups (by tagging)**
 
 **Guarantees**
-* Specified students will only be grouped if all of them exist.
+* Specified students will only be grouped if all of them exist and none of them is already in the group.
+* If grouping fails, no student is changed.
+* There is no separate step to create a group. A group is just the students that have the same tag, so it exists as soon as one student is given the tag.
 
 **MSS**
-1. User requests to add certain students from the class into a group.
-2. CM adds those students to a group and displays a success message. 
+1. User requests to add certain students from the displayed list into a group, e.g. `tag /group Group A /members 1,3`.
+2. CM adds those students to a group and displays a success message listing the students.
 
     Use case ends.
    
 **Extensions**
    
-* 1a. The command format is invalid or one of the students is already in the specified group. 
-  * 1a1. CM terminates the grouping and displays an error message. 
+* 1a. The command format is invalid, e.g. the group name or the members are missing or repeated, the group name is invalid, or a member is not a positive integer or is given twice.
+  * 1a1. CM terminates the grouping and displays an error message naming the problem.
+
+    Use case resumes from step 1.
+* 1b. One of the indices does not refer to a student in the displayed list.
+  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found.
+
+    Use case resumes from step 1.
+* 1c. One or more of the students are already in the specified group. Group names are compared ignoring case and extra spaces.
+  * 1c1. CM terminates the grouping and displays an error message listing those students.
         
-    Use case resumes from step 3.
+    Use case resumes from step 1.
 
 
 **Use case: UC05 - Delete a student**
@@ -494,7 +517,8 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Student Contact**: A record containing information about a student, such as their name, email, class, tags, attendance records, and grades
 * **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
 * **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
-* **Tag**: Any label attached to a student contact used for grouping except class
+* **Tag**: Any label attached to a student contact used for grouping except class. Tags are compared ignoring case and extra whitespace
+* **Group**: The student contacts that have the same tag, such as the members of a team for an assignment. A group is not stored or modelled as an object of its own, so it exists only as long as at least one contact has the tag. A student can be in several groups, and a group is identified by its tag name, ignoring case
 * **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
 * **Attendance Record**: A single entry marking a student as present/absent/late on a given date
 * **Attendance History**: The collection of a student's or class' attendance records over time

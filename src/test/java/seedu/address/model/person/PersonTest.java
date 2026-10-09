@@ -15,9 +15,11 @@ import static seedu.address.testutil.TypicalPersons.BOB;
 
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.Set;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonTest {
@@ -26,6 +28,80 @@ public class PersonTest {
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
+    }
+
+    @Test
+    public void hasTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> person.hasTag(null));
+    }
+
+    @Test
+    public void hasTag_tagPresent_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertTrue(person.hasTag(new Tag("team-1")));
+    }
+
+    @Test
+    public void hasTag_tagPresentWithDifferentCasingAndSpacing_returnsTrue() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertTrue(person.hasTag(new Tag("  gROUP   a ")));
+    }
+
+    @Test
+    public void hasTag_tagAbsent_returnsFalse() {
+        Person person = new PersonBuilder().withTags("Group A", "team-1").build();
+        assertFalse(person.hasTag(new Tag("Group B")));
+    }
+
+    @Test
+    public void hasTag_personWithoutTags_returnsFalse() {
+        Person person = new PersonBuilder().withTags().build();
+        assertFalse(person.hasTag(new Tag("Group A")));
+    }
+
+    @Test
+    public void withTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> person.withTag(null));
+    }
+
+    @Test
+    public void withTag_newTag_keepsExistingTagsAndOtherFields() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person tagged = person.withTag(new Tag("Group B"));
+
+        assertEquals(new PersonBuilder(person).withTags("Group A", "Group B").build(), tagged);
+    }
+
+    @Test
+    public void withTag_newTag_doesNotModifyOriginalPerson() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        person.withTag(new Tag("Group B"));
+
+        assertEquals(Set.of(new Tag("Group A")), person.getTags());
+    }
+
+    @Test
+    public void withTag_personWithoutEmail_returnsPersonWithoutEmail() {
+        Person person = new PersonBuilder().withoutEmail().withTags().build();
+
+        Person tagged = person.withTag(new Tag("Group A"));
+
+        assertEquals(new PersonBuilder(person).withTags("Group A").build(), tagged);
+        assertTrue(tagged.getEmail().isEmpty());
+    }
+
+    @Test
+    public void withTag_tagAlreadyPresent_keepsExistingTag() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person tagged = person.withTag(new Tag("group a"));
+
+        assertEquals(1, tagged.getTags().size());
+        assertEquals("Group A", tagged.getTags().iterator().next().tagName);
     }
 
     @Test

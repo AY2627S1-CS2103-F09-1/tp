@@ -79,6 +79,25 @@ public class Person {
     }
 
     /**
+     * Returns true if this person has {@code tag}. Tags are compared ignoring case.
+     */
+    public boolean hasTag(Tag tag) {
+        requireNonNull(tag);
+        return tags.contains(tag);
+    }
+
+    /**
+     * Returns a copy of this person that also has {@code tag}.
+     * If this person already has a tag equal to {@code tag}, the existing tag is kept.
+     */
+    public Person withTag(Tag tag) {
+        requireNonNull(tag);
+        Set<Tag> updatedTags = new HashSet<>(tags);
+        updatedTags.add(tag);
+        return new Person(name, className, getEmail(), updatedTags);
+    }
+
+    /**
      * Returns an immutable view of the attendance records.
      */
     public List<Attendance> getAttendanceRecords() {
