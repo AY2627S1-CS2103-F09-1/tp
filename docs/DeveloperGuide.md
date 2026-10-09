@@ -117,6 +117,7 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 * Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can use `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)` to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser` does this, and reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages.
+* A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
 
 ### Model component
 **API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -162,6 +163,54 @@ Classes used by multiple components are in the `seedu.address.commons` package.
 ## **Implementation**
 
 This section describes some noteworthy details on how certain features are implemented.
+
+### Listing and searching contacts feature
+
+#### Implementation
+
+The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
+
+* `ListCommandParser#parse(String)` trims the argument. If it is empty, it returns `new ListCommand()`. Otherwise, it returns `new ListCommand(new PersonMatchesKeyword(keyword))`, where `keyword` is the whole trimmed argument, so a full name or class with spaces is one keyword.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields are checked separately, so a keyword cannot match across two fields. Email is not checked.
+* `ListCommand` holds a `Predicate<Person>`, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with it. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search.
+* Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
+* `ListCommand` does not modify the address book, so it does not call `Model#commitAddressBook()`.
+
+Contacts are displayed in the order they were added. Sorting them alphabetically is not implemented yet.
+
+#### Design considerations
+
+**Aspect: How a keyword is matched**
+
+* **Alternative 1 (current choice):** Case-insensitive substring match on the name, class and tags.
+  * Pros: Supports partial matches, such as `jo` for `John` or `2103` for `CS2103`, with one simple predicate.
+  * Cons: A short keyword, such as `a`, matches many contacts.
+* **Alternative 2:** Whole-word match, like the `find` command.
+  * Pros: More precise results.
+  * Cons: Cannot find a contact from part of a name or class, which the search is meant to support.
+
+**Aspect: How the argument is split into keywords**
+
+* **Alternative 1 (current choice):** The whole argument is one keyword.
+  * Pros: A full name or a class with spaces, such as `Tutorial 1`, can be searched.
+  * Cons: Cannot search for several separate keywords at once. A keyword with several words cannot match a tag, because tags are a single word.
+* **Alternative 2:** Split the argument on whitespace and match any keyword, like the `find` command.
+  * Pros: Allows searching for several keywords at once.
+  * Cons: A full name or a class with spaces can no longer be searched as a phrase.
+
+**Aspect: What the search is applied to**
+
+* **Alternative 1 (current choice):** Always search the whole address book.
+  * Pros: Predictable, as the result does not depend on the earlier command.
+  * Cons: Cannot narrow down the previous result by searching again.
+* **Alternative 2:** Search only the contacts currently displayed.
+  * Pros: Allows narrowing down a result step by step.
+  * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
+
+<box type="info" seamless>
+
+**Note:** The earlier `find` command overlaps with this feature and is planned to be removed.
+</box>
 
 ### \[Proposed\] Undo/redo feature
 
@@ -483,11 +532,51 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
+### Listing and searching contacts
+
+1. Listing all contacts
+
+   1. Prerequisites: The app contains the sample data (Alex Yeoh, Bernice Yu, Charlotte Oliveiro, David Li, Irfan Ibrahim and Roy Balakrishnan).
+
+   1. Test case: `list`<br>
+      Expected: All six contacts are shown.
+
+   1. Test case: `list yeoh`, followed by `list`<br>
+      Expected: After `list yeoh`, only Alex Yeoh is shown. After `list`, all six contacts are shown again.
+
+1. Searching contacts by keyword
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `list ALEX`<br>
+      Expected: Only Alex Yeoh is shown. The status message shows that 1 contact is listed. The search ignores case.
+
+   1. Test case: `list li`<br>
+      Expected: Charlotte Oliveiro and David Li are shown. A keyword matches part of a name.
+
+   1. Test case: `list a2`<br>
+      Expected: Charlotte Oliveiro and David Li are shown. A keyword matches a class.
+
+   1. Test case: `list friend`<br>
+      Expected: Alex Yeoh and Bernice Yu are shown. A keyword matches a tag.
+
+   1. Test case: `list alex   yeoh`<br>
+      Expected: Only Alex Yeoh is shown. The whole argument is one keyword and extra spaces are ignored.
+
+   1. Test case: `list ric`<br>
+      Expected: No contact is shown. The characters of the keyword must appear next to each other, so it does not match the tag `friends`.
+
+   1. Test case: `list zzz`<br>
+      Expected: No contact is shown, and the status message shows that 0 contacts are listed.
+
+   1. Test case: `list yeoh`, followed by `list david`<br>
+      Expected: After `list david`, only David Li is shown. The second search covers all contacts, not only the earlier result.
+
 ### Deleting a person
 
 1. Deleting a person while all persons are being shown
 
-   1. Prerequisites: List all persons using the `list` command, with multiple persons in the list.
+   1. Prerequisites: List all contacts using the `list` command, with multiple contacts in the list.
 
    1. Test case: `delete 1`<br>
       Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
