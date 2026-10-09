@@ -92,7 +92,8 @@ public class EditCommand extends Command {
         Optional<Email> updatedEmail = editPersonDescriptor.getEmail().or(personToEdit::getEmail);
         Set<Tag> updatedTags = editPersonDescriptor.getTags().orElse(personToEdit.getTags());
 
-        return new Person(updatedName, personToEdit.getClassName(), updatedEmail, updatedTags);
+        return new Person(updatedName, personToEdit.getClassName(), updatedEmail, updatedTags,
+                personToEdit.getAttendanceRecords());
     }
 
     @Override
