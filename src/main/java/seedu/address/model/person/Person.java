@@ -95,6 +95,7 @@ public class Person {
         Set<Tag> updatedTags = new HashSet<>(tags);
         updatedTags.add(tag);
         return new Person(name, className, getEmail(), updatedTags);
+    /**
      * Returns an immutable view of the attendance records.
      */
     public List<Attendance> getAttendanceRecords() {
