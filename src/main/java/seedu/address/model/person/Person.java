@@ -1,9 +1,12 @@
 package seedu.address.model.person;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -25,16 +28,31 @@ public class Person {
     // Data fields
     private final Email email; // null if the person has no email
     private final Set<Tag> tags = new HashSet<>();
+    private final List<Attendance> attendanceRecords;
 
     /**
      * Every field must be present and not null. The {@code email} may be an empty {@code Optional}.
      */
     public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags) {
-        requireAllNonNull(name, className, email, tags);
+        this(name, className, email, tags, Collections.emptyList());
+    }
+
+    /**
+     * Creates a Person with the given name, className, email, tags, and attendance records.
+     * @param name
+     * @param className
+     * @param email
+     * @param tags
+     * @param attendanceRecords
+     */
+    public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
+        List<Attendance> attendanceRecords) {
+        requireAllNonNull(name, className, email, tags, attendanceRecords);
         this.name = name;
         this.className = className;
         this.email = email.orElse(null);
         this.tags.addAll(tags);
+        this.attendanceRecords = new ArrayList<>(attendanceRecords);
     }
 
     public Name getName() {
@@ -58,6 +76,32 @@ public class Person {
      */
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
+    }
+
+    /**
+     * Returns an immutable view of the attendance records.
+     */
+    public List<Attendance> getAttendanceRecords() {
+        return Collections.unmodifiableList(attendanceRecords);
+    }
+
+    /**
+     * Returns a new Person with the given attendance record added.
+     *
+     * @param attendance
+     * @return a new Person with the given attendance record added
+     * @throws IllegalArgumentException if a record already exists for that date
+     */
+    public Person withAttendance(Attendance attendance) {
+        requireNonNull(attendance);
+        boolean alreadyRecorded = attendanceRecords.stream()
+                .anyMatch(record -> record.getDate().equals(attendance.getDate()));
+        if (alreadyRecorded) {
+            throw new IllegalArgumentException("Attendance record already exists");
+        }
+        List<Attendance> newAttendanceRecords = new ArrayList<>(attendanceRecords);
+        newAttendanceRecords.add(attendance);
+        return new Person(name, className, Optional.ofNullable(email), tags, newAttendanceRecords);
     }
 
     /**
@@ -100,13 +144,14 @@ public class Person {
         return name.equals(otherPerson.name)
                 && className.equals(otherPerson.className)
                 && Objects.equals(email, otherPerson.email)
-                && tags.equals(otherPerson.tags);
+                && tags.equals(otherPerson.tags)
+                && attendanceRecords.equals(otherPerson.attendanceRecords);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, className, email, tags);
+        return Objects.hash(name, className, email, tags, attendanceRecords);
     }
 
     @Override
@@ -116,6 +161,7 @@ public class Person {
                 .add("className", className)
                 .add("email", email)
                 .add("tags", tags)
+                .add("attendanceRecords", attendanceRecords)
                 .toString();
     }
 
