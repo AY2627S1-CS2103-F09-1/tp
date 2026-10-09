@@ -50,7 +50,8 @@ public class JsonAdaptedPersonTest {
 
     @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(INVALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(INVALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            List.of());
         String expectedMessage = Name.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
@@ -58,7 +59,8 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_tooLongName_throwsIllegalValueException() {
         String tooLongName = "a".repeat(Name.MAX_LENGTH + 1);
-        JsonAdaptedPerson person = new JsonAdaptedPerson(tooLongName, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(tooLongName, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            List.of());
         assertThrows(IllegalValueException.class, Name.MESSAGE_TOO_LONG, person::toModelType);
     }
 
@@ -77,14 +79,16 @@ public class JsonAdaptedPersonTest {
 
     @Test
     public void toModelType_invalidClassName_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, INVALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, INVALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            List.of());
         assertThrows(IllegalValueException.class, ClassName.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
     @Test
     public void toModelType_tooLongClassName_throwsIllegalValueException() {
         String tooLongClassName = "a".repeat(ClassName.MAX_LENGTH + 1);
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, tooLongClassName, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, tooLongClassName, VALID_EMAIL, VALID_TAGS,
+            List.of());
         assertThrows(IllegalValueException.class, ClassName.MESSAGE_TOO_LONG, person::toModelType);
     }
 
@@ -103,7 +107,8 @@ public class JsonAdaptedPersonTest {
 
     @Test
     public void toModelType_invalidEmail_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, INVALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, INVALID_EMAIL, VALID_TAGS,
+            List.of());
         String expectedMessage = Email.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
@@ -118,7 +123,8 @@ public class JsonAdaptedPersonTest {
     public void toModelType_invalidTags_throwsIllegalValueException() {
         List<JsonAdaptedTag> invalidTags = new ArrayList<>(VALID_TAGS);
         invalidTags.add(new JsonAdaptedTag(INVALID_TAG));
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, invalidTags, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, invalidTags,
+            List.of());
         assertThrows(IllegalValueException.class, person::toModelType);
     }
 

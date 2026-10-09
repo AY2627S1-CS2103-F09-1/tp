@@ -12,12 +12,12 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.time.LocalDate;
+import java.util.Collections;
+
 import org.junit.jupiter.api.Test;
 
 import seedu.address.testutil.PersonBuilder;
-
-import java.time.LocalDate;
-import java.util.Collections;
 
 public class PersonTest {
 
@@ -161,8 +161,7 @@ public class PersonTest {
         Person person = new PersonBuilder().build()
             .withAttendance(new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT));
 
-        assertThrows(UnsupportedOperationException.class,
-            () -> person.getAttendanceRecords().add(
+        assertThrows(UnsupportedOperationException.class, () -> person.getAttendanceRecords().add(
             new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.ABSENT)));
     }
 

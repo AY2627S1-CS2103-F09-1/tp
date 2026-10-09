@@ -37,7 +37,16 @@ public class Person {
         this(name, className, email, tags, Collections.emptyList());
     }
 
-    public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags, List<Attendance> attendanceRecords) {
+    /**
+     * Creates a Person with the given name, className, email, tags, and attendance records.
+     * @param name
+     * @param className
+     * @param email
+     * @param tags
+     * @param attendanceRecords
+     */
+    public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
+        List<Attendance> attendanceRecords) {
         requireAllNonNull(name, className, email, tags, attendanceRecords);
         this.name = name;
         this.className = className;
@@ -76,9 +85,9 @@ public class Person {
     /**
      * Returns a new Person with the given attendance record added.
      *
-     * @throws IllegalArgumentException if a record already exists for that date
      * @param attendance
      * @return a new Person with the given attendance record added
+     * @throws IllegalArgumentException if a record already exists for that date
      */
     public Person withAttendance(Attendance attendance) {
         requireNonNull(attendance);
