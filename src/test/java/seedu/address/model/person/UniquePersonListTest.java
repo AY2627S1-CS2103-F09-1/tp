@@ -57,6 +57,13 @@ public class UniquePersonListTest {
     }
 
     @Test
+    public void add_multiplePersons_newestPersonIsFirst() {
+        uniquePersonList.add(ALICE);
+        uniquePersonList.add(BOB);
+        assertEquals(List.of(BOB, ALICE), uniquePersonList.asUnmodifiableObservableList());
+    }
+
+    @Test
     public void setPerson_nullTargetPerson_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> uniquePersonList.setPerson(null, ALICE));
     }
@@ -152,6 +159,12 @@ public class UniquePersonListTest {
         UniquePersonList expectedUniquePersonList = new UniquePersonList();
         expectedUniquePersonList.add(BOB);
         assertEquals(expectedUniquePersonList, uniquePersonList);
+    }
+
+    @Test
+    public void setPersons_list_keepsGivenOrder() {
+        uniquePersonList.setPersons(List.of(ALICE, BOB));
+        assertEquals(List.of(ALICE, BOB), uniquePersonList.asUnmodifiableObservableList());
     }
 
     @Test

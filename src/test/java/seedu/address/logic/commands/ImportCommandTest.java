@@ -10,6 +10,7 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
@@ -18,6 +19,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.ImportCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
+import seedu.address.testutil.PersonBuilder;
 
 public class ImportCommandTest {
 
@@ -45,6 +47,21 @@ public class ImportCommandTest {
 
         assertEquals("Imported 2 contacts from " + csv, result.getFeedbackToUser());
         assertEquals(2, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_validCsv_showsContactsAtTopInFileOrder()
+            throws IOException, CommandException, ParseException {
+        Path csv = writeCsv("name,class\nAlice,A1\nBob,A2\nCarl,A3\n");
+        ModelManager model = new ModelManager();
+        model.addPerson(new PersonBuilder().withName("Existing Person").build());
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        List<String> names = model.getFilteredPersonList().stream()
+                .map(person -> person.getName().toString())
+                .toList();
+        assertEquals(List.of("Alice", "Bob", "Carl", "Existing Person"), names);
     }
 
     @Test

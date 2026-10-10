@@ -63,7 +63,8 @@ public class ImportCommand extends Command {
         CsvParser.ParsedCsv csv = parseCsv(content);
 
         List<Person> persons = parsePersons(csv, model);
-        for (Person person : persons) {
+        // Each contact is added to the top of the list, so add the last row first to keep the file order
+        for (Person person : persons.reversed()) {
             model.addPerson(person);
         }
         return new CommandResult(String.format(MESSAGE_SUCCESS, persons.size(), filePath));

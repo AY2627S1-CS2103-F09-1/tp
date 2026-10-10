@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
+import static seedu.address.testutil.TypicalPersons.BOB;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.Collection;
@@ -90,6 +91,13 @@ public class AddressBookTest {
         Person editedAlice = new PersonBuilder(ALICE).withName("alice   PAULINE")
                 .withClassName(ALICE.getClassName().toString().toLowerCase() + " ").build();
         assertTrue(addressBook.hasPerson(editedAlice));
+    }
+
+    @Test
+    public void addPerson_multiplePersons_newestPersonIsFirst() {
+        addressBook.addPerson(ALICE);
+        addressBook.addPerson(BOB);
+        assertEquals(List.of(BOB, ALICE), addressBook.getPersonList());
     }
 
     @Test
