@@ -33,7 +33,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `list John` : Lists the contacts whose name, class or tags contain `John`.
 
-   * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to the Address Book.
+   * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to ClassMates.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -86,16 +86,16 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a contact: `add`
 
-Adds a person to the address book.
+Adds a contact to ClassMates.
 
 Format: `add /name NAME /class CLASS [/email EMAIL]`
 
 * `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
 * `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
-* A person is identified by their name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same person as `John Tan` in class `A1`.
+* A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`.
 * The email is optional.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 
@@ -122,7 +122,7 @@ Examples:
 
 ### Listing and searching contacts: `list`
 
-Shows a list of all contacts in the address book, or only the contacts that match a keyword.
+Shows a list of all contacts in ClassMates, or only the contacts that match a keyword.
 
 Format: `list [KEYWORD]`
 
@@ -135,7 +135,7 @@ Format: `list [KEYWORD]`
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
 * A keyword with several words can match a name or a class, but not a tag, as tags are a single word.
 * The keyword must match within a single field; for example, it cannot match the end of a name and the start of a class.
-* The search always covers all contacts in the address book, even if a previous search is still displayed.
+* The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
 * Contacts are currently shown in the order they were added.
 
@@ -146,20 +146,20 @@ Examples:
 * `list friend` shows all contacts with a tag containing `friend`.
 * `list John Doe` shows contacts whose name or class contains `John Doe`.
 
-### Deleting a person: `delete`
+### Deleting a contact: `delete`
 
-Deletes the specified person from the address book.
+Deletes the specified contact from ClassMates.
 
 Format: `delete INDEX` or `delete /name NAME /class CLASS`
 
-* `delete INDEX` deletes the person at the specified `INDEX`.
-  * The index refers to the index number shown in the displayed person list.
+* `delete INDEX` deletes the contact at the specified `INDEX`.
+  * The index refers to the index number shown in the displayed contact list.
   * The index **must be a positive integer** 1, 2, 3, ...
-* `delete /name NAME /class CLASS` deletes the person with that name in that class.
+* `delete /name NAME /class CLASS` deletes the contact with that name in that class.
   * Both the name and the class must match, because the same name can exist in different classes.
   * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
-  * The whole address book is searched, even if only some persons are displayed, for example after a `list` with a keyword.
-  * The name and class are not checked against the rules for adding a person. If nothing matches, ClassMates shows `No contact found`.
+  * All contacts in ClassMates are searched, even if only some contacts are displayed, for example after a `list` with a keyword.
+  * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `No contact found`.
 * An index cannot be combined with `/name` or `/class` in the same command.
 * On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
 
@@ -172,14 +172,14 @@ A parameter is given more than once | `Each parameter can only be specified once
 No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
 `/name` is missing or has no value | `Command requires a name`
 `/class` is missing or has no value | `Command requires a class`
-No person has the given name and class | `No contact found`
+No contact has the given name and class | `No contact found`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 
 If more than one problem applies, only the first one in the table above is reported.
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `list Betsy` followed by `delete 1` deletes the 1st person in the results of the `list Betsy` command.
+* `list` followed by `delete 2` deletes the 2nd contact in ClassMates.
+* `list Betsy` followed by `delete 1` deletes the 1st contact in the results of the `list Betsy` command.
 * `list Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list Betsy` command.
 
 ### Linking contacts to a group: `tag`
@@ -306,7 +306,7 @@ Examples:
 
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Clears all contacts from ClassMates.
 
 Format: `clear`
 
@@ -327,8 +327,8 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, ClassMates starts with an empty address book at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
-Data files from earlier versions of ClassMates, which do not record a class for each person, are also treated as invalid.<br>
+If your changes make the data file invalid, ClassMates starts with no contacts at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
+Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
