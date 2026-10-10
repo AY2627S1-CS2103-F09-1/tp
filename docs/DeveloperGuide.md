@@ -237,6 +237,7 @@ The contacts are displayed from the most recently added to the oldest. The order
 * `ModelManager#addPerson(Person)` also calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, so the new contact is visible at the top even if a search was displayed.
 * A filter only hides contacts and never reorders them, so search results are also shown from the most recently added to the oldest.
 * `Model#setPerson(Person, Person)` replaces a contact in place, so `edit` and `tag` do not change the position of a contact.
+* `ImportCommand#execute(Model)` adds the contacts of the file from the last row to the first, so that the first row ends up at the top and the imported contacts appear in the order of the file.
 * Code that builds an address book from a whole list must not add the contacts one by one, as that would reverse their order. `JsonSerializableAddressBook#toModelType()`, `SampleDataUtil#getSampleAddressBook()` and `TypicalPersons#getTypicalAddressBook()` use `AddressBook#setPersons(List)`, which keeps the given order.
 
 #### Design considerations

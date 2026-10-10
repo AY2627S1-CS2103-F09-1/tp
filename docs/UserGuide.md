@@ -267,6 +267,7 @@ Format: `import PATH`
   * On Windows, both forward and backward slashes (`/` and `\`) are accepted.
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
+* The imported contacts are shown at the top of the list, in the same order as in the file.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
