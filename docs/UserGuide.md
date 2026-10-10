@@ -133,8 +133,10 @@ Format: `list [KEYWORD]`
 * The characters of `KEYWORD` must appear next to each other; for example, `ric` does not match the tag `friend`.
 * A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* A keyword with several words can match a name or a class, but not a tag, as tags are a single word.
-* The keyword must match within a single field; for example, it cannot match the end of a name and the start of a class.
+* A keyword with several words can match a name, a class, or a single tag whose name has spaces, such as the group `Group A`. For example, `list group a` shows the contacts in the group `Group A`.
+* The keyword must match within a single name, class or tag; for example, it cannot match the end of a name and the start of a class, or run across two tags.
+* Characters are matched exactly as typed, including `/`, `'`, `-`, `.` and `_`. For example, `list s/o` finds `Tan s/o Kumar`, and `list .` finds only names and classes that contain a full stop.
+* `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in the address book, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
 * Contacts are currently shown in the order they were added.
@@ -145,6 +147,7 @@ Examples:
 * `list CS2103` shows all contacts in a class containing `CS2103`.
 * `list friend` shows all contacts with a tag containing `friend`.
 * `list John Doe` shows contacts whose name or class contains `John Doe`.
+* `list Group A` shows contacts in the group `Group A`, as well as any contact whose name or class contains `Group A`.
 
 ### Editing a person: `edit`
 
