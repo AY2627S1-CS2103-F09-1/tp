@@ -332,10 +332,6 @@ Data files from earlier versions of ClassMates, which do not record a class for 
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
-
 --------------------------------------------------------------------------------------------------------------------
 
 ## FAQ
@@ -364,3 +360,4 @@ Action     | Format, Examples
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Import** | `import PATH`<br> e.g., `import data/students.csv`
 **Help**   | `help`
+**Exit**   | `exit`
