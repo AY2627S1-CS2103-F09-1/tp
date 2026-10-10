@@ -255,6 +255,35 @@ Examples:
 * `tag /group Group A /members 1,3,5` links the 1st, 3rd and 5th contacts in the displayed list to `Group A`.
 * `find Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `find` command to `Team 2`.
 
+### Importing from external file: `import`
+
+Imports contacts specified in a CSV file in bulk.
+
+Format: `import PATH`
+* The path to the file is not surrounded by quotes.
+* The path can be either absolute (e.g. `C:/Users/tom/Downloads/data/student.csv`) or relative (e.g. `data/students.csv`)
+* Accepted path separator(s) depends on the operating system:
+  * On Windows, both forward and backward slashes (`/` and `\`) are accepted.
+  * However, on Unix and macOS systems, only forward slash `/` is accepted.
+* The command is fail-fast, i.e. the whole import is canceled upon the first error.
+
+On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+| **Problem**                                                                                        | **Message**                                          |
+|----------------------------------------------------------------------------------------------------|------------------------------------------------------|
+| No file path is provided                                                                           | `Specify file path`                                  |
+| The file does not exist                                                                            | `File not found at <filepath>`                       |
+| The file does not use the `.csv` extension                                                         | `Only .csv files are supported`                      |
+| The file is empty or contains only a header row                                                    | `File empty`                                         |
+| The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
+| A row has an invalid number of fields                                                              | `Invalid number of fields on row <row number>`       |
+| A contact duplicates an existing contact or an earlier imported contact                            | `Duplicate contact on row <row number>`              |
+| A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
+| The file is unreadable, is a directory, contains malformed CSV syntax, or another I/O error occurs | `Failed to import from <filepath>`                   |
+
+
 ### Clearing all entries: `clear`
 
 Clears all entries from the address book.

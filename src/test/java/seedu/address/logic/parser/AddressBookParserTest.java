@@ -25,6 +25,7 @@ import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.FindCommand;
 import seedu.address.logic.commands.HelpCommand;
+import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
@@ -110,6 +111,20 @@ public class AddressBookParserTest {
                 TagCommand.COMMAND_WORD + " /group Group A /members 1, 2");
         assertEquals(new TagCommand(new Tag("Group A"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)),
                 command);
+    }
+
+    @Test
+    public void parseCommand_import() throws Exception {
+        ImportCommand command = (ImportCommand) parser.parseCommand(
+                ImportCommand.COMMAND_WORD + " students.csv");
+
+        assertEquals(new ImportCommand("students.csv"), command);
+    }
+
+    @Test
+    public void parseCommand_importWithoutPath_throwsParseException() {
+        assertThrows(ParseException.class, "Specify file path", () ->
+                parser.parseCommand(ImportCommand.COMMAND_WORD));
     }
 
     @Test
