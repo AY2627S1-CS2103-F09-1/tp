@@ -162,23 +162,6 @@ Examples:
 *  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
 *  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
 
-### Locating persons by name: `find`
-
-Finds persons whose names contain any of the given keywords.
-
-Format: `find KEYWORD [MORE_KEYWORDS]`
-
-* The search is case-insensitive; for example, `hans` matches `Hans`.
-* Keyword order does not matter; for example, `Hans Bo` matches `Bo Hans`.
-* The search considers only names.
-* Only full words match; for example, `Han` does not match `Hans`.
-* Persons matching at least one keyword are returned (an `OR` search); for example, `Hans Bo` returns `Hans Gruber` and `Bo Yang`.
-
-Examples:
-* `find John` returns `john` and `John Doe`
-* `find alex david` returns `Alex Yeoh`, `David Li`<br>
-  ![result for 'find alex david'](images/findAlexDavidResult.png)
-
 ### Deleting a person: `delete`
 
 Deletes the specified person from the address book.
@@ -191,7 +174,7 @@ Format: `delete INDEX` or `delete /name NAME /class CLASS`
 * `delete /name NAME /class CLASS` deletes the person with that name in that class.
   * Both the name and the class must match, because the same name can exist in different classes.
   * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
-  * The whole address book is searched, even if only some persons are displayed, for example after a `find`.
+  * The whole address book is searched, even if only some persons are displayed, for example after a `list` with a keyword.
   * The name and class are not checked against the rules for adding a person. If nothing matches, ClassMates shows `No contact found`.
 * An index cannot be combined with `/name` or `/class` in the same command.
 * On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
@@ -212,8 +195,8 @@ If more than one problem applies, only the first one in the table above is repor
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `find Betsy` followed by `delete 1` deletes the 1st person in the results of the `find` command.
-* `find Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `find` command.
+* `list Betsy` followed by `delete 1` deletes the 1st person in the results of the `list Betsy` command.
+* `list Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list Betsy` command.
 
 ### Linking contacts to a group: `tag`
 
@@ -224,7 +207,7 @@ Format: `tag /group GROUP_NAME /members INDEX[,INDEX]...`
 * `GROUP_NAME` must be 1 to 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, hyphens and underscores, as in `Group A` or `team-1_alpha`.
 * Spaces at the start and end of `GROUP_NAME` are ignored, and repeated spaces inside it are treated as a single space.
 * Group names are compared ignoring case, so `Group A` and `group  a` are the same group. Each contact shows the group name as you typed it when you linked that contact.
-* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `find`, it refers to the contacts in the results. Each index **must be a positive integer** 1, 2, 3, ...
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. Each index **must be a positive integer** 1, 2, 3, ...
 * The indices are separated by commas, and spaces around a comma are ignored, so `1,3,5` and `1, 3, 5` are the same. A comma at the start or end, or two commas in a row, is not allowed, and each index can be given only once.
 * The group is shown as a label on each linked contact, in alphabetical order ignoring case.
 * A contact can be in several groups, but cannot be linked to the same group twice.
@@ -253,7 +236,7 @@ On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:`
 
 Examples:
 * `tag /group Group A /members 1,3,5` links the 1st, 3rd and 5th contacts in the displayed list to `Group A`.
-* `find Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `find` command to `Team 2`.
+* `list Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `list Betsy` command to `Team 2`.
 
 ### Importing from external file: `import`
 
@@ -340,7 +323,6 @@ Action     | Format, Examples
 **Clear**  | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
 **Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
-**Find**   | `find KEYWORD [MORE_KEYWORDS]`<br> e.g., `find James Jake`
 **Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Help**   | `help`

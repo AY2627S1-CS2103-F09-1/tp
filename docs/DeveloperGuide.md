@@ -198,7 +198,7 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 * **Alternative 1 (current choice):** Case-insensitive substring match on the name, class and tags.
   * Pros: Supports partial matches, such as `jo` for `John` or `2103` for `CS2103`, with one simple predicate.
   * Cons: A short keyword, such as `a`, matches many contacts.
-* **Alternative 2:** Whole-word match, like the `find` command.
+* **Alternative 2:** Whole-word match, so that `Han` does not match `Hans`.
   * Pros: More precise results.
   * Cons: Cannot find a contact from part of a name or class, which the search is meant to support.
 
@@ -207,7 +207,7 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 * **Alternative 1 (current choice):** The whole argument is one keyword.
   * Pros: A full name or a class with spaces, such as `Tutorial 1`, can be searched.
   * Cons: Cannot search for several separate keywords at once. A keyword with several words cannot match a tag, because tags are a single word.
-* **Alternative 2:** Split the argument on whitespace and match any keyword, like the `find` command.
+* **Alternative 2:** Split the argument on whitespace and show the contacts that match any of the words.
   * Pros: Allows searching for several keywords at once.
   * Cons: A full name or a class with spaces can no longer be searched as a phrase.
 
@@ -219,11 +219,6 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 * **Alternative 2:** Search only the contacts currently displayed.
   * Pros: Allows narrowing down a result step by step.
   * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
-
-<box type="info" seamless>
-
-**Note:** The earlier `find` command overlaps with this feature and is planned to be removed.
-</box>
 
 ### \[Proposed\] Undo/redo feature
 
