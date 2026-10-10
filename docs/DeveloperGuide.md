@@ -582,7 +582,7 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list alex   yeoh`<br>
       Expected: Only Alex Yeoh is shown. The whole argument is one keyword and extra spaces are ignored.
 
-   1. Test case: `list ric`<br>
+   1. Test case: `list rid`<br>
       Expected: No contact is shown. The characters of the keyword must appear next to each other, so it does not match the tag `friends`.
 
    1. Test case: `list zzz`<br>

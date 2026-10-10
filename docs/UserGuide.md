@@ -130,7 +130,7 @@ Format: `list [KEYWORD]`
 * If `KEYWORD` is given, only the contacts whose name, class or tags contain it are shown, and the message shows how many contacts were listed.
 * The search is case-insensitive; for example, `john` matches `John`.
 * Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
-* The characters of `KEYWORD` must appear next to each other; for example, `ric` does not match the tag `friend`.
+* The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the tag `friend`.
 * A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
 * A keyword with several words can match a name, a class, or a single tag whose name has spaces, such as the group `Group A`. For example, `list group a` shows the contacts in the group `Group A`.

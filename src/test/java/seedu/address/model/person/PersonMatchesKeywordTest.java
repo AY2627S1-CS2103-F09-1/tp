@@ -56,7 +56,7 @@ public class PersonMatchesKeywordTest {
     @Test
     public void test_keywordNotContiguousSubstring_returnsFalse() {
         // letters appear in the same order but not next to each other
-        assertFalse(new PersonMatchesKeyword("ric").test(person));
+        assertFalse(new PersonMatchesKeyword("rid").test(person));
         assertFalse(new PersonMatchesKeyword("jhn").test(person));
         assertFalse(new PersonMatchesKeyword("cs t05").test(person));
     }
