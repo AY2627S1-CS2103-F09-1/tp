@@ -339,6 +339,30 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous ClassMates home folder.
 
+**Q**: How do I get the sample contacts back?<br>
+**A**: Close ClassMates, delete the `data` folder in the folder that contains the JAR file, and start ClassMates again. All your current contacts are lost.
+
+**Q**: Where is my data stored, and do I need to save it?<br>
+**A**: ClassMates saves after every command to `[JAR file location]/data/addressbook.json`. There is no save command, and exiting does not lose data.
+
+**Q**: Can I add two contacts with the same name?<br>
+**A**: Yes, if they are in different classes. A contact is identified by name and class together, ignoring case and extra spaces, so the same name cannot be added twice to the same class.
+
+**Q**: Why did `delete 3` or `attendance 3` act on a contact I did not expect?<br>
+**A**: The index refers to the contacts currently displayed. After a `list KEYWORD`, index 3 is the 3rd contact in the results, not in the full list. Run `list` first, or use `delete /name NAME /class CLASS`.
+
+**Q**: What should my CSV file for `import` look like?<br>
+**A**: The first row is a header with `name` and `class` columns and an optional `email` column. Each following row is one contact, for example `John Doe,A1,johnd@example.com`. See [Importing from external file](#importing-from-external-file-import).
+
+**Q**: I imported a file, but no contact was added. Why?<br>
+**A**: The import is all or nothing. If any row is invalid or duplicates an existing contact, ClassMates shows the first problem with its row number and adds nothing. Fix that row and import again.
+
+**Q**: Can I record attendance for a whole class at once?<br>
+**A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
+
+**Q**: ClassMates started with an empty list. What happened?<br>
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `addressbook.json`, or delete the `data` folder to start with the sample contacts.
+
 --------------------------------------------------------------------------------------------------------------------
 
 ## Known issues
