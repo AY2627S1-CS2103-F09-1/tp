@@ -18,7 +18,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103-F09-1/tp/releases).
 
 1. Copy the file to the folder you want to use as the _home folder_ for your ClassMates.
 
@@ -236,6 +236,25 @@ Format: `import PATH`
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
+The CSV file must follow this format:
+* The first row is a header row. It must contain a `name` column and a `class` column, and it can contain an optional `email` column.
+* The column names are not case-sensitive, and the columns can be in any order.
+* No other columns are accepted, and no column can appear more than once.
+* Every other row is one contact, with its values in the same order as the header. Each row must have as many values as the header.
+* Each value follows the same rules as the matching parameter of `add`, so a name or class that `add` would reject is also rejected in the file.
+* The `email` value of a contact can be left blank if the contact has no email.
+* Blank rows are ignored.
+* The file must be saved in UTF-8 encoding.
+
+For example, a valid file looks like this:
+```
+name,class,email
+John Doe,A1,johnd@example.com
+Betsy Crowe,A2,
+```
+
+A relative path is taken from the folder that contains the JAR file.
+
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 | **Problem**                                                                                        | **Message**                                          |
@@ -250,6 +269,40 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
 | The file is unreadable, is a directory, contains malformed CSV syntax, or another I/O error occurs | `Failed to import from <filepath>`                   |
 
+
+### Recording attendance: `attendance`
+
+Records whether a contact was present, absent or late on a date.
+
+Format: `attendance INDEX /date DATE /status STATUS`
+
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
+* `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
+* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
+* `/date` and `/status` can each be given at most once.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+The index is missing | `Missing index. Please provide the index of the person.`
+`/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
+`/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
+A parameter is given more than once | `Each parameter can only be specified once`
+The index is not a positive integer | `Index must be a positive integer.`
+The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. Please use the format DD-MM-YYYY.`
+The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
+The date is in the future | `Attendance date cannot be in the future.`
+The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The contact already has a record for the date | `Attendance record already exists`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, for example `Attendance for Alex Yeoh on 16-09-2026 recorded as absent.`
+
+Examples:
+* `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
+* `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
 
 ### Clearing all entries: `clear`
 
@@ -304,8 +357,10 @@ _Details coming soon ..._
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **Add**    | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`
+**Attendance** | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`
 **Clear**  | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
 **Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
+**Import** | `import PATH`<br> e.g., `import data/students.csv`
 **Help**   | `help`
