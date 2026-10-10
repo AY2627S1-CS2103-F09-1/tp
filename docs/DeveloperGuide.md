@@ -381,13 +381,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 (For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
+A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC08).
+
+UC01, UC07 and UC09 describe planned features that are not implemented yet. The other use cases describe what the application does now.
+
 **Use case: UC01 - View known student's grades**
+
+*(Planned feature, not implemented yet.)*
 
 **MSS**
 1. User requests to view grades of the student.
 2. CM displays grades of the student.
 
-   Use case ends. 
+   Use case ends.
 
 **Extensions**
 
@@ -397,124 +403,173 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     Use case resumes at step 1.
 
 
-**Use case: UC02 - Track known student's attendance**
+**Use case: UC02 - Record a student's attendance**
+
+**Guarantees**
+* An attendance record is only added if its date and status are valid and the student has no record for that date.
 
 **MSS**
-1. User requests to add attendance record for the student.
-2. CM records the attendance for the student.
+1. User requests to <u>list or search student contacts</u> (UC08) to find the student.
+2. CM displays the matching contacts.
+3. User requests to record the attendance of a contact in the displayed list, giving the index of the contact, the date and the status (present, absent or late).
+4. CM records the attendance and displays a success message.
 
    Use case ends.
-   
-**Extensions**
-   
-* 1a. The command format is invalid or the attendance of the student has already been recorded. 
-  * 1a1. CM displays an error message. 
 
-    Use case resumes at step 1.
+**Extensions**
+
+* 2a. The list is empty.
+
+    Use case ends.
+
+* 3a. The command format is invalid, e.g. the index, date or status is missing or repeated, the index is not a positive integer, the date is not a real date in the format DD-MM-YYYY, or the status is not present, absent or late.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. The date is in the future.
+  * 3b1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3c. The index is larger than the number of displayed contacts.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3d. The contact already has an attendance record for the date.
+  * 3d1. CM displays an error message.
+
+    Use case resumes at step 3.
 
 
 **Use case: UC03 - Set up new classes using bulk load**
 
 **Guarantees**
-* Student records will only be updated if all data is in the correct format.
-  
-**MSS**
-1. User requests to load student data from an external CSV file.
-2. CM parses data and adds records of all students in all classes.
-3. User confirms bulk loading.
-4. For each class added or updated, user requests to <u>search for student contacts</u> (UC08) using the class as the keyword.
-5. CM displays search results for each class. 
-
-    Use case ends.
-   
-**Extensions**
-* 2a. The given CSV file is not formatted correctly. 
-  * 2a1. CM terminates the import and displays an error message. 
-  * 2a2. User externally modifies the CSV file. 
-  
-    Use case resumes from step 1.
-* 3a. User chooses to cancel bulk loading.
-
-    Use case ends.
-
-
-**Use case: UC04 - Add students to groups (by tagging)**
-
-**Guarantees**
-* Specified students will only be grouped if all of them exist and none of them is already in the group.
-* If grouping fails, no student is changed.
-* There is no separate step to create a group. A group is just the students that have the same tag, so it exists as soon as one student is given the tag.
+* Contacts are only added if the file and every row in it are valid. If any problem is found, no contact is added.
 
 **MSS**
-1. User requests to add certain students from the displayed list into a group, e.g. `tag /group Group A /members 1,3`.
-2. CM adds those students to a group and displays a success message listing the students.
-
-    Use case ends.
-   
-**Extensions**
-   
-* 1a. The command format is invalid, e.g. the group name or the members are missing or repeated, the group name is invalid, or a member is not a positive integer or is given twice.
-  * 1a1. CM terminates the grouping and displays an error message naming the problem.
-
-    Use case resumes from step 1.
-* 1b. One of the indices does not refer to a student in the displayed list.
-  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found.
-
-    Use case resumes from step 1.
-* 1c. One or more of the students are already in the specified group. Group names are compared ignoring case and extra spaces.
-  * 1c1. CM terminates the grouping and displays an error message listing those students.
-        
-    Use case resumes from step 1.
-
-
-**Use case: UC05 - Delete a student**
-
-**MSS**
-1. User requests to <u>search for student contacts</u> (UC08) with no keyword, to view all students.
-2. CM displays a list of all students.
-3. User requests to delete a specific student from the list.
-4. If the student has records of grouping or attendance, CM requests for confirmation.
-5. User confirms deletion.
-6. CM deletes the student and displays a success message.
-
-    Use case ends.
-
-**Extensions**
-* 2a. The list is empty. 
-
-  Use case ends.
-   
-* 3a. The given index is invalid.
-  * 3a1. CM displays an error message. 
-    
-    Use case resumes at step 3.
-  
-* 5a. User chooses to cancel the deletion. 
-
-    Use case ends.
-
-
-**Use case: UC06 - Add a new student contact**
-
-**MSS**
-1. User requests to add a student contact, providing a name and class (and optionally an email).
-2. CM adds the new student contact and displays a success message.
+1. User requests to import contacts from a CSV file, giving the path of the file.
+2. CM checks the file, adds all the contacts in it and displays the number of contacts imported.
+3. For each class added, user requests to <u>list or search student contacts</u> (UC08) using the class as the keyword.
+4. CM displays the contacts of that class.
 
    Use case ends.
 
 **Extensions**
 
-* 1a. A required field is missing, or a provided field is invalid (e.g. name contains symbols, email malformed).
-  * 1a1. CM displays an error message describing the problem.
+* 1a. The path is missing, the file does not exist, the file is not a `.csv` file or the file cannot be read.
+  * 1a1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1b. The given name already exists.
-  * 1b1. CM displays an error message stating the name already exists.
+* 2a. The file is empty or has no contact rows.
+  * 2a1. CM displays an error message and adds no contact.
+  * 2a2. User externally modifies the CSV file.
+
+    Use case resumes at step 1.
+* 2b. The header row is invalid, i.e. the `name` or `class` column is missing, or a column is unknown or repeated.
+  * 2b1. CM displays an error message and adds no contact.
+  * 2b2. User externally modifies the CSV file.
+
+    Use case resumes at step 1.
+* 2c. A row has the wrong number of values, has invalid contact data, or duplicates an existing contact or an earlier row.
+  * 2c1. CM stops at the first such row, displays an error message with the row number and adds no contact.
+  * 2c2. User externally modifies the CSV file.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC04 - Add students to groups (by tagging)**
+
+**Guarantees**
+* The contacts are only linked to the group if all of them can be linked. If any problem is found, none of them is linked.
+
+**MSS**
+1. User requests to <u>list or search student contacts</u> (UC08) to find the students to group.
+2. CM displays the matching contacts.
+3. User requests to link the contacts at the given indices of the displayed list to a group, giving the name of the group.
+4. CM links the contacts to the group and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The list is empty.
+
+    Use case ends.
+
+* 3a. The command format is invalid, the group name is invalid, or an index is not a positive integer.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. An index is repeated, or does not match a contact in the displayed list.
+  * 3b1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3c. One or more of the contacts are already in the group.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+
+
+**Use case: UC05 - Delete a student**
+
+**MSS**
+1. User requests to <u>list or search student contacts</u> (UC08).
+2. CM displays the matching contacts.
+3. User requests to delete a contact in the displayed list, giving the index of the contact.
+4. CM deletes the contact and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The list is empty.
+
+    Use case ends.
+
+* 3a. The index is not a positive integer, or is larger than the number of displayed contacts.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. User knows the name and class of the contact, and requests to delete the contact by its name and class instead of its index. This does not need steps 1 and 2.
+  * 3b1. CM searches all contacts, including those that are not displayed, deletes the contact with that name and class, and displays a success message.
+
+    Use case ends.
+* 3c. No contact has the given name and class.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3d. The command format is invalid, e.g. an index is combined with a name or class, or a name or class is missing or repeated.
+  * 3d1. CM displays an error message.
+
+    Use case resumes at step 3.
+
+
+**Use case: UC06 - Add a new student contact**
+
+**MSS**
+1. User requests to add a contact, giving a name, a class and optionally an email.
+2. CM adds the contact and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid, e.g. a parameter is unknown or repeated, there is text before the first parameter, or the name or class is missing.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1b. The name, class or email is invalid, e.g. it is empty, too long or has characters that are not allowed.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1c. A contact with the same name and class already exists. Names and classes are compared ignoring case and extra spaces, so the same name can be added to a different class.
+  * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
 
 
 **Use case: UC07 - Record grades for a known student**
+
+*(Planned feature, not implemented yet.)*
 
 **MSS**
 1. User requests to record a grade for an assessment for the student.
@@ -530,21 +585,79 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     Use case resumes at step 1.
 
 
-**Use case: UC08 - Search for student contacts**
+**Use case: UC08 - List or search student contacts**
+
+**Guarantees**
+* The search always covers all contacts, whether or not an earlier search is displayed.
 
 **MSS**
-1. User requests to search for student contacts matching a keyword.
-2. CM displays all student contacts whose name, class, or tags match the keyword.
+1. User requests to list contacts, giving a keyword.
+2. CM displays the contacts whose name, class or tags contain the keyword, and the number of contacts displayed.
 
    Use case ends.
 
 **Extensions**
 
-* 2a. No student contact matches the given keyword.
+* 1a. User does not give a keyword.
+  * 1a1. CM displays all contacts.
+
+    Use case ends.
+* 2a. No contact matches the keyword.
   * 2a1. CM displays an empty list.
 
     Use case ends.
 
+
+**Use case: UC09 - View known student's attendance**
+
+*(Planned feature, not implemented yet.)*
+
+**MSS**
+1. User requests to view the attendance of the student.
+2. CM displays the attendance records of the student in chronological order.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid or the student does not exist.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC10 - Clear all contacts**
+
+**MSS**
+1. User requests to clear all contacts.
+2. CM deletes all contacts and displays a success message.
+
+   Use case ends.
+
+
+**Use case: UC11 - View help**
+
+**MSS**
+1. User requests to view help.
+2. CM opens the help window, which shows the link to the user guide.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The help window is already open.
+  * 2a1. CM brings the existing help window to the front instead of opening another one.
+
+    Use case ends.
+
+
+**Use case: UC12 - Exit the application**
+
+**MSS**
+1. User requests to exit the application.
+2. CM saves the window size and position, closes all its windows and exits.
+
+   Use case ends.
 
 ### Non-Functional Requirements
 
