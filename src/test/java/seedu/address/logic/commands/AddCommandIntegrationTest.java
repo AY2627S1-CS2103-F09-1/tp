@@ -1,5 +1,6 @@
 package seedu.address.logic.commands;
 
+import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
@@ -7,7 +8,6 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -34,15 +34,53 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, Messages.format(validPerson)),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
+                expectedModel);
+    }
+
+    @Test
+    public void execute_newPersonWithoutEmail_success() {
+        Person validPerson = new PersonBuilder().withoutEmail().build();
+
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.addPerson(validPerson);
+
+        assertCommandSuccess(new AddCommand(validPerson), model,
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
                 expectedModel);
     }
 
     @Test
     public void execute_duplicatePerson_throwsCommandException() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
-        assertCommandFailure(new AddCommand(personInList), model,
-                AddCommand.MESSAGE_DUPLICATE_PERSON);
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, personInList.getName(),
+                personInList.getClassName());
+        assertCommandFailure(new AddCommand(personInList), model, expectedMessage);
+    }
+
+    @Test
+    public void execute_sameNameAndClassInDifferentCase_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person duplicatePerson = new PersonBuilder(personInList)
+                .withName(personInList.getName().toString().toUpperCase())
+                .withClassName(personInList.getClassName().toString().toLowerCase())
+                .build();
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
+                duplicatePerson.getClassName());
+        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
+    }
+
+    @Test
+    public void execute_sameNameDifferentClass_success() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person samePersonInOtherClass = new PersonBuilder(personInList).withClassName(VALID_CLASS_BOB).build();
+
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.addPerson(samePersonInOtherClass);
+
+        assertCommandSuccess(new AddCommand(samePersonInOtherClass), model,
+                String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName()),
+                expectedModel);
     }
 
 }

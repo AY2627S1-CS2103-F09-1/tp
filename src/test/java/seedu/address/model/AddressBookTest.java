@@ -3,7 +3,8 @@ package seedu.address.model;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_ADDRESS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
+import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
@@ -44,7 +45,7 @@ public class AddressBookTest {
     @Test
     public void resetData_withDuplicatePersons_throwsDuplicatePersonException() {
         // Two persons with the same identity fields
-        Person editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND)
+        Person editedAlice = new PersonBuilder(ALICE).withEmail(VALID_EMAIL_BOB).withTags(VALID_TAG_HUSBAND)
                 .build();
         List<Person> newPersons = List.of(ALICE, editedAlice);
         AddressBookStub newData = new AddressBookStub(newPersons);
@@ -71,8 +72,23 @@ public class AddressBookTest {
     @Test
     public void hasPerson_personWithSameIdentityFieldsInAddressBook_returnsTrue() {
         addressBook.addPerson(ALICE);
-        Person editedAlice = new PersonBuilder(ALICE).withAddress(VALID_ADDRESS_BOB).withTags(VALID_TAG_HUSBAND)
+        Person editedAlice = new PersonBuilder(ALICE).withEmail(VALID_EMAIL_BOB).withTags(VALID_TAG_HUSBAND)
                 .build();
+        assertTrue(addressBook.hasPerson(editedAlice));
+    }
+
+    @Test
+    public void hasPerson_sameNameDifferentClass_returnsFalse() {
+        addressBook.addPerson(ALICE);
+        Person aliceInOtherClass = new PersonBuilder(ALICE).withClassName(VALID_CLASS_BOB).build();
+        assertFalse(addressBook.hasPerson(aliceInOtherClass));
+    }
+
+    @Test
+    public void hasPerson_nameAndClassDifferInCaseAndSpaces_returnsTrue() {
+        addressBook.addPerson(ALICE);
+        Person editedAlice = new PersonBuilder(ALICE).withName("alice   PAULINE")
+                .withClassName(ALICE.getClassName().toString().toLowerCase() + " ").build();
         assertTrue(addressBook.hasPerson(editedAlice));
     }
 

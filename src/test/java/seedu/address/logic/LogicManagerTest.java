@@ -1,17 +1,18 @@
 package seedu.address.logic;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
-import static seedu.address.logic.commands.CommandTestUtil.ADDRESS_DESC_AMY;
+import static seedu.address.logic.commands.CommandTestUtil.CLASS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.PHONE_DESC_AMY;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 
 import org.junit.jupiter.api.BeforeEach;
@@ -21,13 +22,17 @@ import org.junit.jupiter.api.io.TempDir;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.ListCommand;
+import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.TagCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.StorageManager;
@@ -46,7 +51,7 @@ public class LogicManagerTest {
     @BeforeEach
     public void setUp() {
         JsonAddressBookStorage addressBookStorage =
-                new JsonAddressBookStorage(temporaryFolder.resolve("addressBook.json"));
+                new JsonAddressBookStorage(addressBookFilePath());
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
         StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
         logic = new LogicManager(model, storage);
@@ -71,6 +76,42 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_tagCommand_linksContactAndSavesAddressBook() throws Exception {
+        Person amy = new PersonBuilder(AMY).withTags().build();
+        model.addPerson(amy);
+        Model expectedModel = new ModelManager();
+        expectedModel.addPerson(amy.withTag(new Tag("Group A")));
+
+        String expectedMessage = String.format(TagCommand.MESSAGE_SUCCESS, "Group A", "Amy Bee (A1)");
+        assertCommandSuccess("tag /group Group A /members 1", expectedMessage, expectedModel);
+
+        assertEquals(expectedModel.getAddressBook(), new AddressBook(readSavedAddressBook()));
+    }
+
+    @Test
+    public void execute_tagCommandContactAlreadyInGroup_throwsCommandExceptionAndDoesNotSave() {
+        model.addPerson(new PersonBuilder(AMY).withTags("Group A").build());
+
+        assertCommandException("tag /group group   a /members 1",
+                String.format(TagCommand.MESSAGE_ALREADY_IN_GROUP, "Amy Bee (A1)"));
+        assertFalse(Files.exists(addressBookFilePath()));
+    }
+
+    @Test
+    public void execute_tagCommandIndexNotInList_throwsCommandExceptionAndDoesNotSave() {
+        model.addPerson(new PersonBuilder(AMY).withTags().build());
+
+        assertCommandException("tag /group Group A /members 1,2",
+                String.format(TagCommand.MESSAGE_INDEX_NOT_FOUND, 2));
+        assertFalse(Files.exists(addressBookFilePath()));
+    }
+
+    @Test
+    public void execute_tagCommandMissingMembers_throwsParseException() {
+        assertParseException("tag /group Group A", TagCommandParser.MESSAGE_MISSING_MEMBERS);
+    }
+
+    @Test
     public void execute_storageThrowsIoException_throwsCommandException() {
         assertCommandFailureForExceptionFromStorage(DUMMY_IO_EXCEPTION, String.format(
                 LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()));
@@ -85,6 +126,17 @@ public class LogicManagerTest {
     @Test
     public void getFilteredPersonList_modifyList_throwsUnsupportedOperationException() {
         assertThrows(UnsupportedOperationException.class, () -> logic.getFilteredPersonList().remove(0));
+    }
+
+    private Path addressBookFilePath() {
+        return temporaryFolder.resolve("addressBook.json");
+    }
+
+    /**
+     * Returns the address book that was saved to the file the logic under test writes to.
+     */
+    private ReadOnlyAddressBook readSavedAddressBook() throws Exception {
+        return new JsonAddressBookStorage(addressBookFilePath()).readAddressBook().orElseThrow();
     }
 
     /**
@@ -164,8 +216,8 @@ public class LogicManagerTest {
         logic = new LogicManager(model, storage);
 
         // Triggers the saveAddressBook method by executing an add command
-        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + PHONE_DESC_AMY
-                + EMAIL_DESC_AMY + ADDRESS_DESC_AMY;
+        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + CLASS_DESC_AMY
+                + EMAIL_DESC_AMY;
         Person expectedPerson = new PersonBuilder(AMY).withTags().build();
         ModelManager expectedModel = new ModelManager();
         expectedModel.addPerson(expectedPerson);

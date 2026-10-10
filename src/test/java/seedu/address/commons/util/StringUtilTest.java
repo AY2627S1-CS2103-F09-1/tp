@@ -1,5 +1,6 @@
 package seedu.address.commons.util;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
@@ -128,6 +129,22 @@ public class StringUtilTest {
     /*
      * Equivalence Partitions: null, valid throwable object
      */
+
+    @Test
+    public void toComparisonKey_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.toComparisonKey(null));
+    }
+
+    @Test
+    public void toComparisonKey_variousInputs_correctKey() {
+        assertEquals("", StringUtil.toComparisonKey(""));
+        assertEquals("", StringUtil.toComparisonKey("   "));
+        assertEquals("john tan", StringUtil.toComparisonKey("john tan")); // already a key
+        assertEquals("john tan", StringUtil.toComparisonKey("John TAN")); // case
+        assertEquals("john tan", StringUtil.toComparisonKey("  john tan  ")); // leading/trailing whitespace
+        assertEquals("john tan", StringUtil.toComparisonKey("john   \t tan")); // repeated whitespace
+        assertEquals("s/o-1", StringUtil.toComparisonKey("S/O-1")); // symbols kept
+    }
 
     @Test
     public void getDetails_exceptionGiven() {

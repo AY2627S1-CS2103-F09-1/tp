@@ -1,6 +1,7 @@
 package seedu.address.ui;
 
 import java.util.Comparator;
+import java.util.List;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
@@ -8,6 +9,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 
 /**
  * A UI component that displays information of a {@code Person}.
@@ -33,9 +35,7 @@ public class PersonCard extends UiPart<Region> {
     @FXML
     private Label id;
     @FXML
-    private Label phone;
-    @FXML
-    private Label address;
+    private Label className;
     @FXML
     private Label email;
     @FXML
@@ -49,11 +49,25 @@ public class PersonCard extends UiPart<Region> {
         this.person = person;
         id.setText(displayedIndex + ". ");
         name.setText(person.getName().fullName);
-        phone.setText(person.getPhone().value);
-        address.setText(person.getAddress().value);
-        email.setText(person.getEmail().value);
-        person.getTags().stream()
-                .sorted(Comparator.comparing(tag -> tag.tagName))
-                .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+        className.setText(person.getClassName().value);
+        person.getEmail().ifPresentOrElse(personEmail -> email.setText(personEmail.value), () -> hide(email));
+        getSortedTags(person).forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+    }
+
+    /**
+     * Returns the tags of {@code person} in alphabetical order, ignoring case.
+     */
+    static List<Tag> getSortedTags(Person person) {
+        return person.getTags().stream()
+                .sorted(Comparator.comparing(tag -> tag.tagName, String.CASE_INSENSITIVE_ORDER))
+                .toList();
+    }
+
+    /**
+     * Hides the given {@code label} and stops it from taking up space in the card.
+     */
+    private static void hide(Label label) {
+        label.setVisible(false);
+        label.setManaged(false);
     }
 }

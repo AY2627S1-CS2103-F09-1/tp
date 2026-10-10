@@ -6,11 +6,27 @@ import static seedu.address.commons.util.AppUtil.checkArgument;
 import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.Arrays;
+import java.util.Locale;
 
 /**
  * Helper functions for handling strings.
  */
 public class StringUtil {
+
+    private static final String WHITESPACE_REGEX = "\\s+";
+
+    /**
+     * Returns {@code s} in lower case with leading and trailing whitespace removed and repeated whitespace
+     * collapsed into a single space, so that strings that only differ in these respects have the same key.
+     *   <br>examples:<pre>
+     *       toComparisonKey("John   TAN ") equals "john tan"
+     *       </pre>
+     * @param s cannot be null
+     */
+    public static String toComparisonKey(String s) {
+        requireNonNull(s);
+        return s.trim().replaceAll(WHITESPACE_REGEX, " ").toLowerCase(Locale.ROOT);
+    }
 
     /**
      * Returns true if the {@code sentence} contains the {@code word}.
