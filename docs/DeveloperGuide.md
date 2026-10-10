@@ -184,12 +184,12 @@ This section describes some noteworthy details on how certain features are imple
 The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
 
 * `ListCommandParser#parse(String)` trims the argument. If it is empty, it returns `new ListCommand()`. Otherwise, it returns `new ListCommand(new PersonMatchesKeyword(keyword))`, where `keyword` is the whole trimmed argument, so a full name or class with spaces is one keyword.
-* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields are checked separately, so a keyword cannot match across two fields. Email is not checked.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. Email is not checked. Matching is a plain substring test and not a regular expression, so symbols such as `.` and `/` are matched as typed. A tag name can contain spaces, as in the group `Group A`, so a keyword with several words can match a tag. A blank keyword matches every contact, but `ListCommandParser` never creates one, because a blank argument lists all contacts.
 * `ListCommand` holds a `Predicate<Person>`, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with it. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search.
 * Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
 * `ListCommand` does not modify the address book, so it does not call `Model#commitAddressBook()`.
 
-Contacts are displayed in the order they were added. Sorting them alphabetically is not implemented yet.
+Contacts are displayed in the order they were added.
 
 #### Design considerations
 
@@ -198,7 +198,7 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 * **Alternative 1 (current choice):** Case-insensitive substring match on the name, class and tags.
   * Pros: Supports partial matches, such as `jo` for `John` or `2103` for `CS2103`, with one simple predicate.
   * Cons: A short keyword, such as `a`, matches many contacts.
-* **Alternative 2:** Whole-word match, like the `find` command.
+* **Alternative 2:** Whole-word match, so that `Han` does not match `Hans`.
   * Pros: More precise results.
   * Cons: Cannot find a contact from part of a name or class, which the search is meant to support.
 
@@ -206,8 +206,8 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 
 * **Alternative 1 (current choice):** The whole argument is one keyword.
   * Pros: A full name or a class with spaces, such as `Tutorial 1`, can be searched.
-  * Cons: Cannot search for several separate keywords at once. A keyword with several words cannot match a tag, because tags are a single word.
-* **Alternative 2:** Split the argument on whitespace and match any keyword, like the `find` command.
+  * Cons: Cannot search for several separate keywords at once. A keyword with several words cannot match across two tags, such as `Group A owesMoney`.
+* **Alternative 2:** Split the argument on whitespace and show the contacts that match any of the words.
   * Pros: Allows searching for several keywords at once.
   * Cons: A full name or a class with spaces can no longer be searched as a phrase.
 
@@ -219,11 +219,6 @@ Contacts are displayed in the order they were added. Sorting them alphabetically
 * **Alternative 2:** Search only the contacts currently displayed.
   * Pros: Allows narrowing down a result step by step.
   * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
-
-<box type="info" seamless>
-
-**Note:** The earlier `find` command overlaps with this feature and is planned to be removed.
-</box>
 
 ### \[Proposed\] Undo/redo feature
 
@@ -587,11 +582,17 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list alex   yeoh`<br>
       Expected: Only Alex Yeoh is shown. The whole argument is one keyword and extra spaces are ignored.
 
-   1. Test case: `list ric`<br>
+   1. Test case: `list rid`<br>
       Expected: No contact is shown. The characters of the keyword must appear next to each other, so it does not match the tag `friends`.
 
    1. Test case: `list zzz`<br>
       Expected: No contact is shown, and the status message shows that 0 contacts are listed.
+
+   1. Test case: `list /class A1`<br>
+      Expected: No contact is shown. `list` has no parameters, so the text is searched for as it is typed and does not filter by class.
+
+   1. Test case: `list`, then `tag /group Group A /members 1,2`, then `list group   a`<br>
+      Expected: Only the two contacts that were linked to `Group A` are shown. A keyword with several words matches a tag whose name has spaces.
 
    1. Test case: `list yeoh`, followed by `list david`<br>
       Expected: After `list david`, only David Li is shown. The second search covers all contacts, not only the earlier result.
