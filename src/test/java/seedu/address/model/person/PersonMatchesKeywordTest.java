@@ -3,6 +3,7 @@ package seedu.address.model.person;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -80,6 +81,62 @@ public class PersonMatchesKeywordTest {
         assertTrue(new PersonMatchesKeyword("amy").test(personWithoutTags));
         assertTrue(new PersonMatchesKeyword("a1").test(personWithoutTags));
         assertFalse(new PersonMatchesKeyword("friend").test(personWithoutTags));
+    }
+
+    @Test
+    public void test_keywordInEmail_returnsFalse() {
+        Person personWithEmail = new PersonBuilder().withName("Amy Bee").withClassName("A1")
+                .withEmail("secret@example.com").build();
+
+        assertFalse(new PersonMatchesKeyword("secret").test(personWithEmail));
+        assertFalse(new PersonMatchesKeyword("example.com").test(personWithEmail));
+        assertFalse(new PersonMatchesKeyword("secret@example.com").test(personWithEmail));
+    }
+
+    @Test
+    public void test_keywordWithSpecialCharacters_matchedLiterally() {
+        Person personWithSlash = new PersonBuilder().withName("Tan s/o Kumar").withClassName("A1").build();
+        Person personWithDot = new PersonBuilder().withName("Dr. Lee").withClassName("A1").build();
+
+        // characters that are allowed in names are matched as typed
+        assertTrue(new PersonMatchesKeyword("s/o").test(personWithSlash));
+        assertTrue(new PersonMatchesKeyword("dr.").test(personWithDot));
+
+        // regular expression symbols have no special meaning
+        assertFalse(new PersonMatchesKeyword(".").test(personWithSlash));
+        assertFalse(new PersonMatchesKeyword("t.*r").test(personWithSlash));
+        assertFalse(new PersonMatchesKeyword("r.l").test(personWithDot));
+    }
+
+    @Test
+    public void test_multiWordKeywordInTagName_returnsTrue() {
+        Person personInGroup = new PersonBuilder().withName("Amy Bee").withClassName("A1")
+                .withTags("Group A", "owesMoney").build();
+
+        assertTrue(new PersonMatchesKeyword("group a").test(personInGroup));
+        assertTrue(new PersonMatchesKeyword("  GROUP    A ").test(personInGroup));
+        assertTrue(new PersonMatchesKeyword("oup").test(personInGroup));
+    }
+
+    @Test
+    public void test_keywordSpansDifferentTags_returnsFalse() {
+        Person personInGroup = new PersonBuilder().withName("Amy Bee").withClassName("A1")
+                .withTags("Group A", "owesMoney").build();
+
+        assertFalse(new PersonMatchesKeyword("group a owesmoney").test(personInGroup));
+        assertFalse(new PersonMatchesKeyword("a owesmoney").test(personInGroup));
+    }
+
+    @Test
+    public void test_blankKeyword_matchesEveryone() {
+        // the list command never builds this, because it treats a blank argument as no keyword
+        assertTrue(new PersonMatchesKeyword("").test(person));
+        assertTrue(new PersonMatchesKeyword("   ").test(person));
+    }
+
+    @Test
+    public void constructor_nullKeyword_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonMatchesKeyword(null));
     }
 
     @Test

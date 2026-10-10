@@ -39,4 +39,11 @@ public class ListCommandParserTest {
         assertParseSuccess(parser, " John \t Doe  ", expectedListCommand);
     }
 
+    @Test
+    public void parse_parameterLikeText_treatedAsPartOfKeyword() {
+        // list has no parameters, so text that looks like a prefix is searched for like any other text
+        assertParseSuccess(parser, "/class A1", new ListCommand(new PersonMatchesKeyword("/class A1")));
+        assertParseSuccess(parser, " s/o ", new ListCommand(new PersonMatchesKeyword("s/o")));
+    }
+
 }
