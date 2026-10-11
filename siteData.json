@@ -50,6 +50,7 @@
         "common-classes": "Common classes",
         "implementation": "Implementation",
         "listing-and-searching-contacts-feature": "Listing and searching contacts feature",
+        "order-of-contacts-feature": "Order of contacts feature",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "proposed-data-archiving": "[Proposed] Data archiving",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
