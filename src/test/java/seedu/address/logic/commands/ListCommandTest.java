@@ -10,6 +10,7 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
+import static seedu.address.testutil.TypicalPersons.HOON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.Arrays;
@@ -97,6 +98,18 @@ public class ListCommandTest {
 
         assertCommandSuccess(new ListCommand(predicate), model, expectedMessage, expectedModel);
         assertEquals(Arrays.asList(BENSON, DANIEL), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_keywordMatchesPersonsAddedAtDifferentTimes_newestMatchIsFirst() {
+        model.addPerson(HOON);
+        expectedModel.addPerson(HOON);
+        PersonMatchesKeyword predicate = new PersonMatchesKeyword("meier");
+        expectedModel.updateFilteredPersonList(predicate);
+        String expectedMessage = String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 3);
+
+        assertCommandSuccess(new ListCommand(predicate), model, expectedMessage, expectedModel);
+        assertEquals(Arrays.asList(HOON, BENSON, DANIEL), model.getFilteredPersonList());
     }
 
     @Test
