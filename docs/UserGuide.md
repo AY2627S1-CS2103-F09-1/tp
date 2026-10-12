@@ -134,11 +134,8 @@ Format: `list [KEYWORD]`
 * The search is case-insensitive; for example, `john` matches `John`.
 * Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
 * The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the tag `friend`.
-* A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* A keyword with several words can match a name, a class, or a single tag whose name has spaces, such as the group `Group A`. For example, `list group a` shows the contacts in the group `Group A`.
 * The keyword must match within a single name, class or tag; for example, it cannot match the end of a name and the start of a class, or run across two tags.
-* Characters are matched exactly as typed, including `/`, `'`, `-`, `.` and `_`. For example, `list s/o` finds `Tan s/o Kumar`, and `list .` finds only names and classes that contain a full stop.
 * `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
@@ -147,10 +144,7 @@ Format: `list [KEYWORD]`
 Examples:
 * `list` shows all contacts.
 * `list John` shows `John Doe` and any contact in a class or with a tag containing `john`.
-* `list CS2103` shows all contacts in a class containing `CS2103`.
-* `list friend` shows all contacts with a tag containing `friend`.
-* `list John Doe` shows contacts whose name or class contains `John Doe`.
-* `list Group A` shows contacts in the group `Group A`, as well as any contact whose name or class contains `Group A`.
+* `list Group A` shows any contact whose name, class or tag contains `Group A`.
 
 ### Deleting a contact: `delete`
 
@@ -190,7 +184,7 @@ Examples:
 
 ### Linking contacts to a group: `tag`
 
-Links one or more contacts to a group, so that you can tell which contacts belong together, such as the members of a team.
+Links one or more contacts to a group.
 
 Format: `tag /group GROUP_NAME /members INDEX[,INDEX]...`
 

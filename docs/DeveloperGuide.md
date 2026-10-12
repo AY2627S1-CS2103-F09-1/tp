@@ -216,6 +216,45 @@ The contacts that match a keyword are displayed in the same order as in the whol
   * Pros: Allows narrowing down a result step by step.
   * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
 
+### Deleting a contact feature
+
+#### Implementation
+
+The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand`, which both extend the abstract `DeleteCommand` (see [Logic component](#logic-component)).
+
+* `DeleteByIndexCommand#execute(Model)` rejects an index that is larger than the displayed list, then deletes the contact at that index.
+* `DeleteByNameAndClassCommand#execute(Model)` searches the whole address book, not the displayed list, using `Person#hasNameAndClass(String, String)`. It reports `No contact found` if no contact matches.
+* The name and class given to `DeleteByNameAndClassCommand` are not checked against the rules for `Name` and `ClassName`.
+
+#### Design considerations
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `DeleteCommand` with one subclass for each way of identifying the contact.
+  * Pros: Each `execute` method does one thing and can be tested on its own, and an invalid combination, such as an index together with a name, cannot be represented.
+  * Cons: One command word maps to two classes, so the parser must choose between them.
+* **Alternative 2:** A single `DeleteCommand` with an optional index and an optional name and class.
+  * Pros: Only one command class.
+  * Cons: `execute` must branch on which fields are set, and an invalid combination of fields is possible.
+
+**Aspect: Which contacts a delete by name and class searches**
+
+* **Alternative 1 (current choice):** The whole address book.
+  * Pros: Works whatever is displayed, so the user does not have to run `list` first.
+  * Cons: Can delete a contact that is not currently displayed.
+* **Alternative 2:** Only the displayed contacts.
+  * Pros: Consistent with deleting by index.
+  * Cons: Fails after a search that hides the contact, which defeats the purpose of using a name.
+
+**Aspect: Whether the name and class are validated**
+
+* **Alternative 1 (current choice):** They are only compared with the stored contacts, ignoring case and extra spaces.
+  * Pros: The user always gets the same message, `No contact found`, and the rules for `add` can change without affecting `delete`.
+  * Cons: A name with a typo in a character that is not allowed gets no hint about the allowed format.
+* **Alternative 2:** Validate them with the rules for `add`.
+  * Pros: Gives more specific error messages.
+  * Cons: Duplicates the validation rules, and adds errors that do not help the user, since no stored contact can have an invalid name.
+
 ### Order of contacts feature
 
 #### Implementation
@@ -252,6 +291,35 @@ The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the 
 * `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
 * `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The constructor of `TagCommand` asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. `TagCommandParser` guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
 * The success message lists the linked contacts in the order the indices were given. It shows the group name with the casing it was typed in, after leading and trailing spaces are removed and repeated spaces are collapsed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
+
+#### Design considerations
+
+**Aspect: How a group is represented**
+
+* **Alternative 1 (current choice):** A group is a `Tag` on each of its members.
+  * Pros: Reuses the existing `Tag` class, storage and `list` search, and a contact can be in several groups without any new data structure.
+  * Cons: A group has no identity of its own. It exists only while a contact has the tag, and it cannot hold group-level data.
+* **Alternative 2:** A separate `Group` class that stores its members.
+  * Pros: Allows group-level data and operations.
+  * Cons: Adds a new entity to `Model` and `Storage`, and must be kept in sync when contacts are deleted.
+
+**Aspect: What happens when some contacts cannot be linked**
+
+* **Alternative 1 (current choice):** All or nothing. If any index is invalid or any contact is already in the group, no contact is linked.
+  * Pros: The result is predictable, and the user can correct the command and run it again without working out who was linked.
+  * Cons: One bad index blocks the other contacts.
+* **Alternative 2:** Link the contacts that can be linked and report the rest.
+  * Pros: Less retyping.
+  * Cons: The user must work out which contacts were linked, and the data is left half-changed.
+
+**Aspect: How the members are identified**
+
+* **Alternative 1 (current choice):** By index in the displayed list.
+  * Pros: Short to type, and consistent with `delete` and `attendance`.
+  * Cons: The result depends on what is displayed, so the wrong contacts are linked if the list is not what the user expects.
+* **Alternative 2:** By name and class.
+  * Pros: Does not depend on the displayed list.
+  * Cons: A long command for several members, and easy to mistype.
 
 ### \[Proposed\] Undo/redo feature
 
