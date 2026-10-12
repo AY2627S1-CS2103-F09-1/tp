@@ -98,6 +98,7 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
 * Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same person as `John Tan` in class `A1`.
 * The email is optional.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
+* The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -139,7 +140,7 @@ Format: `list [KEYWORD]`
 * `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in the address book, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
-* Contacts are currently shown in the order they were added.
+* Contacts are shown from the most recently added to the oldest, whether or not a keyword is given.
 
 Examples:
 * `list` shows all contacts.
@@ -252,6 +253,7 @@ Format: `import PATH`
   * On Windows, both forward and backward slashes (`/` and `\`) are accepted.
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
+* The imported contacts are shown at the top of the list, in the same order as in the file.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
