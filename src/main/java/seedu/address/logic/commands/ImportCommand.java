@@ -59,7 +59,7 @@ public class ImportCommand extends Command {
 
         Path path = resolvePath(filePath);
         validatePath(path);
-        String content = readFile(path);
+        String content = readFile(path).strip(); // read file and ignore leading and trailing whitespace
         CsvParser.ParsedCsv csv = parseCsv(content);
 
         List<Person> persons = parsePersons(csv, model);
