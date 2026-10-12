@@ -98,6 +98,7 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
 * Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`.
 * The email is optional.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
+* The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -130,14 +131,16 @@ Format: `list [KEYWORD]`
 * If `KEYWORD` is given, only the contacts whose name, class or tags contain it are shown, and the message shows how many contacts were listed.
 * The search is case-insensitive; for example, `john` matches `John`.
 * Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
-* The characters of `KEYWORD` must appear next to each other; for example, `ric` does not match the tag `friend`.
+* The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the tag `friend`.
 * A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* A keyword with several words can match a name or a class, but not a tag, as tags are a single word.
-* The keyword must match within a single field; for example, it cannot match the end of a name and the start of a class.
+* A keyword with several words can match a name, a class, or a single tag whose name has spaces, such as the group `Group A`. For example, `list group a` shows the contacts in the group `Group A`.
+* The keyword must match within a single name, class or tag; for example, it cannot match the end of a name and the start of a class, or run across two tags.
+* Characters are matched exactly as typed, including `/`, `'`, `-`, `.` and `_`. For example, `list s/o` finds `Tan s/o Kumar`, and `list .` finds only names and classes that contain a full stop.
+* `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
-* Contacts are currently shown in the order they were added.
+* Contacts are shown from the most recently added to the oldest, whether or not a keyword is given.
 
 Examples:
 * `list` shows all contacts.
@@ -145,6 +148,7 @@ Examples:
 * `list CS2103` shows all contacts in a class containing `CS2103`.
 * `list friend` shows all contacts with a tag containing `friend`.
 * `list John Doe` shows contacts whose name or class contains `John Doe`.
+* `list Group A` shows contacts in the group `Group A`, as well as any contact whose name or class contains `Group A`.
 
 ### Deleting a contact: `delete`
 
@@ -233,6 +237,7 @@ Format: `import PATH`
   * On Windows, both forward and backward slashes (`/` and `\`) are accepted.
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
+* The imported contacts are shown at the top of the list, in the same order as in the file.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 

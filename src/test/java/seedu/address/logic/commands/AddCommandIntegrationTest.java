@@ -1,5 +1,6 @@
 package seedu.address.logic.commands;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
@@ -36,6 +37,29 @@ public class AddCommandIntegrationTest {
         assertCommandSuccess(new AddCommand(validPerson), model,
                 String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
                 expectedModel);
+    }
+
+    @Test
+    public void execute_newPerson_showsNewPersonAtTopOfList() throws Exception {
+        Person previousFirstPerson = model.getFilteredPersonList().get(0);
+        Person validPerson = new PersonBuilder().build();
+
+        new AddCommand(validPerson).execute(model);
+
+        assertEquals(validPerson, model.getFilteredPersonList().get(0));
+        assertEquals(previousFirstPerson, model.getFilteredPersonList().get(1));
+    }
+
+    @Test
+    public void execute_newPersonWhileListIsFiltered_showsNewPersonAtTopOfFullList() throws Exception {
+        Person previousFirstPerson = model.getFilteredPersonList().get(0);
+        Person validPerson = new PersonBuilder().build();
+        model.updateFilteredPersonList(person -> false);
+
+        new AddCommand(validPerson).execute(model);
+
+        assertEquals(validPerson, model.getFilteredPersonList().get(0));
+        assertEquals(previousFirstPerson, model.getFilteredPersonList().get(1));
     }
 
     @Test

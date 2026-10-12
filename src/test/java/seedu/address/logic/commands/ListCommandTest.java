@@ -6,10 +6,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_PERSONS_LISTED_OVERVIEW;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 import static seedu.address.testutil.TypicalPersons.DANIEL;
+import static seedu.address.testutil.TypicalPersons.HOON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.Arrays;
@@ -100,10 +102,34 @@ public class ListCommandTest {
     }
 
     @Test
+    public void execute_keywordMatchesPersonsAddedAtDifferentTimes_newestMatchIsFirst() {
+        model.addPerson(HOON);
+        expectedModel.addPerson(HOON);
+        PersonMatchesKeyword predicate = new PersonMatchesKeyword("meier");
+        expectedModel.updateFilteredPersonList(predicate);
+        String expectedMessage = String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 3);
+
+        assertCommandSuccess(new ListCommand(predicate), model, expectedMessage, expectedModel);
+        assertEquals(Arrays.asList(HOON, BENSON, DANIEL), model.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_noKeywordAfterKeyword_showsEverything() {
         model.updateFilteredPersonList(new PersonMatchesKeyword("meier"));
 
         assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SUCCESS, expectedModel);
+    }
+
+    @Test
+    public void constructor_nullPredicate_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new ListCommand(null));
+    }
+
+    @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new ListCommand().execute(null));
+        assertThrows(NullPointerException.class, () ->
+                new ListCommand(new PersonMatchesKeyword("meier")).execute(null));
     }
 
     @Test
