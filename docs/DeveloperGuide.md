@@ -192,7 +192,7 @@ The `list` command shows all contacts, or, when it is given a keyword, only the 
 * Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
 * `ListCommand` does not modify the address book, so it does not call `Model#commitAddressBook()`.
 
-Contacts are displayed in the order they were added.
+The contacts that match a keyword are displayed in the same order as in the whole list, from the most recently added to the oldest, because a filter only hides contacts (see [Order of contacts](#order-of-contacts-feature)).
 
 #### Design considerations
 
@@ -222,6 +222,33 @@ Contacts are displayed in the order they were added.
 * **Alternative 2:** Search only the contacts currently displayed.
   * Pros: Allows narrowing down a result step by step.
   * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
+
+### Order of contacts feature
+
+#### Implementation
+
+The contacts are displayed from the most recently added to the oldest. The order is kept in the list itself, so the displayed order, the order in memory and the order in the data file are all the same.
+
+* `UniquePersonList#add(Person)` inserts the contact at index 0 instead of at the end. `AddCommand#execute(Model)` reaches it through `Model#addPerson(Person)` and `AddressBook#addPerson(Person)`.
+* `ModelManager#addPerson(Person)` also calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, so the new contact is visible at the top even if a search was displayed.
+* A filter only hides contacts and never reorders them, so search results are also shown from the most recently added to the oldest.
+* `Model#setPerson(Person, Person)` replaces a contact in place, so `edit` and `tag` do not change the position of a contact.
+* `ImportCommand#execute(Model)` adds the contacts of the file from the last row to the first, so that the first row ends up at the top and the imported contacts appear in the order of the file.
+* Code that builds an address book from a whole list must not add the contacts one by one, as that would reverse their order. `JsonSerializableAddressBook#toModelType()`, `SampleDataUtil#getSampleAddressBook()` and `TypicalPersons#getTypicalAddressBook()` use `AddressBook#setPersons(List)`, which keeps the given order.
+
+#### Design considerations
+
+**Aspect: Where the order is kept**
+
+* **Alternative 1 (current choice):** The list is stored in the displayed order, and `add` inserts at the front.
+  * Pros: Simple, with no extra state. Indices, filters, saving and loading all see the same order.
+  * Cons: Every place that builds a list from several contacts must keep the given order, as described above.
+* **Alternative 2:** Store the contacts in the order they were added and display them in reverse.
+  * Pros: `add` keeps appending, and loading needs no change.
+  * Cons: JavaFX has no reversed `ObservableList`, so the displayed list would need its own sorting or mapping. Indices would then refer to a different order from the stored list.
+* **Alternative 3:** Give each `Person` a timestamp and sort the displayed list by it.
+  * Pros: The order survives any change to the stored order.
+  * Cons: Adds a field to `Person` and to the data file, and data files from before the change have no timestamps.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -727,13 +754,20 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data.
 
    1. Test case: `add /name John Doe /class A1 /email johnd@example.com`<br>
-      Expected: John Doe is added to the list. The status message shows `John Doe added to contacts`.
+      Expected: John Doe is added at the top of the list. The status message shows `John Doe added to contacts`.
 
    1. Test case: `add /name Betsy Crowe /class A2`<br>
-      Expected: Betsy Crowe is added without an email. The status message shows `Betsy Crowe added to contacts`.
+      Expected: Betsy Crowe is added without an email, at the top of the list above John Doe. The status message shows `Betsy Crowe added to contacts`.
 
    1. Test case: `add /name Alex Yeoh /class B2`<br>
-      Expected: Alex Yeoh is added to class B2. The same name can be added to a different class.
+      Expected: Alex Yeoh is added to class B2 at the top of the list. The same name can be added to a different class.
+
+1. Adding a contact while a search is displayed
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `list yeoh`, followed by `add /name Betsy Crowe /class A2`<br>
+      Expected: After `list yeoh`, only Alex Yeoh is shown. After the `add` command, all contacts are shown again, with Betsy Crowe at the top, so the new contact is visible.
 
 1. Adding a contact that already exists
 
@@ -772,7 +806,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data (Alex Yeoh, Bernice Yu, Charlotte Oliveiro, David Li, Irfan Ibrahim and Roy Balakrishnan).
 
    1. Test case: `list`<br>
-      Expected: All six contacts are shown.
+      Expected: All six contacts are shown, from Alex Yeoh at the top to Roy Balakrishnan at the bottom.
 
    1. Test case: `list yeoh`, followed by `list`<br>
       Expected: After `list yeoh`, only Alex Yeoh is shown. After `list`, all six contacts are shown again.
@@ -810,6 +844,23 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `list yeoh`, followed by `list david`<br>
       Expected: After `list david`, only David Li is shown. The second search covers all contacts, not only the earlier result.
+
+1. Searching contacts that contain special characters
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `add /name Tan s/o Kumar /class C1`, followed by `list s/o`<br>
+      Expected: Only Tan s/o Kumar is shown. Characters such as `/` are matched exactly as typed.
+
+1. Order of the listed contacts
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `add /name John Doe /class A1`, followed by `add /name Betsy Crowe /class A2`, followed by `list`<br>
+      Expected: Betsy Crowe is at the top, followed by John Doe, and then the six sample contacts from Alex Yeoh down. The contacts are shown from the most recently added to the oldest.
+
+   1. Test case: `list a1`, after the test case above<br>
+      Expected: John Doe, Alex Yeoh and Bernice Yu are shown, in that order. The search results are in the same order as in the whole list.
 
 ### Deleting a contact
 
@@ -854,7 +905,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data. List all contacts using the `list` command.
 
    1. Test case: `tag /group Group A /members 1,3`<br>
-      Expected: Alex Yeoh and Charlotte Oliveiro both show the label `Group A`. The status message shows `Contacts successfully linked to group Group A: Alex Yeoh (A1), Charlotte Oliveiro (A2)`.
+      Expected: Alex Yeoh and Charlotte Oliveiro both show the label `Group A`, and stay at the same positions in the list. The status message shows `Contacts successfully linked to group Group A: Alex Yeoh (A1), Charlotte Oliveiro (A2)`.
 
    1. Test case: `list david`, followed by `tag /group Team 2 /members 1`<br>
       Expected: David Li shows the label `Team 2`. The index refers to the contact in the displayed list, which is David Li.
@@ -899,7 +950,7 @@ testers are expected to do more *exploratory* testing.
       ```
 
    1. Test case: `import students.csv`<br>
-      Expected: John Doe and Betsy Crowe are added to the list. The status message shows `Imported 2 contacts from students.csv`.
+      Expected: John Doe and Betsy Crowe are added at the top of the list, in the same order as in the file, so John Doe is above Betsy Crowe. The status message shows `Imported 2 contacts from students.csv`.
 
    1. Test case: `import students.csv` again<br>
       Expected: No contact is added. The status message shows `Duplicate contact on row 2`.
