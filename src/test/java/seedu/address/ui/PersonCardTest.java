@@ -3,11 +3,13 @@ package seedu.address.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import java.time.LocalDate;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.model.person.Attendance;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonCardTest {
@@ -56,6 +58,13 @@ public class PersonCardTest {
                         + "12-Sep-2026  present\n"
                         + "+1 older record(s)",
                 PersonCard.formatRecentAttendance(person));
+    }
+
+    @Test
+    public void getSortedTags_sortsIgnoringCase() {
+        Person person = new PersonBuilder().withTags("beta", "Alpha", "gamma").build();
+
+        assertEquals(List.of(new Tag("Alpha"), new Tag("beta"), new Tag("gamma")), PersonCard.getSortedTags(person));
     }
 
 }

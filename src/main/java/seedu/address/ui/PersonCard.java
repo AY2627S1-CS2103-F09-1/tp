@@ -59,9 +59,6 @@ public class PersonCard extends UiPart<Region> {
         name.setText(person.getName().fullName);
         className.setText(person.getClassName().value);
         person.getEmail().ifPresentOrElse(personEmail -> email.setText(personEmail.value), () -> hide(email));
-        person.getTags().stream()
-                .sorted(Comparator.comparing(tag -> tag.tagName))
-                .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
         attendance.setText(formatRecentAttendance(person));
         getSortedTags(person).forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
     }
