@@ -50,6 +50,30 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_csvSurroundedByWhitespace_importsContacts()
+            throws IOException, CommandException, ParseException {
+        Path csv = writeCsv("\r\n\t  name,class\nAlice Smith,A1\n  \t\r\n");
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+        assertEquals("Alice Smith", model.getAddressBook().getPersonList().get(0).getName().toString());
+    }
+
+    @Test
+    public void execute_csvWithTrailingUnicodeWhitespace_importsContacts()
+            throws IOException, CommandException, ParseException {
+        Path csv = writeCsv("name,class\nAlice,A1\u2003");
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+        assertEquals("A1", model.getAddressBook().getPersonList().get(0).getClassName().toString());
+    }
+
+    @Test
     public void execute_validCsv_showsContactsAtTopInFileOrder()
             throws IOException, CommandException, ParseException {
         Path csv = writeCsv("name,class\nAlice,A1\nBob,A2\nCarl,A3\n");
