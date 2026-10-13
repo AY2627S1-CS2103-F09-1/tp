@@ -1,40 +1,84 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
-import java.util.List;
+import java.time.LocalDate;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
 
+import javafx.application.Platform;
+import javafx.scene.control.Label;
+import seedu.address.model.person.Attendance;
 import seedu.address.model.person.Person;
-import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonCardTest {
 
     @Test
-    public void getSortedTags_noTags_returnsEmptyList() {
-        Person person = new PersonBuilder().withTags().build();
-        assertTrue(PersonCard.getSortedTags(person).isEmpty());
+    public void constructor_noAttendance_showsNone() {
+        PersonCard card = new PersonCard(new PersonBuilder().build(), 1);
+
+        assertEquals("Recent attendance: none", attendanceLabel(card).getText());
     }
 
     @Test
-    public void getSortedTags_mixedCasing_sortsIgnoringCase() {
-        Person person = new PersonBuilder().withTags("Zeta", "alpha", "Beta", "gamma").build();
+    public void constructor_threeAttendanceRecords_showsAllWithoutOlderCount() {
+        Person person = new PersonBuilder().build();
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 12), Attendance.Status.PRESENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 13), Attendance.Status.ABSENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 14), Attendance.Status.LATE));
 
-        List<String> sortedNames = PersonCard.getSortedTags(person).stream().map(tag -> tag.tagName).toList();
+        PersonCard card = new PersonCard(person, 1);
 
-        assertEquals(List.of("alpha", "Beta", "gamma", "Zeta"), sortedNames);
+        assertEquals(
+                "Recent attendance:\n"
+                        + "14-Sep-2026  late\n"
+                        + "13-Sep-2026  absent\n"
+                        + "12-Sep-2026  present",
+                attendanceLabel(card).getText());
     }
 
     @Test
-    public void getSortedTags_tagsWithSpacesAndSymbols_sortsByWholeName() {
-        Person person = new PersonBuilder().withTags("group b", "Group A", "group-1", "Group 10").build();
+    public void constructor_moreThanThreeAttendanceRecords_showsLatestThreeAndOlderCount() {
+        Person person = new PersonBuilder().build();
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 10), Attendance.Status.PRESENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 12), Attendance.Status.PRESENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 13), Attendance.Status.ABSENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 14), Attendance.Status.LATE));
 
-        List<Tag> sortedTags = PersonCard.getSortedTags(person);
+        PersonCard card = new PersonCard(person, 1);
 
-        assertEquals(List.of(new Tag("Group 10"), new Tag("Group A"), new Tag("group b"), new Tag("group-1")),
-                sortedTags);
+        assertEquals(
+                "Recent attendance:\n"
+                        + "14-Sep-2026  late\n"
+                        + "13-Sep-2026  absent\n"
+                        + "12-Sep-2026  present\n"
+                        + "+1 older record(s)",
+                attendanceLabel(card).getText());
     }
+
+    private static Label attendanceLabel(PersonCard card) {
+        Label label = (Label) card.getRoot().lookup("#attendance");
+        assertNotNull(label);
+        return label;
+    }
+
+    @BeforeAll
+    public static void startJavaFxToolkit() throws InterruptedException {
+        try {
+            Platform.startup(() -> { });
+        } catch (IllegalStateException alreadyStarted) {
+        // The toolkit was started by another test.
+        }
+    }
+
 }
