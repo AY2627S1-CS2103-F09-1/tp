@@ -41,6 +41,10 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `tag /group Group A /members 1,2` : Links the 1st and 2nd contacts shown in the current list to the group `Group A`.
 
+   * `attendance 1 /date 14-10-2026 /status present` : Adds attendance record to contact in the 1st index as `present` on `14-10-2026`
+
+   * `viewA /name John Doe /class A1` : Lists the attendance records of `John Doe` in class `A1`
+
    * `clear` : Deletes all contacts.
 
    * `exit` : Exits the app.
@@ -308,6 +312,33 @@ Examples:
 * `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
 * `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
 
+### Viewing attendance: `viewA`
+
+Shows all recorded attendance for a contact.
+
+Format: `viewA /name NAME /class CLASS`
+
+* `NAME` and `CLASS` identify the contact whose attendance you want to view. Both must match a contact in ClassMates.
+* The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
+* `/name` and `/class` can be given in either order, but each must be given exactly once.
+* All attendance records for the contact are shown in chronological order, from earliest to latest.
+* If the contact has no attendance records, ClassMates shows a message indicating that there are no records.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+`/name` is missing or has nothing after it | `Missing student name.`
+`/class` is missing or has nothing after it | `Missing class.`
+A parameter is given more than once | `Each parameter can only be specified once`
+No contact matches the given name and class | `Contact not found`
+
+If more than one problem applies, only the first one reported by the parser is shown.
+
+Examples:
+* `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
+* `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+
 ### Clearing all entries: `clear`
 
 Clears all contacts from ClassMates.
@@ -387,5 +418,6 @@ Action     | Format, Examples
 **Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Import** | `import PATH`<br> e.g., `import data/students.csv`
+**viewA**  | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`
 **Help**   | `help`
 **Exit**   | `exit`
