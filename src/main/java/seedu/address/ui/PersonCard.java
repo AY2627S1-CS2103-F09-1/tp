@@ -83,7 +83,7 @@ public class PersonCard extends UiPart<Region> {
         label.setManaged(false);
     }
 
-    private static String formatRecentAttendance(Person person) {
+    static String formatRecentAttendance(Person person) {
         List<Attendance> attRecords = person.getAttendanceRecords();
 
         if (attRecords.isEmpty()) {
