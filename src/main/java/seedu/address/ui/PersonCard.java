@@ -1,12 +1,17 @@
 package seedu.address.ui;
 
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
+import java.util.List;
+import java.util.Locale;
+import java.util.stream.Collectors;
 
 import javafx.fxml.FXML;
 import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import seedu.address.model.person.Attendance;
 import seedu.address.model.person.Person;
 
 /**
@@ -15,6 +20,8 @@ import seedu.address.model.person.Person;
 public class PersonCard extends UiPart<Region> {
 
     private static final String FXML = "PersonListCard.fxml";
+    private static final DateTimeFormatter ATTENDANCE_DATE_FORMAT =
+        DateTimeFormatter.ofPattern("dd-MMM-uuuu");
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -38,6 +45,8 @@ public class PersonCard extends UiPart<Region> {
     private Label email;
     @FXML
     private FlowPane tags;
+    @FXML
+    private Label attendance;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -52,6 +61,7 @@ public class PersonCard extends UiPart<Region> {
         person.getTags().stream()
                 .sorted(Comparator.comparing(tag -> tag.tagName))
                 .forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
+        attendance.setText(formatRecentAttendance(person));
     }
 
     /**
@@ -61,4 +71,27 @@ public class PersonCard extends UiPart<Region> {
         label.setVisible(false);
         label.setManaged(false);
     }
+
+    private static String formatRecentAttendance(Person person) {
+        List<Attendance> attRecords = person.getAttendanceRecords();
+
+        if (attRecords.isEmpty()) {
+            return "Recent attendance: none";
+        }
+
+        List<Attendance> recentRecords = attRecords.stream()
+            .sorted(Comparator.comparing(Attendance::getDate).reversed()).limit(3).toList();
+
+        String recordLines = recentRecords.stream()
+            .map(record -> ATTENDANCE_DATE_FORMAT.format(record.getDate())
+            + "  " + record.getStatus().name().toLowerCase(Locale.ROOT)).collect(Collectors.joining("\n"));
+
+        int olderRecordCount = attRecords.size() - recentRecords.size();
+        if (olderRecordCount > 0) {
+            recordLines += "\n+" + olderRecordCount + " older record(s)";
+        }
+
+        return "Recent attendance:\n" + recordLines;
+    }
+
 }
