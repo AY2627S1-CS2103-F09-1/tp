@@ -1,12 +1,13 @@
 package seedu.address.ui;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.model.person.Attendance;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
@@ -14,27 +15,56 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonCardTest {
 
     @Test
-    public void getSortedTags_noTags_returnsEmptyList() {
-        Person person = new PersonBuilder().withTags().build();
-        assertTrue(PersonCard.getSortedTags(person).isEmpty());
+    public void formatRecentAttendance_noRecords_showsNone() {
+        Person person = new PersonBuilder().build();
+
+        assertEquals("Recent attendance: none", PersonCard.formatRecentAttendance(person));
     }
 
     @Test
-    public void getSortedTags_mixedCasing_sortsIgnoringCase() {
-        Person person = new PersonBuilder().withTags("Zeta", "alpha", "Beta", "gamma").build();
+    public void formatRecentAttendance_threeRecords_showsAllWithoutOlderCount() {
+        Person person = new PersonBuilder().build();
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 12), Attendance.Status.PRESENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 13), Attendance.Status.ABSENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 14), Attendance.Status.LATE));
 
-        List<String> sortedNames = PersonCard.getSortedTags(person).stream().map(tag -> tag.tagName).toList();
-
-        assertEquals(List.of("alpha", "Beta", "gamma", "Zeta"), sortedNames);
+        assertEquals(
+                "Recent attendance:\n"
+                        + "14-Sep-2026  late\n"
+                        + "13-Sep-2026  absent\n"
+                        + "12-Sep-2026  present",
+                PersonCard.formatRecentAttendance(person));
     }
 
     @Test
-    public void getSortedTags_tagsWithSpacesAndSymbols_sortsByWholeName() {
-        Person person = new PersonBuilder().withTags("group b", "Group A", "group-1", "Group 10").build();
+    public void formatRecentAttendance_moreThanThreeRecords_showsLatestThreeAndOlderCount() {
+        Person person = new PersonBuilder().build();
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 10), Attendance.Status.PRESENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 12), Attendance.Status.PRESENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 13), Attendance.Status.ABSENT));
+        person = person.withAttendance(new Attendance(
+                LocalDate.of(2026, 9, 14), Attendance.Status.LATE));
 
-        List<Tag> sortedTags = PersonCard.getSortedTags(person);
-
-        assertEquals(List.of(new Tag("Group 10"), new Tag("Group A"), new Tag("group b"), new Tag("group-1")),
-                sortedTags);
+        assertEquals(
+                "Recent attendance:\n"
+                        + "14-Sep-2026  late\n"
+                        + "13-Sep-2026  absent\n"
+                        + "12-Sep-2026  present\n"
+                        + "+1 older record(s)",
+                PersonCard.formatRecentAttendance(person));
     }
+
+    @Test
+    public void getSortedTags_sortsIgnoringCase() {
+        Person person = new PersonBuilder().withTags("beta", "Alpha", "gamma").build();
+
+        assertEquals(List.of(new Tag("Alpha"), new Tag("beta"), new Tag("gamma")), PersonCard.getSortedTags(person));
+    }
+
 }
