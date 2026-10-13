@@ -18,7 +18,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 1. Ensure that Java `25` or later is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
-1. Download the latest `.jar` file from [here](https://github.com/se-edu/addressbook-level3/releases).
+1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103-F09-1/tp/releases).
 
 1. Copy the file to the folder you want to use as the _home folder_ for your ClassMates.
 
@@ -33,7 +33,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `list John` : Lists the contacts whose name, class or tags contain `John`.
 
-   * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to the Address Book.
+   * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to ClassMates.
 
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
@@ -66,7 +66,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `/name NAME [/email EMAIL]` can be used as `/name John Doe /email johnd@example.com` or as `/name John Doe`.
 
 * Items followed by `...` can appear zero or more times.<br>
-  For example, `[/tag TAG]... ` may be omitted, or written as `/tag friend` or `/tag friend /tag family`.
+  For example, `/members INDEX[,INDEX]...` can be written as `/members 1` or as `/members 1,3,5`.
 
 * Parameters can be in any order.<br>
   For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
@@ -86,17 +86,19 @@ Shows a message explaining how to access the help page.
 Format: `help`
 
 
-### Adding a person: `add`
+### Adding a contact: `add`
 
-Adds a person to the address book.
+Adds a contact to ClassMates.
 
 Format: `add /name NAME /class CLASS [/email EMAIL]`
 
 * `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
 * `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
-* A person is identified by their name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same person as `John Tan` in class `A1`.
-* The email is optional.
+* `EMAIL` is optional. If given, it must be in the format `local-part@domain`.
+  * The local-part can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
+  * The domain is made up of one or more labels separated by periods, as in `example.com`. Each label can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last label must be at least 2 characters long.
+* A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -123,7 +125,7 @@ Examples:
 
 ### Listing and searching contacts: `list`
 
-Shows a list of all contacts in the address book, or only the contacts that match a keyword.
+Shows a list of all contacts in ClassMates, or only the contacts that match a keyword.
 
 Format: `list [KEYWORD]`
 
@@ -132,54 +134,32 @@ Format: `list [KEYWORD]`
 * The search is case-insensitive; for example, `john` matches `John`.
 * Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
 * The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the tag `friend`.
-* A contact is shown if the keyword matches any one of their name, class or tags. Email is not searched.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* A keyword with several words can match a name, a class, or a single tag whose name has spaces, such as the group `Group A`. For example, `list group a` shows the contacts in the group `Group A`.
 * The keyword must match within a single name, class or tag; for example, it cannot match the end of a name and the start of a class, or run across two tags.
-* Characters are matched exactly as typed, including `/`, `'`, `-`, `.` and `_`. For example, `list s/o` finds `Tan s/o Kumar`, and `list .` finds only names and classes that contain a full stop.
 * `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
-* The search always covers all contacts in the address book, even if a previous search is still displayed.
+* The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
 * Contacts are shown from the most recently added to the oldest, whether or not a keyword is given.
 
 Examples:
 * `list` shows all contacts.
 * `list John` shows `John Doe` and any contact in a class or with a tag containing `john`.
-* `list CS2103` shows all contacts in a class containing `CS2103`.
-* `list friend` shows all contacts with a tag containing `friend`.
-* `list John Doe` shows contacts whose name or class contains `John Doe`.
-* `list Group A` shows contacts in the group `Group A`, as well as any contact whose name or class contains `Group A`.
+* `list Group A` shows any contact whose name, class or tag contains `Group A`.
 
-### Editing a person: `edit`
+### Deleting a contact: `delete`
 
-Edits an existing person in the address book.
-
-Format: `edit INDEX [n/NAME] [p/PHONE] [e/EMAIL] [a/ADDRESS] [t/TAG]... `
-
-* Edits the person at the specified `INDEX`. The index refers to the index number shown in the displayed person list. The index **must be a positive integer** 1, 2, 3, ...
-* At least one of the optional fields must be provided.
-* Existing values will be updated to the input values.
-* When editing tags, all of the person's existing tags are removed; adding tags is not cumulative.
-* To remove all of a person's tags, enter `t/` without a tag after it.
-
-Examples:
-*  `edit 1 p/91234567 e/johndoe@example.com` Edits the phone number and email address of the 1st person to be `91234567` and `johndoe@example.com` respectively.
-*  `edit 2 n/Betsy Crower t/` Edits the name of the 2nd person to be `Betsy Crower` and clears all existing tags.
-
-### Deleting a person: `delete`
-
-Deletes the specified person from the address book.
+Deletes the specified contact from ClassMates.
 
 Format: `delete INDEX` or `delete /name NAME /class CLASS`
 
-* `delete INDEX` deletes the person at the specified `INDEX`.
-  * The index refers to the index number shown in the displayed person list.
+* `delete INDEX` deletes the contact at the specified `INDEX`.
+  * The index refers to the index number shown in the displayed contact list.
   * The index **must be a positive integer** 1, 2, 3, ...
-* `delete /name NAME /class CLASS` deletes the person with that name in that class.
+* `delete /name NAME /class CLASS` deletes the contact with that name in that class.
   * Both the name and the class must match, because the same name can exist in different classes.
   * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
-  * The whole address book is searched, even if only some persons are displayed, for example after a `list` with a keyword.
-  * The name and class are not checked against the rules for adding a person. If nothing matches, ClassMates shows `No contact found`.
+  * All contacts in ClassMates are searched, even if only some contacts are displayed, for example after a `list` with a keyword.
+  * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `No contact found`.
 * An index cannot be combined with `/name` or `/class` in the same command.
 * On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
 
@@ -192,25 +172,25 @@ A parameter is given more than once | `Each parameter can only be specified once
 No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
 `/name` is missing or has no value | `Command requires a name`
 `/class` is missing or has no value | `Command requires a class`
-No person has the given name and class | `No contact found`
+No contact has the given name and class | `No contact found`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 
 If more than one problem applies, only the first one in the table above is reported.
 
 Examples:
-* `list` followed by `delete 2` deletes the 2nd person in the address book.
-* `list Betsy` followed by `delete 1` deletes the 1st person in the results of the `list Betsy` command.
+* `list` followed by `delete 2` deletes the 2nd contact in ClassMates.
+* `list Betsy` followed by `delete 1` deletes the 1st contact in the results of the `list Betsy` command.
 * `list Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list Betsy` command.
 
 ### Linking contacts to a group: `tag`
 
-Links one or more contacts to a group, so that you can tell which contacts belong together, such as the members of a team.
+Links one or more contacts to a group.
 
 Format: `tag /group GROUP_NAME /members INDEX[,INDEX]...`
 
 * `GROUP_NAME` must be 1 to 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, hyphens and underscores, as in `Group A` or `team-1_alpha`.
 * Spaces at the start and end of `GROUP_NAME` are ignored, and repeated spaces inside it are treated as a single space.
-* Group names are compared ignoring case, so `Group A` and `group  a` are the same group. Each contact shows the group name as you typed it when you linked that contact.
+* Group names are compared ignoring case, so `Group A` and `group  a` are the same group. Each contact shows the group name with the casing you typed when you linked that contact.
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. Each index **must be a positive integer** 1, 2, 3, ...
 * The indices are separated by commas, and spaces around a comma are ignored, so `1,3,5` and `1, 3, 5` are the same. A comma at the start or end, or two commas in a row, is not allowed, and each index can be given only once.
 * The group is shown as a label on each linked contact, in alphabetical order ignoring case.
@@ -234,7 +214,7 @@ The same index is given more than once | `Duplicate contact index: INDEX`
 An index does not match a contact in the displayed list | `Contact index not found: INDEX`
 One or more of the contacts are already in the group | `One or more contacts are already in this group: NAME (CLASS)`
 
-If more than one problem applies, only the first one in the table above is reported.<br>
+If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
 If several indices are repeated or not found, or several contacts are already in the group, all of them are listed in the message, separated by commas.<br>
 On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given.
 
@@ -257,6 +237,25 @@ Format: `import PATH`
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
+The CSV file must follow this format:
+* The first row is a header row. It must contain a `name` column and a `class` column, and it can contain an optional `email` column.
+* The column names are not case-sensitive, and the columns can be in any order.
+* No other columns are accepted, and no column can appear more than once.
+* Every other row is one contact, with its values in the same order as the header. Each row must have as many values as the header.
+* Each value follows the same rules as the matching parameter of `add`, so a name or class that `add` would reject is also rejected in the file.
+* The `email` value of a contact can be left blank if the contact has no email.
+* Blank rows are ignored.
+* The file must be saved in UTF-8 encoding.
+
+For example, a valid file looks like this:
+```
+name,class,email
+John Doe,A1,johnd@example.com
+Betsy Crowe,A2,
+```
+
+A relative path is taken from the folder that contains the JAR file.
+
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 | **Problem**                                                                                        | **Message**                                          |
@@ -272,9 +271,43 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | The file is unreadable, is a directory, contains malformed CSV syntax, or another I/O error occurs | `Failed to import from <filepath>`                   |
 
 
+### Recording attendance: `attendance`
+
+Records whether a contact was present, absent or late on a date.
+
+Format: `attendance INDEX /date DATE /status STATUS`
+
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
+* `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
+* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
+* `/date` and `/status` can each be given at most once.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+The index is missing | `Missing index. Please provide the index of the person.`
+`/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
+`/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
+A parameter is given more than once | `Each parameter can only be specified once`
+The index is not a positive integer | `Index must be a positive integer.`
+The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. Please use the format DD-MM-YYYY.`
+The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
+The date is in the future | `Attendance date cannot be in the future.`
+The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The contact already has a record for the date | `Attendance record already exists`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, for example `Attendance for Alex Yeoh on 16-09-2026 recorded as absent.`
+
+Examples:
+* `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
+* `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
+
 ### Clearing all entries: `clear`
 
-Clears all entries from the address book.
+Clears all contacts from ClassMates.
 
 Format: `clear`
 
@@ -295,14 +328,10 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, ClassMates starts with an empty address book at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
-Data files from earlier versions of ClassMates, which do not record a class for each person, are also treated as invalid.<br>
+If your changes make the data file invalid, ClassMates starts with no contacts at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
+Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
-
-### Archiving data files `[coming in v2.0]`
-
-_Details coming soon ..._
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -310,6 +339,30 @@ _Details coming soon ..._
 
 **Q**: How do I transfer my data to another computer?<br>
 **A**: Install the app on the other computer and overwrite the data file it creates with the data file from your previous ClassMates home folder.
+
+**Q**: How do I get the sample contacts back?<br>
+**A**: Close ClassMates, delete the `data` folder in the folder that contains the JAR file, and start ClassMates again. All your current contacts are lost.
+
+**Q**: Where is my data stored, and do I need to save it?<br>
+**A**: ClassMates saves after every command to `[JAR file location]/data/addressbook.json`. There is no save command, and exiting does not lose data.
+
+**Q**: Can I add two contacts with the same name?<br>
+**A**: Yes, if they are in different classes. A contact is identified by name and class together, ignoring case and extra spaces, so the same name cannot be added twice to the same class.
+
+**Q**: Why did `delete 3` or `attendance 3` act on a contact I did not expect?<br>
+**A**: The index refers to the contacts currently displayed. After a `list KEYWORD`, index 3 is the 3rd contact in the results, not in the full list. Run `list` first, or use `delete /name NAME /class CLASS`.
+
+**Q**: What should my CSV file for `import` look like?<br>
+**A**: The first row is a header with `name` and `class` columns and an optional `email` column. Each following row is one contact, for example `John Doe,A1,johnd@example.com`. See [Importing from external file](#importing-from-external-file-import).
+
+**Q**: I imported a file, but no contact was added. Why?<br>
+**A**: The import is all or nothing. If any row is invalid or duplicates an existing contact, ClassMates shows the first problem with its row number and adds nothing. Fix that row and import again.
+
+**Q**: Can I record attendance for a whole class at once?<br>
+**A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
+
+**Q**: ClassMates started with an empty list. What happened?<br>
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `addressbook.json`, or delete the `data` folder to start with the sample contacts.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -325,9 +378,11 @@ _Details coming soon ..._
 Action     | Format, Examples
 -----------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
 **Add**    | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`
+**Attendance** | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`
 **Clear**  | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
-**Edit**   | `edit INDEX [n/NAME] [p/PHONE_NUMBER] [e/EMAIL] [a/ADDRESS] [t/TAG]... `<br> e.g.,`edit 2 n/James Lee e/jameslee@example.com`
 **Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
+**Import** | `import PATH`<br> e.g., `import data/students.csv`
 **Help**   | `help`
+**Exit**   | `exit`

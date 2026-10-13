@@ -13,7 +13,8 @@
 
 ## **Acknowledgements**
 
-* _{List the sources of reused or adapted ideas, code, documentation, and third-party libraries here, with links to the originals.}_
+* This project is based on the [AddressBook-Level3](https://github.com/se-edu/addressbook-level3) project created by the [SE-EDU initiative](https://se-education.org).
+* Libraries used: [JavaFX](https://openjfx.io/), [Jackson](https://github.com/FasterXML/jackson), [JUnit5](https://github.com/junit-team/junit5)
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -35,7 +36,7 @@ The following provides a quick overview of the main components and their interac
 
 **Main components of the architecture**
 
-**`Main`** (consisting of classes [`Main`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
+**`Main`** (consisting of classes [`Main`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/Main.java) and [`MainApp`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/MainApp.java)) is in charge of the app launch and shut down.
 * At app launch, it initializes the other components in the correct sequence, and connects them up with each other.
 * At shut down, it shuts down the other components and invokes cleanup methods where necessary.
 
@@ -67,13 +68,13 @@ The sections below give more details of each component.
 
 ### UI component
 
-The **API** of this component is specified in [`Ui.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/Ui.java)
+The **API** of this component is specified in [`Ui.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/ui/Ui.java)
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
 The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
 The `UI` component,
 
@@ -86,7 +87,7 @@ Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring 
 
 ### Logic component
 
-**API** : [`Logic.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/logic/Logic.java)
+**API** : [`Logic.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
 
 Here's a (partial) class diagram of the `Logic` component:
 
@@ -106,7 +107,7 @@ How the `Logic` component works:
 
 1. When `Logic` is called upon to execute a command, the command is passed to an `AddressBookParser` object, which in turn creates a parser that matches the command (e.g., `DeleteCommandParser`) and uses it to parse the command.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteCommand`) which is executed by the `LogicManager`.
-1. The command can communicate with the `Model` when it is executed (e.g. to delete a person).<br>
+1. The command can communicate with the `Model` when it is executed (e.g. to delete a contact).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation.
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
 
@@ -119,18 +120,11 @@ How the parsing works:
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 * Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser` and `TagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
 * `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
-* A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages.
+* A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages. `DeleteCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or an index combined with `/name` or `/class`, a missing name, then a missing class. A parameter given without a value counts as missing.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
 
-#### Tag command
-The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups.
-
-* `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
-* `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The constructor of `TagCommand` asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. `TagCommandParser` guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
-* The success message lists the linked contacts in the order the indices were given, and shows the group name as it was typed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
-
 ### Model component
-**API** : [`Model.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/model/Model.java)
+**API** : [`Model.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
 
 <puml src="diagrams/ModelClassDiagram.puml" width="450" />
 
@@ -142,7 +136,7 @@ The `Model` component,
 * compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
 * keeps the `Person` objects in the order they are displayed, which is from the most recently added to the oldest (see [Order of contacts](#order-of-contacts-feature)).
 * keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, and `Person#hasTag(Tag)` checks whether the contact is already in it.
-* treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the person has no email.
+* treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the contact has no email.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
@@ -158,7 +152,7 @@ The `Model` component,
 
 ### Storage component
 
-**API** : [`Storage.java`](https://github.com/se-edu/addressbook-level3/tree/master/src/main/java/seedu/address/storage/Storage.java)
+**API** : [`Storage.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/storage/Storage.java)
 
 <puml src="diagrams/StorageClassDiagram.puml" width="550" />
 
@@ -189,9 +183,9 @@ The `list` command shows all contacts, or, when it is given a keyword, only the 
 * `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. Email is not checked. Matching is a plain substring test and not a regular expression, so symbols such as `.` and `/` are matched as typed. A tag name can contain spaces, as in the group `Group A`, so a keyword with several words can match a tag. A blank keyword matches every contact, but `ListCommandParser` never creates one, because a blank argument lists all contacts.
 * `ListCommand` holds a `Predicate<Person>`, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with it. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search.
 * Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
-* `ListCommand` does not modify the address book, so it does not call `Model#commitAddressBook()`.
+* `ListCommand` only changes which contacts are displayed and never modifies the address book.
 
-Contacts are displayed in the order they were added.
+The contacts that match a keyword are displayed in the same order as in the whole list, from the most recently added to the oldest, because a filter only hides contacts (see [Order of contacts](#order-of-contacts-feature)).
 
 #### Design considerations
 
@@ -222,6 +216,111 @@ Contacts are displayed in the order they were added.
   * Pros: Allows narrowing down a result step by step.
   * Cons: The result depends on what is displayed, and a contact can be missed after an earlier search.
 
+### Deleting a contact feature
+
+#### Implementation
+
+The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand`, which both extend the abstract `DeleteCommand` (see [Logic component](#logic-component)).
+
+* `DeleteByIndexCommand#execute(Model)` rejects an index that is larger than the displayed list, then deletes the contact at that index.
+* `DeleteByNameAndClassCommand#execute(Model)` searches the whole address book, not the displayed list, using `Person#hasNameAndClass(String, String)`. It reports `No contact found` if no contact matches.
+* The name and class given to `DeleteByNameAndClassCommand` are not checked against the rules for `Name` and `ClassName`.
+
+#### Design considerations
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `DeleteCommand` with one subclass for each way of identifying the contact.
+  * Pros: Each `execute` method does one thing and can be tested on its own, and an invalid combination, such as an index together with a name, cannot be represented.
+  * Cons: One command word maps to two classes, so the parser must choose between them.
+* **Alternative 2:** A single `DeleteCommand` with an optional index and an optional name and class.
+  * Pros: Only one command class.
+  * Cons: `execute` must branch on which fields are set, and an invalid combination of fields is possible.
+
+**Aspect: Which contacts a delete by name and class searches**
+
+* **Alternative 1 (current choice):** The whole address book.
+  * Pros: Works whatever is displayed, so the user does not have to run `list` first.
+  * Cons: Can delete a contact that is not currently displayed.
+* **Alternative 2:** Only the displayed contacts.
+  * Pros: Consistent with deleting by index.
+  * Cons: Fails after a search that hides the contact, which defeats the purpose of using a name.
+
+**Aspect: Whether the name and class are validated**
+
+* **Alternative 1 (current choice):** They are only compared with the stored contacts, ignoring case and extra spaces.
+  * Pros: The user always gets the same message, `No contact found`, and the rules for `add` can change without affecting `delete`.
+  * Cons: A name with a typo in a character that is not allowed gets no hint about the allowed format.
+* **Alternative 2:** Validate them with the rules for `add`.
+  * Pros: Gives more specific error messages.
+  * Cons: Duplicates the validation rules, and adds errors that do not help the user, since no stored contact can have an invalid name.
+
+### Order of contacts feature
+
+#### Implementation
+
+The contacts are displayed from the most recently added to the oldest. The order is kept in the list itself, so the displayed order, the order in memory and the order in the data file are all the same.
+
+* `UniquePersonList#add(Person)` inserts the contact at index 0 instead of at the end. `AddCommand#execute(Model)` reaches it through `Model#addPerson(Person)` and `AddressBook#addPerson(Person)`.
+* `ModelManager#addPerson(Person)` also calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, so the new contact is visible at the top even if a search was displayed.
+* A filter only hides contacts and never reorders them, so search results are also shown from the most recently added to the oldest.
+* `Model#setPerson(Person, Person)` replaces a contact in place, so `edit` and `tag` do not change the position of a contact.
+* `ImportCommand#execute(Model)` adds the contacts of the file from the last row to the first, so that the first row ends up at the top and the imported contacts appear in the order of the file.
+* Code that builds an address book from a whole list must not add the contacts one by one, as that would reverse their order. `JsonSerializableAddressBook#toModelType()`, `SampleDataUtil#getSampleAddressBook()` and `TypicalPersons#getTypicalAddressBook()` use `AddressBook#setPersons(List)`, which keeps the given order.
+
+#### Design considerations
+
+**Aspect: Where the order is kept**
+
+* **Alternative 1 (current choice):** The list is stored in the displayed order, and `add` inserts at the front.
+  * Pros: Simple, with no extra state. Indices, filters, saving and loading all see the same order.
+  * Cons: Every place that builds a list from several contacts must keep the given order, as described above.
+* **Alternative 2:** Store the contacts in the order they were added and display them in reverse.
+  * Pros: `add` keeps appending, and loading needs no change.
+  * Cons: JavaFX has no reversed `ObservableList`, so the displayed list would need its own sorting or mapping. Indices would then refer to a different order from the stored list.
+* **Alternative 3:** Give each `Person` a timestamp and sort the displayed list by it.
+  * Pros: The order survives any change to the stored order.
+  * Cons: Adds a field to `Person` and to the data file, and data files from before the change have no timestamps.
+
+### Linking contacts to a group feature
+
+#### Implementation
+
+The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups. It is implemented by `TagCommandParser` and `TagCommand`.
+
+* `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
+* `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The constructor of `TagCommand` asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. `TagCommandParser` guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
+* The success message lists the linked contacts in the order the indices were given. It shows the group name with the casing it was typed in, after leading and trailing spaces are removed and repeated spaces are collapsed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
+
+#### Design considerations
+
+**Aspect: How a group is represented**
+
+* **Alternative 1 (current choice):** A group is a `Tag` on each of its members.
+  * Pros: Reuses the existing `Tag` class, storage and `list` search, and a contact can be in several groups without any new data structure.
+  * Cons: A group has no identity of its own. It exists only while a contact has the tag, and it cannot hold group-level data.
+* **Alternative 2:** A separate `Group` class that stores its members.
+  * Pros: Allows group-level data and operations.
+  * Cons: Adds a new entity to `Model` and `Storage`, and must be kept in sync when contacts are deleted.
+
+**Aspect: What happens when some contacts cannot be linked**
+
+* **Alternative 1 (current choice):** All or nothing. If any index is invalid or any contact is already in the group, no contact is linked.
+  * Pros: The result is predictable, and the user can correct the command and run it again without working out who was linked.
+  * Cons: One bad index blocks the other contacts.
+* **Alternative 2:** Link the contacts that can be linked and report the rest.
+  * Pros: Less retyping.
+  * Cons: The user must work out which contacts were linked, and the data is left half-changed.
+
+**Aspect: How the members are identified**
+
+* **Alternative 1 (current choice):** By index in the displayed list.
+  * Pros: Short to type, and consistent with `delete` and `attendance`.
+  * Cons: The result depends on what is displayed, so the wrong contacts are linked if the list is not what the user expects.
+* **Alternative 2:** By name and class.
+  * Pros: Does not depend on the displayed list.
+  * Cons: A long command for several members, and easy to mistype.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -240,11 +339,11 @@ Step 1. The user launches the application for the first time. The `VersionedAddr
 
 <puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
 
-Step 2. The user executes `delete 5` command to delete the 5th person in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
+Step 2. The user executes `delete 5` command to delete the 5th contact in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
 
 <puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
 
-Step 3. The user executes `add /name David …​` to add a new person. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
+Step 3. The user executes `add /name David …​` to add a new contact. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
 
 <puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
 
@@ -253,7 +352,7 @@ Step 3. The user executes `add /name David …​` to add a new person. The `add
 **Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
 </box>
 
-Step 4. The user now decides that adding the person was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
+Step 4. The user now decides that adding the contact was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
 
 <puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
 
@@ -306,15 +405,10 @@ The following activity diagram summarizes what happens when a user executes a ne
 
 * **Alternative 2:** Individual command knows how to undo/redo by
   itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the person being deleted).
+  * Pros: Will use less memory (e.g. for `delete`, just save the contact being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
 
 _{more aspects and alternatives to be added}_
-
-### \[Proposed\] Data archiving
-
-_{Explain here how the data archiving feature will be implemented}_
-
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -378,13 +472,19 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 (For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
+A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC08).
+
+UC01, UC07 and UC09 describe planned features that are not implemented yet. The other use cases describe what the application does now.
+
 **Use case: UC01 - View known student's grades**
+
+*(Planned feature, not implemented yet.)*
 
 **MSS**
 1. User requests to view grades of the student.
 2. CM displays grades of the student.
 
-   Use case ends. 
+   Use case ends.
 
 **Extensions**
 
@@ -394,102 +494,261 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
     Use case resumes at step 1.
 
 
-**Use case: UC02 - Track known student's attendance**
+**Use case: UC02 - Record a student's attendance**
+
+**Guarantees**
+* An attendance record is only added if its date and status are valid and the student has no record for that date.
 
 **MSS**
-1. User requests to add attendance record for the student.
-2. CM records the attendance for the student.
+1. User requests to <u>list or search student contacts</u> (UC08) to find the student.
+2. CM displays the matching contacts.
+3. User requests to record the attendance of a contact in the displayed list, giving the index of the contact, the date and the status (present, absent or late).
+4. CM records the attendance and displays a success message.
 
    Use case ends.
-   
-**Extensions**
-   
-* 1a. The command format is invalid or the attendance of the student has already been recorded. 
-  * 1a1. CM displays an error message. 
 
-    Use case resumes at step 1.
+**Extensions**
+
+* 2a. The list is empty.
+
+    Use case ends.
+
+* 3a. The command format is invalid, e.g. the index, date or status is missing or repeated, the index is not a positive integer, the date is not a real date in the format DD-MM-YYYY, or the status is not present, absent or late.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. The date is in the future.
+  * 3b1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3c. The index is larger than the number of displayed contacts.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3d. The contact already has an attendance record for the date.
+  * 3d1. CM displays an error message.
+
+    Use case resumes at step 3.
 
 
 **Use case: UC03 - Set up new classes using bulk load**
 
 **Guarantees**
-* Student records will only be updated if all data is in the correct format.
-  
+* Contacts are only added if the file and every row in it are valid. If any problem is found, no contact is added.
+
 **MSS**
-1. User requests to load student data from an external CSV file.
-2. CM parses data and adds records of all students in all classes.
-3. User confirms bulk loading.
-4. For each class added or updated, user requests to view students in that class.
-5. CM displays search results for each class. 
+1. User requests to import contacts from a CSV file, giving the path of the file.
+2. CM checks the file, adds all the contacts in it and displays the number of contacts imported.
+3. For each class added, user requests to <u>list or search student contacts</u> (UC08) using the class as the keyword.
+4. CM displays the contacts of that class.
 
-    Use case ends.
-   
+   Use case ends.
+
 **Extensions**
-* 2a. The given CSV file is not formatted correctly. 
-  * 2a1. CM terminates the import and displays an error message. 
-  * 2a2. User externally modifies the CSV file. 
-  
-    Use case resumes from step 1.
-* 3a. User chooses to cancel bulk loading.
 
-    Use case ends.
+* 1a. The path is missing, the file does not exist, the file is not a `.csv` file or the file cannot be read.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 2a. The file is empty or has no contact rows.
+  * 2a1. CM displays an error message and adds no contact.
+  * 2a2. User externally modifies the CSV file.
+
+    Use case resumes at step 1.
+* 2b. The header row is invalid, i.e. the `name` or `class` column is missing, or a column is unknown or repeated.
+  * 2b1. CM displays an error message and adds no contact.
+  * 2b2. User externally modifies the CSV file.
+
+    Use case resumes at step 1.
+* 2c. A row has the wrong number of values, has invalid contact data, or duplicates an existing contact or an earlier row.
+  * 2c1. CM stops at the first such row, displays an error message with the row number and adds no contact.
+  * 2c2. User externally modifies the CSV file.
+
+    Use case resumes at step 1.
 
 
 **Use case: UC04 - Add students to groups (by tagging)**
 
 **Guarantees**
-* Specified students will only be grouped if all of them exist and none of them is already in the group.
-* If grouping fails, no student is changed.
-* There is no separate step to create a group. A group is just the students that have the same tag, so it exists as soon as one student is given the tag.
+* The contacts are only linked to the group if all of them can be linked. If any problem is found, none of them is linked.
 
 **MSS**
-1. User requests to add certain students from the displayed list into a group, e.g. `tag /group Group A /members 1,3`.
-2. CM adds those students to a group and displays a success message listing the students.
+1. User requests to <u>list or search student contacts</u> (UC08) to find the students to group.
+2. CM displays the matching contacts.
+3. User requests to link the contacts at the given indices of the displayed list to a group, giving the name of the group.
+4. CM links the contacts to the group and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The list is empty.
 
     Use case ends.
-   
-**Extensions**
-   
-* 1a. The command format is invalid, e.g. the group name or the members are missing or repeated, the group name is invalid, or a member is not a positive integer or is given twice.
-  * 1a1. CM terminates the grouping and displays an error message naming the problem.
 
-    Use case resumes from step 1.
-* 1b. One of the indices does not refer to a student in the displayed list.
-  * 1b1. CM terminates the grouping and displays an error message listing the indices that were not found.
+* 3a. The command format is invalid, the group name is invalid, or an index is not a positive integer.
+  * 3a1. CM displays an error message.
 
-    Use case resumes from step 1.
-* 1c. One or more of the students are already in the specified group. Group names are compared ignoring case and extra spaces.
-  * 1c1. CM terminates the grouping and displays an error message listing those students.
-        
-    Use case resumes from step 1.
+    Use case resumes at step 3.
+* 3b. An index is repeated, or does not match a contact in the displayed list.
+  * 3b1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3c. One or more of the contacts are already in the group.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
 
 
 **Use case: UC05 - Delete a student**
 
 **MSS**
-1. User requests to view all students.
-2. CM displays a list of all students.
-3. User requests to delete a specific student from the list.
-4. If the student has records of grouping or attendance, CM requests for confirmation.
-5. User confirms deletion.
-6. CM deletes the student and displays a success message.
+1. User requests to <u>list or search student contacts</u> (UC08).
+2. CM displays the matching contacts.
+3. User requests to delete a contact in the displayed list, giving the index of the contact.
+4. CM deletes the contact and displays a success message.
 
-    Use case ends.
+   Use case ends.
 
 **Extensions**
-* 2a. The list is empty. 
 
-  Use case ends.
-   
-* 3a. The given index is invalid.
-  * 3a1. CM displays an error message. 
-    
-    Use case resumes at step 3.
-  
-* 5a. User chooses to cancel the deletion. 
+* 2a. The list is empty.
 
     Use case ends.
 
+* 3a. The index is not a positive integer, or is larger than the number of displayed contacts.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. User knows the name and class of the contact, and requests to delete the contact by its name and class instead of its index. This does not need steps 1 and 2.
+  * 3b1. CM searches all contacts, including those that are not displayed, deletes the contact with that name and class, and displays a success message.
+
+    Use case ends.
+* 3c. No contact has the given name and class.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3d. The command format is invalid, e.g. an index is combined with a name or class, or a name or class is missing or repeated.
+  * 3d1. CM displays an error message.
+
+    Use case resumes at step 3.
+
+
+**Use case: UC06 - Add a new student contact**
+
+**MSS**
+1. User requests to add a contact, giving a name, a class and optionally an email.
+2. CM adds the contact and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid, e.g. a parameter is unknown or repeated, there is text before the first parameter, or the name or class is missing.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1b. The name, class or email is invalid, e.g. it is empty, too long or has characters that are not allowed.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1c. A contact with the same name and class already exists. Names and classes are compared ignoring case and extra spaces, so the same name can be added to a different class.
+  * 1c1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC07 - Record grades for a known student**
+
+*(Planned feature, not implemented yet.)*
+
+**MSS**
+1. User requests to record a grade for an assessment for the student.
+2. CM records the grade and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid, the student does not exist, or the grade is out of range (not between 0 and 100).
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC08 - List or search student contacts**
+
+**Guarantees**
+* The search always covers all contacts, whether or not an earlier search is displayed.
+
+**MSS**
+1. User requests to list contacts, giving a keyword.
+2. CM displays the contacts whose name, class or tags contain the keyword, and the number of contacts displayed.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. User does not give a keyword.
+  * 1a1. CM displays all contacts.
+
+    Use case ends.
+* 2a. No contact matches the keyword.
+  * 2a1. CM displays an empty list.
+
+    Use case ends.
+
+
+**Use case: UC09 - View known student's attendance**
+
+*(Planned feature, not implemented yet.)*
+
+**MSS**
+1. User requests to view the attendance of the student.
+2. CM displays the attendance records of the student in chronological order.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid or the student does not exist.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+
+**Use case: UC10 - Clear all contacts**
+
+**MSS**
+1. User requests to clear all contacts.
+2. CM deletes all contacts and displays a success message.
+
+   Use case ends.
+
+
+**Use case: UC11 - View help**
+
+**MSS**
+1. User requests to view help.
+2. CM opens the help window, which shows the link to the user guide.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The help window is already open.
+  * 2a1. CM brings the existing help window to the front instead of opening another one.
+
+    Use case ends.
+
+
+**Use case: UC12 - Exit the application**
+
+**MSS**
+1. User requests to exit the application.
+2. CM saves the window size and position, closes all its windows and exits.
+
+   Use case ends.
 
 ### Non-Functional Requirements
 
@@ -519,6 +778,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 * **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
 * **Attendance Record**: A single entry marking a student as present/absent/late on a given date
 * **Attendance History**: The collection of a student's or class' attendance records over time
+* **Assessment**: A named piece of work (e.g. "Assignment 1", "Midterm") that a grade is recorded against for a student
 * **Grade**: A single number between 0 to 100 inclusive representing the percentage
 * **Grade Entry**: A single recorded grade attached to a student contact
 * **Grade History**: The collection of a student's grade entries over time
@@ -533,6 +793,11 @@ Given below are instructions to test the app manually.
 
 **Note:** These instructions only provide a starting point for testers to work on;
 testers are expected to do more *exploratory* testing.
+</box>
+
+<box type="info" seamless>
+
+**Note:** Many test cases change the data. To start again with the sample data, close the app, delete the `data` folder in the folder that contains the JAR file, and launch the app again.
 </box>
 
 ### Launch and shutdown
@@ -553,6 +818,58 @@ testers are expected to do more *exploratory* testing.
 
 1. _{ more test cases … }_
 
+### Adding a contact
+
+1. Adding a contact successfully
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `add /name John Doe /class A1 /email johnd@example.com`<br>
+      Expected: John Doe is added at the top of the list. The status message shows `John Doe added to contacts`.
+
+   1. Test case: `add /name Betsy Crowe /class A2`<br>
+      Expected: Betsy Crowe is added without an email, at the top of the list above John Doe. The status message shows `Betsy Crowe added to contacts`.
+
+   1. Test case: `add /name Alex Yeoh /class B2`<br>
+      Expected: Alex Yeoh is added to class B2 at the top of the list. The same name can be added to a different class.
+
+1. Adding a contact while a search is displayed
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `list yeoh`, followed by `add /name Betsy Crowe /class A2`<br>
+      Expected: After `list yeoh`, only Alex Yeoh is shown. After the `add` command, all contacts are shown again, with Betsy Crowe at the top, so the new contact is visible.
+
+1. Adding a contact that already exists
+
+   1. Prerequisites: The app contains the sample data, which has Alex Yeoh in class A1.
+
+   1. Test case: `add /name alex  yeoh /class a1`<br>
+      Expected: No contact is added. The status message says that the name already exists in the class. Case and extra spaces are ignored.
+
+1. Adding a contact with invalid input
+
+   1. Test case: `add /name John Doe`<br>
+      Expected: No contact is added. The status message shows `Command requires a class`.
+
+   1. Test case: `add /class A1`<br>
+      Expected: No contact is added. The status message shows `Command requires a name`.
+
+   1. Test case: `add /name John Doe /class A1 /phone 91234567`<br>
+      Expected: No contact is added. The status message shows `Unknown parameter. Use /name, /class or /email`.
+
+   1. Test case: `add /name John Doe /name Jane Doe /class A1`<br>
+      Expected: No contact is added. The status message shows `Each parameter can only be specified once`.
+
+   1. Test case: `add John Doe /class A1`<br>
+      Expected: No contact is added. The status message shows `Invalid command format!` followed by the usage of `add`, because there is text before the first parameter.
+
+   1. Test case: `add /name J0hn /class A1`<br>
+      Expected: No contact is added. The status message describes the characters that a name can contain.
+
+   1. Test case: `add /name John Doe /class A1 /email john`<br>
+      Expected: No contact is added. The status message describes the valid email format.
+
 ### Listing and searching contacts
 
 1. Listing all contacts
@@ -560,7 +877,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data (Alex Yeoh, Bernice Yu, Charlotte Oliveiro, David Li, Irfan Ibrahim and Roy Balakrishnan).
 
    1. Test case: `list`<br>
-      Expected: All six contacts are shown.
+      Expected: All six contacts are shown, from Alex Yeoh at the top to Roy Balakrishnan at the bottom.
 
    1. Test case: `list yeoh`, followed by `list`<br>
       Expected: After `list yeoh`, only Alex Yeoh is shown. After `list`, all six contacts are shown again.
@@ -599,27 +916,211 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list yeoh`, followed by `list david`<br>
       Expected: After `list david`, only David Li is shown. The second search covers all contacts, not only the earlier result.
 
-### Deleting a person
+1. Searching contacts that contain special characters
 
-1. Deleting a person while all persons are being shown
+   1. Prerequisites: The app contains the sample data.
 
-   1. Prerequisites: List all contacts using the `list` command, with multiple contacts in the list.
+   1. Test case: `add /name Tan s/o Kumar /class C1`, followed by `list s/o`<br>
+      Expected: Only Tan s/o Kumar is shown. Characters such as `/` are matched exactly as typed.
+
+1. Order of the listed contacts
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `add /name John Doe /class A1`, followed by `add /name Betsy Crowe /class A2`, followed by `list`<br>
+      Expected: Betsy Crowe is at the top, followed by John Doe, and then the six sample contacts from Alex Yeoh down. The contacts are shown from the most recently added to the oldest.
+
+   1. Test case: `list a1`, after the test case above<br>
+      Expected: John Doe, Alex Yeoh and Bernice Yu are shown, in that order. The search results are in the same order as in the whole list.
+
+### Deleting a contact
+
+1. Deleting a contact while all contacts are being shown
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command.
 
    1. Test case: `delete 1`<br>
-      Expected: The first contact is deleted from the list. The status message shows the deleted contact's details.
+      Expected: Alex Yeoh, the first contact, is deleted from the list. The status message shows `Alex Yeoh in class A1 has been deleted`.
 
    1. Test case: `delete 0`<br>
-      Expected: No person is deleted. The status message shows error details.
+      Expected: No contact is deleted. The status message shows `Invalid command format!` followed by the usage of `delete`, because the index is not a positive integer.
 
-   1. Other incorrect delete commands to try: `delete`, `delete x`, `...` (where x is larger than the list size)<br>
-      Expected: Similar to previous.
+   1. Test case: `delete`, or `delete x` where `x` is not a number<br>
+      Expected: No contact is deleted. The status message is the same as for `delete 0`.
+
+   1. Test case: `delete 99`, where 99 is larger than the number of displayed contacts<br>
+      Expected: No contact is deleted. The status message shows `The contact index provided is invalid.`.
+
+1. Deleting a contact by name and class
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `delete /name alex yeoh /class a1`<br>
+      Expected: Alex Yeoh is deleted. The status message shows `Alex Yeoh in class A1 has been deleted`. Case is ignored.
+
+   1. Test case: `list david`, followed by `delete /name Bernice Yu /class A1`<br>
+      Expected: Bernice Yu is deleted, even though she is not displayed after `list david`. The whole address book is searched.
+
+   1. Test case: `delete /name David Li /class B1`<br>
+      Expected: No contact is deleted. The status message shows `No contact found`, because both the name and the class must match, and David Li is in class A2.
+
+   1. Test case: `delete /name David Li`<br>
+      Expected: No contact is deleted. The status message shows `Command requires a class`.
+
+   1. Test case: `delete 1 /name David Li /class A2`<br>
+      Expected: No contact is deleted. The status message shows `Invalid command format!` followed by the usage of `delete`, because an index cannot be combined with a name and class.
 
 1. _{ more test cases … }_
 
-### Saving data
+### Linking contacts to a group
 
-1. Dealing with missing/corrupted data files
+1. Linking contacts to a group successfully
 
-   1. _{Explain how to simulate missing or corrupted data files and state the expected behavior.}_
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command.
 
-1. _{ more test cases … }_
+   1. Test case: `tag /group Group A /members 1,3`<br>
+      Expected: Alex Yeoh and Charlotte Oliveiro both show the label `Group A`, and stay at the same positions in the list. The status message shows `Contacts successfully linked to group Group A: Alex Yeoh (A1), Charlotte Oliveiro (A2)`.
+
+   1. Test case: `list david`, followed by `tag /group Team 2 /members 1`<br>
+      Expected: David Li shows the label `Team 2`. The index refers to the contact in the displayed list, which is David Li.
+
+1. Linking contacts to a group unsuccessfully
+
+   1. Prerequisites: Complete the previous test cases. List all contacts using the `list` command. Alex Yeoh, who is at index 1, is in `Group A`.
+
+   1. Test case: `tag /group GROUP A /members 1`<br>
+      Expected: No contact is linked. The status message shows `One or more contacts are already in this group: Alex Yeoh (A1)`. Group names are compared ignoring case.
+
+   1. Test case: `tag /group Group B /members 1,99`<br>
+      Expected: No contact is linked, not even the contact at index 1. The status message shows `Contact index not found: 99`.
+
+   1. Test case: `tag /group Group B /members 1,1`<br>
+      Expected: No contact is linked. The status message shows `Duplicate contact index: 1`.
+
+   1. Test case: `tag /group Group B /members 0`<br>
+      Expected: No contact is linked. The status message shows `Contact index must be a positive integer: 0`.
+
+   1. Test case: `tag /group Group B /members 1,,3`<br>
+      Expected: No contact is linked. The status message shows `Members cannot contain empty entries`.
+
+   1. Test case: `tag /group Group B`<br>
+      Expected: No contact is linked. The status message shows `Missing members`.
+
+   1. Test case: `tag /members 1`<br>
+      Expected: No contact is linked. The status message shows `Missing group name`.
+
+   1. Test case: `tag /group Group! /members 1`<br>
+      Expected: No contact is linked. The status message starts with `Invalid group name.` and describes the characters that a group name can contain.
+
+### Importing contacts from a file
+
+1. Importing a valid file
+
+   1. Prerequisites: The app contains the sample data. Create a file named `students.csv` in the folder that contains the JAR file, with the following content:
+      ```
+      name,class,email
+      John Doe,A1,johnd@example.com
+      Betsy Crowe,A2,
+      ```
+
+   1. Test case: `import students.csv`<br>
+      Expected: John Doe and Betsy Crowe are added at the top of the list, in the same order as in the file, so John Doe is above Betsy Crowe. The status message shows `Imported 2 contacts from students.csv`.
+
+   1. Test case: `import students.csv` again<br>
+      Expected: No contact is added. The status message shows `Duplicate contact on row 2`.
+
+1. Importing an invalid file
+
+   1. Prerequisites: The app contains the sample data. Create the files in the folder that contains the JAR file as described in each test case.
+
+   1. Test case: `import`<br>
+      Expected: The status message shows `Specify file path`.
+
+   1. Test case: `import missing.csv`, where `missing.csv` does not exist<br>
+      Expected: The status message shows `File not found at missing.csv`.
+
+   1. Test case: `import students.txt`<br>
+      Expected: The status message shows `Only .csv files are supported`.
+
+   1. Test case: `import empty.csv`, where `empty.csv` is an empty file<br>
+      Expected: The status message shows `File empty`.
+
+   1. Test case: `import no-class.csv`, where the first row of the file is `name,email`<br>
+      Expected: The status message shows `CSV header must contain 'name' and 'class' columns`.
+
+   1. Test case: `import short-row.csv`, where the file has the header `name,class,email` followed by the row `Alice Tan,A1`<br>
+      Expected: The status message shows `Invalid number of fields on row 2`.
+
+   1. Test case: `import bad-name.csv`, where the file has the header `name,class` followed by the row `J0hn,A1`<br>
+      Expected: The status message shows `Invalid contact data on row 2`.
+
+   In every test case above, no contact is added. If any row of a file is invalid, none of its contacts is added.
+
+### Recording attendance
+
+1. Recording attendance successfully
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command. Alex Yeoh is at index 1.
+
+   1. Test case: `attendance 1 /date 01-01-2024 /status present`<br>
+      Expected: The status message shows `Attendance for Alex Yeoh on 01-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/addressbook.json`.
+
+   1. Test case: `attendance 1 /date 02-01-2024 /status LATE`<br>
+      Expected: The status message shows `Attendance for Alex Yeoh on 02-01-2024 recorded as late.`. Case is ignored.
+
+1. Recording attendance unsuccessfully
+
+   1. Prerequisites: Complete the previous test cases. List all contacts using the `list` command.
+
+   1. Test case: `attendance 1 /date 01-01-2024 /status absent`<br>
+      Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
+
+   1. Test case: `attendance 1 /date 2024-01-01 /status present`<br>
+      Expected: The status message shows `Invalid date format. Please use the format DD-MM-YYYY.`. The same message is shown for a date that does not exist, such as `30-02-2024`.
+
+   1. Test case: `attendance 1 /date 01-01-2999 /status present`<br>
+      Expected: The status message shows `Attendance date cannot be in the future.`.
+
+   1. Test case: `attendance 1 /date 03-01-2024 /status sick`<br>
+      Expected: The status message shows `Invalid status. Please use 'present', 'absent' or 'late'.`.
+
+   1. Test case: `attendance 99 /date 03-01-2024 /status present`<br>
+      Expected: The status message shows `The contact index provided is invalid.`.
+
+   1. Test case: `attendance 0 /date 03-01-2024 /status present`<br>
+      Expected: The status message shows `Index must be a positive integer.`.
+
+   1. Test case: `attendance /date 03-01-2024 /status present`<br>
+      Expected: The status message shows `Missing index. Please provide the index of the person.`.
+
+   1. Test case: `attendance 1 /status present`<br>
+      Expected: The status message shows `Missing date. Please provide the date of attendance.`.
+
+   1. Test case: `attendance 1 /date 03-01-2024`<br>
+      Expected: The status message shows `Missing status. Please provide the attendance status.`.
+
+### Clearing all contacts
+
+1. Clearing all contacts
+
+   1. Prerequisites: The app contains the sample data.
+
+   1. Test case: `clear`<br>
+      Expected: All contacts are removed from the list. The status message shows `Address book has been cleared!`.
+
+### Viewing help
+
+1. Opening the help window
+
+   1. Test case: `help`<br>
+      Expected: The help window opens and shows a link to the user guide. The status message shows `Opened help window.`.
+
+   1. Test case: `help` again while the help window is open<br>
+      Expected: The existing help window is brought to the front. No second help window opens.
+
+### Exiting the application
+
+1. Exiting the application
+
+   1. Test case: `exit`<br>
+      Expected: The application window and the help window, if open, close.
