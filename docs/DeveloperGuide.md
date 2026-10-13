@@ -730,7 +730,7 @@ UC01, UC07 and UC09 describe planned features that are not implemented yet. The 
 
 **MSS**
 1. User requests to view help.
-2. CM opens the help window, which shows the link to the user guide.
+2. CM opens the help window, which shows the command summary and a button to copy the link to the user guide.
 
    Use case ends.
 
@@ -1113,7 +1113,10 @@ testers are expected to do more *exploratory* testing.
 1. Opening the help window
 
    1. Test case: `help`<br>
-      Expected: The help window opens and shows a link to the user guide. The status message shows `Opened help window.`.
+      Expected: The help window opens and shows the summary of all commands, with one line for each command format. The status message shows `Opened help window.`.
+
+   1. Test case: Click the `Copy user guide URL` button in the help window, then paste into any text field<br>
+      Expected: The pasted text is `https://ay2627s1-cs2103-f09-1.github.io/tp/UserGuide.html`.
 
    1. Test case: `help` again while the help window is open<br>
       Expected: The existing help window is brought to the front. No second help window opens.
