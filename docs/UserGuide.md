@@ -79,11 +79,14 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 ### Viewing help: `help`
 
-Shows a message explaining how to access the help page.
+Opens a window that summarizes the format of every command, with a button to copy the link to this user guide.
 
 ![help message](images/helpMessage.png)
 
 Format: `help`
+
+* You can also open the help window from the `Help` menu or by pressing `F1`.
+* If the help window is already open, it is brought to the front.
 
 
 ### Adding a contact: `add`
