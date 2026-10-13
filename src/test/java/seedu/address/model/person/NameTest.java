@@ -107,6 +107,45 @@ public class NameTest {
     }
 
     @Test
+    public void matches_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new Name("Valid Name").matches(null));
+    }
+
+    @Test
+    public void matches() {
+        Name name = new Name("Valid Name");
+
+        // same text -> returns true
+        assertTrue(name.matches("Valid Name"));
+
+        // different case -> returns true
+        assertTrue(name.matches("valid name"));
+        assertTrue(name.matches("VALID NAME"));
+
+        // extra whitespace -> returns true
+        assertTrue(name.matches("  valid    name "));
+
+        // name constructed with different case and spaces -> returns true
+        assertTrue(new Name("vAlId   nAmE").matches("Valid Name"));
+
+        // different text -> returns false
+        assertFalse(name.matches("Other Valid Name"));
+        assertFalse(name.matches("Valid"));
+        assertFalse(name.matches("Valid Name 2"));
+
+        // empty or blank text -> returns false
+        assertFalse(name.matches(""));
+        assertFalse(name.matches("   "));
+
+        // text that is not a valid name does not match and does not throw
+        assertFalse(name.matches("R@chel"));
+        assertFalse(name.matches("a".repeat(Name.MAX_LENGTH + 1)));
+
+        // different punctuation -> returns false
+        assertFalse(new Name("Mary-Ann").matches("Mary Ann"));
+    }
+
+    @Test
     public void toString_keepsTextAsGiven() {
         assertEquals("john   TAN", new Name("john   TAN").toString());
         assertEquals("john   TAN", new Name("john   TAN").fullName);

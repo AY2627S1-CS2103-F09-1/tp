@@ -96,6 +96,39 @@ public class ClassNameTest {
     }
 
     @Test
+    public void matches_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new ClassName("Sec 3-2").matches(null));
+    }
+
+    @Test
+    public void matches() {
+        ClassName className = new ClassName("Sec 3-2");
+
+        // same text -> returns true
+        assertTrue(className.matches("Sec 3-2"));
+
+        // different case -> returns true
+        assertTrue(className.matches("sec 3-2"));
+        assertTrue(new ClassName("A1").matches("a1"));
+
+        // extra whitespace -> returns true
+        assertTrue(className.matches("  sec    3-2 "));
+
+        // different text -> returns false
+        assertFalse(className.matches("Sec 3-3"));
+        assertFalse(className.matches("Sec"));
+        assertFalse(className.matches("Sec3-2"));
+
+        // empty or blank text -> returns false
+        assertFalse(className.matches(""));
+        assertFalse(className.matches("   "));
+
+        // text that is not a valid class name does not match and does not throw
+        assertFalse(className.matches("A1/B2"));
+        assertFalse(className.matches("a".repeat(ClassName.MAX_LENGTH + 1)));
+    }
+
+    @Test
     public void toString_keepsTextAsGiven() {
         assertEquals("sec   3-2", new ClassName("sec   3-2").toString());
         assertEquals("sec   3-2", new ClassName("sec   3-2").value);

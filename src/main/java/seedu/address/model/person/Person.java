@@ -63,6 +63,9 @@ public class Person {
         return className;
     }
 
+    /**
+     * Returns the email of this person, or an empty {@code Optional} if this person has no email.
+     */
     public Optional<Email> getEmail() {
         return Optional.ofNullable(email);
     }
@@ -73,6 +76,25 @@ public class Person {
      */
     public Set<Tag> getTags() {
         return Collections.unmodifiableSet(tags);
+    }
+
+    /**
+     * Returns true if this person has {@code tag}. Tags are compared ignoring case.
+     */
+    public boolean hasTag(Tag tag) {
+        requireNonNull(tag);
+        return tags.contains(tag);
+    }
+
+    /**
+     * Returns a copy of this person that also has {@code tag}.
+     * If this person already has a tag equal to {@code tag}, the existing tag is kept.
+     */
+    public Person withTag(Tag tag) {
+        requireNonNull(tag);
+        Set<Tag> updatedTags = new HashSet<>(tags);
+        updatedTags.add(tag);
+        return new Person(name, className, getEmail(), updatedTags);
     }
 
     /**
@@ -113,6 +135,14 @@ public class Person {
         return otherPerson != null
                 && otherPerson.getName().equals(getName())
                 && otherPerson.getClassName().equals(getClassName());
+    }
+
+    /**
+     * Returns true if this person has the given name and class, ignoring case and extra whitespace.
+     * The given strings do not need to be valid, in which case they simply do not match.
+     */
+    public boolean hasNameAndClass(String nameToMatch, String classNameToMatch) {
+        return name.matches(nameToMatch) && className.matches(classNameToMatch);
     }
 
     /**
