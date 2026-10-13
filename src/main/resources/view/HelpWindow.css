@@ -2,6 +2,12 @@
     -fx-text-fill: white;
 }
 
+#helpMessage {
+    -fx-font-family: monospace;
+    -fx-font-size: 11pt;
+    -fx-line-spacing: 3px;
+}
+
 #copyButton {
     -fx-background-color: dimgray;
 }
