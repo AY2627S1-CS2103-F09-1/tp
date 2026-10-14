@@ -122,6 +122,7 @@ How the parsing works:
 * `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages. `DeleteCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or an index combined with `/name` or `/class`, a missing name, then a missing class. A parameter given without a value counts as missing.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
+* `AttendanceCommandParser` parses the contact index, date and status for the `attendance` command and creates an `AttendanceCommand`. `ViewAttendanceCommandParser` parses the name and class for the `viewA` command and creates a `ViewAttendanceCommand`. Both parsers use `ArgumentTokenizer` to extract their prefixed arguments.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -136,6 +137,7 @@ The `Model` component,
 * compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
 * keeps the `Person` objects in the order they are displayed, which is from the most recently added to the oldest (see [Order of contacts](#order-of-contacts-feature)).
 * keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, and `Person#hasTag(Tag)` checks whether the contact is already in it.
+* stores each contact's attendance records as a list of `Attendance` objects. Each record contains a date and a status (`PRESENT`, `ABSENT` or `LATE`). `Person#withAttendance(Attendance)` returns a copy of the contact with the new record added.
 * treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the contact has no email.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
@@ -160,6 +162,7 @@ The `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
 * is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
 * saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
+* saves each contact's attendance records in the address book JSON file and restores them when the file is loaded (see `JsonAdaptedPerson` and `JsonAdaptedAttendance`).
 * saves the contacts in the order they are displayed, and keeps that order when it reads them back (see `JsonSerializableAddressBook#toModelType()`).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
@@ -321,53 +324,51 @@ The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the 
   * Pros: Does not depend on the displayed list.
   * Cons: A long command for several members, and easy to mistype.
 
-### Importing contacts from a file feature
+### Recording attendance feature
 
 #### Implementation
 
-The `import` command adds multiple contacts from a CSV file. It is implemented by `ImportCommandParser`, `ImportCommand` and `CsvParser`.
+The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, `AttendanceCommand`, and the `Attendance` model class.
 
-* `ImportCommandParser#parse(String)` removes leading and trailing whitespace from the path while preserving spaces within it. It rejects empty paths and paths containing line breaks.
-* `ImportCommand#resolvePath(String)` normalizes the supplied path. An absolute path is used directly. A relative path is resolved from the project working directory. If the application is packaged and run as a JAR file, it is resolved from the folder containing the JAR file.
-* `ImportCommand#validatePath(Path)` checks that the path has the `.csv` extension and refers to an existing, readable regular file. `FileUtil#readFromFile(Path)` then reads the complete file as UTF-8 text. Leading and trailing whitespace surrounding the CSV content is ignored.
-* `CsvParser#parse(String)` parses the CSV syntax and validates the header. Its state-based parser supports comma-separated fields, quoted fields, escaped double quotes, embedded line endings, `LF` and `CRLF` record endings, and a UTF-8 byte-order mark at the start of the file.
-* The header is converted into a `CsvHeader`, which records the index of each column. Column names are compared without case sensitivity and can appear in any order. The `name` and `class` columns are mandatory, while `email` is optional. Unknown and repeated columns are rejected.
-* Each data row is represented by a `CsvRecord`, which retains its row number for error reporting. Blank rows are ignored. `ImportCommand#parsePerson(CsvRecord, CsvHeader)` checks the number of fields and uses the same `ParserUtil` methods as `add` command to validate the name, class and optional email.
-* `ImportCommand#parsePersons(ParsedCsv, Model)` validates every contact before modifying the model. It checks for duplicates against both the existing address book and contacts parsed from earlier rows. Validation stops at the first invalid row.
-* Only after every non-blank row has been successfully converted does `ImportCommand#execute(Model)` add the contacts. This makes the operation atomic, i.e. if any error occurs, no contact from the file is added.
-* Since `Model#addPerson(Person)` inserts a contact at the top of the list, the validated contacts are added from the last row to the first. The imported contacts therefore appear at the top in the same order as in the CSV file.
-* CSV syntax and I/O failures are reported as a general import failure, while header, field-count, contact-validation and duplicate errors receive more specific messages.
-
-The CSV import uses `FileUtil` rather than the `Storage` component. The CSV file is external command input, whereas `Storage` is responsible for loading and saving ClassMates's persistent JSON data.
+* `AttendanceCommandParser#parse(String)` tokenizes the arguments using the `/date` and `/status` prefixes. It reads the contact index from the preamble, checks for missing or repeated parameters, parses the index, validates the date strictly in `DD-MM-YYYY` format, and converts the status to an `Attendance.Status`.
+* `AttendanceCommand#execute(Model)` first rejects a date in the future. It then gets the contact at the specified index from `Model#getFilteredPersonList()`. If the index is invalid, it throws a `CommandException`.
+* To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old person in the model with `Model#setPerson(Person, Person)`.
+* If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
+* On success, the command returns a message naming the contact, date and status.
 
 #### Design considerations
 
-**Aspect: When contacts are added to the model**
+**Aspect: How attendance updates a contact**
 
-* **Alternative 1 (current choice):** Validate every row before adding any contact.
-  * Pros: The operation is atomic. After an error, the user can correct the file and try again without removing contacts from a partially completed import.
-  * Cons: All parsed contacts must be kept in memory until validation finishes, and one invalid row prevents every other row from being imported.
-* **Alternative 2:** Add each contact immediately after validating its row.
-  * Pros: Uses less temporary memory and preserves contacts from valid rows before an error.
-  * Cons: Leaves the address book partially modified, making the result harder for the user to understand or safely retry.
+* **Alternative 1 (current choice):** Select the contact by its index in the displayed list.
+  * Pros: Consistent with commands such as `delete INDEX` and `tag`; users can first use `list` to narrow down the contacts.
+  * Cons: The index depends on the currently displayed list, so users need to check the list before recording attendance.
 
-**Aspect: How CSV responsibilities are separated**
+* **Alternative 2:** Select the contact using `/name NAME /class CLASS`.
+  * Pros: Identifies the contact directly and does not depend on the current list or its indices.
+  * Cons: Requires entering both the name and class, and is less convenient when recording attendance for several contacts from a displayed list.
 
-* **Alternative 1 (current choice):** Keep CSV syntax and header validation in the dedicated `CsvParser` utility.
-  * Pros: Keeps `ImportCommand` focused on file handling, contact validation and model updates. CSV behavior can also be tested independently.
-  * Cons: Requires additional record classes and CSV-specific exceptions to pass parsed data back to the command.
-* **Alternative 2:** Parse the CSV directly inside `ImportCommand`.
-  * Pros: Fewer classes are required.
-  * Cons: Mixes filesystem, CSV and model responsibilities in one class, producing longer methods that are harder to test independently.
+### Viewing attendance feature
 
-**Aspect: How CSV columns are identified**
+#### Implementation
 
-* **Alternative 1 (current choice):** Read column positions from a required header row.
-  * Pros: Columns can appear in any order, and the optional email column can be omitted without creating ambiguous rows.
-  * Cons: The header requires additional validation and can itself contain errors.
-* **Alternative 2:** Require a fixed column order without a header.
-  * Pros: Simpler parsing and shorter files.
-  * Cons: Users must remember the column order, and adding or omitting an optional column becomes ambiguous.
+The `viewA` command displays all attendance records for a contact. It is implemented by `ViewAttendanceCommandParser` and `ViewAttendanceCommand`.
+
+* `ViewAttendanceCommandParser#parse(String)` uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It checks that both values are present and that neither prefix is repeated, then creates a `ViewAttendanceCommand` with the parsed `Name` and `ClassName`.
+* `ViewAttendanceCommand#execute(Model)` searches the address book for a contact whose name and class match the command arguments. If no contact matches, it throws a `CommandException`.
+* If a contact is found, the command formats all of that contact’s attendance records in chronological order and returns them in the command result. If there are no records, it returns the no-attendance-records message instead.
+
+#### Design considerations
+
+**Aspect: How the contact is identified**
+
+* **Alternative 1 (current choice):** Identify the contact by `/name` and `/class`.
+  * Pros: Finds the intended contact directly, even if it is not in the currently displayed list or a search is active.
+  * Cons: Requires the user to enter both the name and class.
+
+* **Alternative 2:** Identify the contact by its index in the displayed list.
+  * Pros: Shorter to enter after displaying or searching for contacts.
+  * Cons: The index depends on the current list, so the user may view attendance for a different contact if the list changes.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -1146,6 +1147,30 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `attendance 1 /date 03-01-2024`<br>
       Expected: The status message shows `Missing status. Please provide the attendance status.`.
+
+### Viewing attendance
+
+1. Viewing attendance successfully
+
+   1. Prerequisites: The app contains the sample data. Record attendance for Alex Yeoh using the `attendance` command above.
+
+   1. Test case: `viewA /name Alex Yeoh /class A1`<br>
+      Expected: The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by Alex Yeoh's attendance records in chronological order.
+
+   1. Test case: `viewA /class A1 /name Alex Yeoh`<br>
+      Expected: The same attendance records are displayed, because the parameter order does not matter.
+
+1. Viewing attendance for a contact without records
+
+   1. Prerequisites: Choose a sample contact with no attendance records.
+
+   1. Test case: `viewA /name Betsy Crowe /class A2`<br>
+      Expected: The status message shows the no-attendance-records message.
+
+1. Viewing attendance unsuccessfully
+
+   1. Test case: `viewA /name Unknown Student /class A1`<br>
+      Expected: The status message shows the contact-not-found message.
 
 ### Clearing all contacts
 
