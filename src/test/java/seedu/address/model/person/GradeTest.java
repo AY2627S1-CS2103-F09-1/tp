@@ -41,6 +41,20 @@ public class GradeTest {
         assertEquals(first.hashCode(), second.hashCode());
         assertFalse(first.equals(new Grade("Assignment 2", new BigDecimal("97"))));
         assertFalse(first.equals(new Grade("Assignment 1", new BigDecimal("96"))));
+        assertTrue(first.equals(first));
+        assertFalse(first.equals(null));
+        assertFalse(first.equals("not a Grade"));
+    }
+
+    @Test
+    public void isSameAssessment_caseInsensitiveAndNull_safe() {
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97"));
+        Grade sameAssessment = new Grade("assignment 1", new BigDecimal("80"));
+        Grade differentAssessment = new Grade("Assignment 2", new BigDecimal("97"));
+
+        assertTrue(grade.isSameAssessment(sameAssessment));
+        assertFalse(grade.isSameAssessment(differentAssessment));
+        assertFalse(grade.isSameAssessment(null));
     }
 
 }
