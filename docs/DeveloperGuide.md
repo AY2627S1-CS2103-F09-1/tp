@@ -321,6 +321,54 @@ The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the 
   * Pros: Does not depend on the displayed list.
   * Cons: A long command for several members, and easy to mistype.
 
+### Importing contacts from a file feature
+
+#### Implementation
+
+The `import` command adds multiple contacts from a CSV file. It is implemented by `ImportCommandParser`, `ImportCommand` and `CsvParser`.
+
+* `ImportCommandParser#parse(String)` removes leading and trailing whitespace from the path while preserving spaces within it. It rejects empty paths and paths containing line breaks.
+* `ImportCommand#resolvePath(String)` normalizes the supplied path. An absolute path is used directly. A relative path is resolved from the project working directory. If the application is packaged and run as a JAR file, it is resolved from the folder containing the JAR file.
+* `ImportCommand#validatePath(Path)` checks that the path has the `.csv` extension and refers to an existing, readable regular file. `FileUtil#readFromFile(Path)` then reads the complete file as UTF-8 text. Leading and trailing whitespace surrounding the CSV content is ignored.
+* `CsvParser#parse(String)` parses the CSV syntax and validates the header. Its state-based parser supports comma-separated fields, quoted fields, escaped double quotes, embedded line endings, `LF` and `CRLF` record endings, and a UTF-8 byte-order mark at the start of the file.
+* The header is converted into a `CsvHeader`, which records the index of each column. Column names are compared without case sensitivity and can appear in any order. The `name` and `class` columns are mandatory, while `email` is optional. Unknown and repeated columns are rejected.
+* Each data row is represented by a `CsvRecord`, which retains its row number for error reporting. Blank rows are ignored. `ImportCommand#parsePerson(CsvRecord, CsvHeader)` checks the number of fields and uses the same `ParserUtil` methods as `add` command to validate the name, class and optional email.
+* `ImportCommand#parsePersons(ParsedCsv, Model)` validates every contact before modifying the model. It checks for duplicates against both the existing address book and contacts parsed from earlier rows. Validation stops at the first invalid row.
+* Only after every non-blank row has been successfully converted does `ImportCommand#execute(Model)` add the contacts. This makes the operation atomic, i.e. if any error occurs, no contact from the file is added.
+* Since `Model#addPerson(Person)` inserts a contact at the top of the list, the validated contacts are added from the last row to the first. The imported contacts therefore appear at the top in the same order as in the CSV file.
+* CSV syntax and I/O failures are reported as a general import failure, while header, field-count, contact-validation and duplicate errors receive more specific messages.
+
+The CSV import uses `FileUtil` rather than the `Storage` component. The CSV file is external command input, whereas `Storage` is responsible for loading and saving ClassMates's persistent JSON data.
+
+#### Design considerations
+
+**Aspect: When contacts are added to the model**
+
+* **Alternative 1 (current choice):** Validate every row before adding any contact.
+  * Pros: The operation is atomic. After an error, the user can correct the file and try again without removing contacts from a partially completed import.
+  * Cons: All parsed contacts must be kept in memory until validation finishes, and one invalid row prevents every other row from being imported.
+* **Alternative 2:** Add each contact immediately after validating its row.
+  * Pros: Uses less temporary memory and preserves contacts from valid rows before an error.
+  * Cons: Leaves the address book partially modified, making the result harder for the user to understand or safely retry.
+
+**Aspect: How CSV responsibilities are separated**
+
+* **Alternative 1 (current choice):** Keep CSV syntax and header validation in the dedicated `CsvParser` utility.
+  * Pros: Keeps `ImportCommand` focused on file handling, contact validation and model updates. CSV behavior can also be tested independently.
+  * Cons: Requires additional record classes and CSV-specific exceptions to pass parsed data back to the command.
+* **Alternative 2:** Parse the CSV directly inside `ImportCommand`.
+  * Pros: Fewer classes are required.
+  * Cons: Mixes filesystem, CSV and model responsibilities in one class, producing longer methods that are harder to test independently.
+
+**Aspect: How CSV columns are identified**
+
+* **Alternative 1 (current choice):** Read column positions from a required header row.
+  * Pros: Columns can appear in any order, and the optional email column can be omitted without creating ambiguous rows.
+  * Cons: The header requires additional validation and can itself contain errors.
+* **Alternative 2:** Require a fixed column order without a header.
+  * Pros: Simpler parsing and shorter files.
+  * Cons: Users must remember the column order, and adding or omitting an optional column becomes ambiguous.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
