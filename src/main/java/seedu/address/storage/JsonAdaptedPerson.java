@@ -14,6 +14,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Attendance;
 import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Grade;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
@@ -30,14 +31,15 @@ class JsonAdaptedPerson {
     private final String email; // null if the person has no email
     private final List<JsonAdaptedTag> tags = new ArrayList<>();
     private final List<JsonAdaptedAttendance> attendanceRecords = new ArrayList<>();
-
+    private final List<JsonAdaptedGrade> gradeRecords = new ArrayList<>();
     /**
      * Constructs a {@code JsonAdaptedPerson} with the given person details.
      */
     @JsonCreator
     public JsonAdaptedPerson(@JsonProperty("name") String name, @JsonProperty("className") String className,
             @JsonProperty("email") String email, @JsonProperty("tags") List<JsonAdaptedTag> tags,
-            @JsonProperty("attendanceRecords") List<JsonAdaptedAttendance> attendanceRecords) {
+            @JsonProperty("attendanceRecords") List<JsonAdaptedAttendance> attendanceRecords,
+            @JsonProperty("gradeRecords") List<JsonAdaptedGrade> gradeRecords) {
         this.name = name;
         this.className = className;
         this.email = email;
@@ -46,6 +48,9 @@ class JsonAdaptedPerson {
         }
         if (attendanceRecords != null) {
             this.attendanceRecords.addAll(attendanceRecords);
+        }
+        if (gradeRecords != null) {
+            this.gradeRecords.addAll(gradeRecords);
         }
     }
 
@@ -61,6 +66,9 @@ class JsonAdaptedPerson {
                 .collect(Collectors.toList()));
         attendanceRecords.addAll(source.getAttendanceRecords().stream()
                 .map(JsonAdaptedAttendance::new)
+                .collect(Collectors.toList()));
+        gradeRecords.addAll(source.getGradeRecords().stream()
+                .map(JsonAdaptedGrade::new)
                 .collect(Collectors.toList()));
     }
 
@@ -79,6 +87,11 @@ class JsonAdaptedPerson {
             modelAttendanceRecords.add(attendance.toModelType());
         }
 
+        List<Grade> modelGradeRecords = new ArrayList<>();
+        for (JsonAdaptedGrade grade : gradeRecords) {
+            modelGradeRecords.add(grade.toModelType());
+        }
+
         if (name == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName()));
         }
@@ -93,7 +106,7 @@ class JsonAdaptedPerson {
         final Optional<Email> modelEmail = toModelEmail();
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelClassName, modelEmail, modelTags, modelAttendanceRecords);
+        return new Person(modelName, modelClassName, modelEmail, modelTags, modelAttendanceRecords, modelGradeRecords);
     }
 
     /**

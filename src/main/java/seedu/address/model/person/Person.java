@@ -29,12 +29,13 @@ public class Person {
     private final Email email; // null if the person has no email
     private final Set<Tag> tags = new HashSet<>();
     private final List<Attendance> attendanceRecords;
+    private final List<Grade> gradeRecords;
 
     /**
      * Every field must be present and not null. The {@code email} may be an empty {@code Optional}.
      */
     public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags) {
-        this(name, className, email, tags, Collections.emptyList());
+        this(name, className, email, tags, Collections.emptyList(), Collections.emptyList());
     }
 
     /**
@@ -53,6 +54,27 @@ public class Person {
         this.email = email.orElse(null);
         this.tags.addAll(tags);
         this.attendanceRecords = new ArrayList<>(attendanceRecords);
+        this.gradeRecords = new ArrayList<>();
+    }
+
+    /**
+     * Creates a Person with the given name, className, email, tags, attendance records and grade records.
+     * @param name
+     * @param className
+     * @param email
+     * @param tags
+     * @param attendanceRecords
+     * @param gradeRecords
+     */
+    public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
+        List<Attendance> attendanceRecords, List<Grade> gradeRecords) {
+        requireAllNonNull(name, className, email, tags, attendanceRecords, gradeRecords);
+        this.name = name;
+        this.className = className;
+        this.email = email.orElse(null);
+        this.tags.addAll(tags);
+        this.attendanceRecords = new ArrayList<>(attendanceRecords);
+        this.gradeRecords = new ArrayList<>(gradeRecords);
     }
 
     public Name getName() {
@@ -105,6 +127,13 @@ public class Person {
     }
 
     /**
+     * Returns an immutable view of the grade records.
+     */
+    public List<Grade> getGradeRecords() {
+        return Collections.unmodifiableList(gradeRecords);
+    }
+
+    /**
      * Returns a new Person with the given attendance record added.
      *
      * @param attendance
@@ -120,7 +149,26 @@ public class Person {
         }
         List<Attendance> newAttendanceRecords = new ArrayList<>(attendanceRecords);
         newAttendanceRecords.add(attendance);
-        return new Person(name, className, Optional.ofNullable(email), tags, newAttendanceRecords);
+        return new Person(name, className, Optional.ofNullable(email), tags, newAttendanceRecords, gradeRecords);
+    }
+
+    /**
+     * Returns a new Person with the given grade record added.
+     *
+     * @param grade
+     * @return a new Person with the given grade record added
+     * @throws IllegalArgumentException if a record already exists for that assessment
+     */
+    public Person withGrade(Grade grade) {
+        requireNonNull(grade);
+        boolean alreadyRecorded = gradeRecords.stream()
+                .anyMatch(record -> record.getAssessmentName().equals(grade.getAssessmentName()));
+        if (alreadyRecorded) {
+            throw new IllegalArgumentException("Grade record already exists");
+        }
+        List<Grade> newGradeRecords = new ArrayList<>(gradeRecords);
+        newGradeRecords.add(grade);
+        return new Person(name, className, Optional.ofNullable(email), tags, attendanceRecords, newGradeRecords);
     }
 
     /**
@@ -164,13 +212,14 @@ public class Person {
                 && className.equals(otherPerson.className)
                 && Objects.equals(email, otherPerson.email)
                 && tags.equals(otherPerson.tags)
-                && attendanceRecords.equals(otherPerson.attendanceRecords);
+                && attendanceRecords.equals(otherPerson.attendanceRecords)
+                && gradeRecords.equals(otherPerson.gradeRecords);
     }
 
     @Override
     public int hashCode() {
         // use this method for custom fields hashing instead of implementing your own
-        return Objects.hash(name, className, email, tags, attendanceRecords);
+        return Objects.hash(name, className, email, tags, attendanceRecords, gradeRecords);
     }
 
     @Override
@@ -181,6 +230,7 @@ public class Person {
                 .add("email", email)
                 .add("tags", tags)
                 .add("attendanceRecords", attendanceRecords)
+                .add("gradeRecords", gradeRecords)
                 .toString();
     }
 

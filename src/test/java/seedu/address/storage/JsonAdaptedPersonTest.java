@@ -6,6 +6,7 @@ import static seedu.address.storage.JsonAdaptedPerson.MISSING_FIELD_MESSAGE_FORM
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.BENSON;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,6 +19,7 @@ import seedu.address.commons.exceptions.IllegalValueException;
 import seedu.address.model.person.Attendance;
 import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
+import seedu.address.model.person.Grade;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
@@ -53,7 +55,7 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_invalidName_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(INVALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
-            List.of());
+            List.of(), List.of());
         String expectedMessage = Name.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
@@ -62,19 +64,21 @@ public class JsonAdaptedPersonTest {
     public void toModelType_tooLongName_throwsIllegalValueException() {
         String tooLongName = "a".repeat(Name.MAX_LENGTH + 1);
         JsonAdaptedPerson person = new JsonAdaptedPerson(tooLongName, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
-            List.of());
+            List.of(), List.of());
         assertThrows(IllegalValueException.class, Name.MESSAGE_TOO_LONG, person::toModelType);
     }
 
     @Test
     public void toModelType_emptyName_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson("", VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson("", VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            List.of(), List.of());
         assertThrows(IllegalValueException.class, Name.MESSAGE_EMPTY, person::toModelType);
     }
 
     @Test
     public void toModelType_nullName_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(null, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person =
+            new JsonAdaptedPerson(null, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, List.of(), List.of());
         String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName());
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
@@ -82,7 +86,7 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_invalidClassName_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, INVALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
-            List.of());
+            List.of(), List.of());
         assertThrows(IllegalValueException.class, ClassName.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
@@ -90,19 +94,21 @@ public class JsonAdaptedPersonTest {
     public void toModelType_tooLongClassName_throwsIllegalValueException() {
         String tooLongClassName = "a".repeat(ClassName.MAX_LENGTH + 1);
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, tooLongClassName, VALID_EMAIL, VALID_TAGS,
-            List.of());
+            List.of(), List.of());
         assertThrows(IllegalValueException.class, ClassName.MESSAGE_TOO_LONG, person::toModelType);
     }
 
     @Test
     public void toModelType_emptyClassName_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, "", VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person =
+            new JsonAdaptedPerson(VALID_NAME, "", VALID_EMAIL, VALID_TAGS, List.of(), List.of());
         assertThrows(IllegalValueException.class, ClassName.MESSAGE_EMPTY, person::toModelType);
     }
 
     @Test
     public void toModelType_nullClassName_throwsIllegalValueException() {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, null, VALID_EMAIL, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, null, VALID_EMAIL, VALID_TAGS,
+            List.of(), List.of());
         String expectedMessage = String.format(MISSING_FIELD_MESSAGE_FORMAT, ClassName.class.getSimpleName());
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
@@ -110,14 +116,15 @@ public class JsonAdaptedPersonTest {
     @Test
     public void toModelType_invalidEmail_throwsIllegalValueException() {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, INVALID_EMAIL, VALID_TAGS,
-            List.of());
+            List.of(), List.of());
         String expectedMessage = Email.MESSAGE_CONSTRAINTS;
         assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
 
     @Test
     public void toModelType_nullEmail_returnsPersonWithoutEmail() throws Exception {
-        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, null, VALID_TAGS, List.of());
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, null, VALID_TAGS,
+            List.of(), List.of());
         assertTrue(person.toModelType().getEmail().isEmpty());
     }
 
@@ -126,7 +133,7 @@ public class JsonAdaptedPersonTest {
         List<JsonAdaptedTag> invalidTags = new ArrayList<>(VALID_TAGS);
         invalidTags.add(new JsonAdaptedTag(INVALID_TAG));
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, invalidTags,
-            List.of());
+            List.of(), List.of());
         assertThrows(IllegalValueException.class, person::toModelType);
     }
 
@@ -134,7 +141,7 @@ public class JsonAdaptedPersonTest {
     public void toModelType_tooLongTag_throwsIllegalValueException() {
         List<JsonAdaptedTag> tooLongTags = List.of(new JsonAdaptedTag("a".repeat(Tag.MAX_LENGTH + 1)));
         JsonAdaptedPerson person =
-                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tooLongTags, List.of());
+                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tooLongTags, List.of(), List.of());
         assertThrows(IllegalValueException.class, Tag.MESSAGE_CONSTRAINTS, person::toModelType);
     }
 
@@ -156,7 +163,8 @@ public class JsonAdaptedPersonTest {
     public void toModelType_tagWithExtraSpacesInFile_returnsNormalizedTag() throws Exception {
         List<JsonAdaptedTag> tagsWithExtraSpaces = List.of(new JsonAdaptedTag("  Group    A "));
         JsonAdaptedPerson person =
-                new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tagsWithExtraSpaces, List.of());
+            new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL,
+            tagsWithExtraSpaces, List.of(), List.of());
 
         Set<Tag> tags = person.toModelType().getTags();
 
@@ -184,6 +192,7 @@ public class JsonAdaptedPersonTest {
             VALID_CLASS_NAME,
             VALID_EMAIL,
             VALID_TAGS,
+            null,
             null);
 
         assertTrue(adaptedPerson.toModelType().getAttendanceRecords().isEmpty());
@@ -198,9 +207,28 @@ public class JsonAdaptedPersonTest {
             VALID_CLASS_NAME,
             VALID_EMAIL,
             VALID_TAGS,
-            List.of(invalidRecord));
+            List.of(invalidRecord),
+            List.of());
 
         assertThrows(IllegalValueException.class, adaptedPerson::toModelType);
+    }
+
+    @Test
+    public void toModelType_personWithGrade_returnsPersonWithGrade() throws Exception {
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
+        Person personWithGrade = BENSON.withGrade(grade);
+        JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(personWithGrade);
+
+        assertEquals(personWithGrade, adaptedPerson.toModelType());
+        assertEquals(List.of(grade), adaptedPerson.toModelType().getGradeRecords());
+    }
+
+    @Test
+    public void toModelType_missingGradeRecords_returnsPersonWithNoGrades() throws Exception {
+        JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(
+            VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS, null, null);
+
+        assertTrue(adaptedPerson.toModelType().getGradeRecords().isEmpty());
     }
 
 }

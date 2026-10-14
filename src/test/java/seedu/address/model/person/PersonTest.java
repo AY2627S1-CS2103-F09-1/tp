@@ -13,8 +13,10 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -245,7 +247,8 @@ public class PersonTest {
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", className="
                 + ALICE.getClassName() + ", email=" + ALICE.getEmail().get() + ", tags=" + ALICE.getTags()
-                + ", attendanceRecords=" + ALICE.getAttendanceRecords() + "}";
+                + ", attendanceRecords=" + ALICE.getAttendanceRecords() + ", gradeRecords="
+                + ALICE.getGradeRecords() + "}";
         assertEquals(expected, ALICE.toString());
     }
 
@@ -286,4 +289,20 @@ public class PersonTest {
 
         assertFalse(personWithoutAttendance.equals(personWithAttendance));
     }
+
+    @Test
+    public void withGrade_addsGrade() {
+        Person original = new PersonBuilder().build();
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
+
+        Person updated = original.withGrade(grade);
+
+        assertTrue(original.getGradeRecords().isEmpty());
+        assertEquals(List.of(grade), updated.getGradeRecords());
+
+        assertThrows(IllegalArgumentException.class, () ->
+            updated.withGrade(new Grade("Assignment 1", BigDecimal.ONE)));
+        assertThrows(UnsupportedOperationException.class, () -> updated.getGradeRecords().clear());
+    }
+
 }
