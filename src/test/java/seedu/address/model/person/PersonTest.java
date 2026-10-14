@@ -107,6 +107,18 @@ public class PersonTest {
     }
 
     @Test
+    public void withTag_personWithRecords_keepsAttendanceAndGradeRecords() {
+        Attendance attendance = new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT);
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
+        Person person = new PersonBuilder().build().withAttendance(attendance).withGrade(grade);
+
+        Person tagged = person.withTag(new Tag("Group A"));
+
+        assertEquals(List.of(attendance), tagged.getAttendanceRecords());
+        assertEquals(List.of(grade), tagged.getGradeRecords());
+    }
+
+    @Test
     public void isSamePerson() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));

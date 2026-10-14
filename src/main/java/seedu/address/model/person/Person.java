@@ -116,7 +116,7 @@ public class Person {
         requireNonNull(tag);
         Set<Tag> updatedTags = new HashSet<>(tags);
         updatedTags.add(tag);
-        return new Person(name, className, getEmail(), updatedTags);
+        return new Person(name, className, getEmail(), updatedTags, attendanceRecords, gradeRecords);
     }
 
     /**
