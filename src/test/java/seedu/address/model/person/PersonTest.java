@@ -317,4 +317,12 @@ public class PersonTest {
         assertThrows(UnsupportedOperationException.class, () -> updated.getGradeRecords().clear());
     }
 
+    @Test
+    public void withGrade_sameAssessmentDifferentCase_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build().withGrade(new Grade("Quiz 1", new BigDecimal("90")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+            person.withGrade(new Grade("quiz 1", new BigDecimal("80"))));
+    }
+
 }

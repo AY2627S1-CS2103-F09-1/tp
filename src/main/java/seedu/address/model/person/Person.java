@@ -162,7 +162,7 @@ public class Person {
     public Person withGrade(Grade grade) {
         requireNonNull(grade);
         boolean alreadyRecorded = gradeRecords.stream()
-                .anyMatch(record -> record.getAssessmentName().equals(grade.getAssessmentName()));
+                .anyMatch(record -> record.isSameAssessment(grade));
         if (alreadyRecorded) {
             throw new IllegalArgumentException("Grade record already exists");
         }
