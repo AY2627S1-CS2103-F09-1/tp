@@ -57,4 +57,10 @@ public class GradeTest {
         assertFalse(grade.isSameAssessment(null));
     }
 
+    @Test
+    public void toString_scoreWithTrailingZeros_omitsTrailingZeros() {
+        assertEquals("Assignment 1: 97.5", new Grade("Assignment 1", new BigDecimal("97.50")).toString());
+        assertEquals("Quiz: 100", new Grade("Quiz", new BigDecimal("100")).toString());
+    }
+
 }

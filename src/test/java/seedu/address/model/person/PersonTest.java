@@ -303,6 +303,14 @@ public class PersonTest {
     }
 
     @Test
+    public void equals_differentGradeRecords_returnsFalse() {
+        Person personWithoutGrades = new PersonBuilder().build();
+        Person personWithGrade = personWithoutGrades.withGrade(new Grade("Quiz 1", new BigDecimal("90")));
+
+        assertFalse(personWithoutGrades.equals(personWithGrade));
+    }
+
+    @Test
     public void withGrade_addsGrade() {
         Person original = new PersonBuilder().build();
         Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));

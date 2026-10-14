@@ -49,7 +49,7 @@ public class GradeCommandParser implements Parser<GradeCommand> {
                 throw new NumberFormatException();
             }
             score = new BigDecimal(scoreArgument);
-            if (score.compareTo(BigDecimal.ZERO) < 0 || score.compareTo(BigDecimal.valueOf(100)) > 0) {
+            if (score.compareTo(BigDecimal.valueOf(100)) > 0) {
                 throw new NumberFormatException();
             }
         } catch (NumberFormatException e) {

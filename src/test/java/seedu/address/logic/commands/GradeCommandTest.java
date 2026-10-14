@@ -1,5 +1,6 @@
 package seedu.address.logic.commands;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
@@ -69,6 +70,17 @@ public class GradeCommandTest {
         assertFalse(command.equals("not a GradeCommand"));
         assertFalse(command.equals(new GradeCommand(Index.fromOneBased(2), grade)));
         assertFalse(command.equals(new GradeCommand(index, new Grade("Assignment 1", BigDecimal.ONE))));
+    }
+
+    @Test
+    public void toStringMethod() {
+        Index index = Index.fromOneBased(1);
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97"));
+        GradeCommand command = new GradeCommand(index, grade);
+
+        String expected = GradeCommand.class.getCanonicalName()
+                + "{index=" + index + ", grade=" + grade + "}";
+        assertEquals(expected, command.toString());
     }
 
 }

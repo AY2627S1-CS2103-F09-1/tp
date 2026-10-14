@@ -8,6 +8,7 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
 
@@ -22,6 +23,7 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
@@ -30,6 +32,7 @@ import seedu.address.logic.commands.ViewAttendanceCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Attendance;
 import seedu.address.model.person.ClassName;
+import seedu.address.model.person.Grade;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonMatchesKeyword;
@@ -154,6 +157,14 @@ public class AddressBookParserTest {
                 new Name("John Tan"), new ClassName("A1"));
 
         assertEquals(expected, parser.parseCommand("viewA /name John Tan /class A1"));
+    }
+
+    @Test
+    public void parseCommand_grade() throws Exception {
+        GradeCommand expected = new GradeCommand(INDEX_FIRST_PERSON,
+                new Grade("Assignment 1", new BigDecimal("97.5")));
+
+        assertEquals(expected, parser.parseCommand("grade 1 /assessment Assignment 1 /score 97.5"));
     }
 
 }
