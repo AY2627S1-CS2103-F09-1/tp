@@ -32,17 +32,17 @@ public class ViewAttendanceCommandParserTest {
 
     @Test
     public void parse_missingName_failure() {
-        assertParseFailure(parser, " /class A1", "Missing student name.");
+        assertParseFailure(parser, " /class A1", "Command requires a name");
     }
 
     @Test
     public void parse_missingClass_failure() {
-        assertParseFailure(parser, " /name John Tan", "Missing class.");
+        assertParseFailure(parser, " /name John Tan", "Command requires a class");
     }
 
     @Test
     public void parse_missingBothFields_reportsMissingName() {
-        assertParseFailure(parser, "", "Missing student name.");
+        assertParseFailure(parser, "", "Command requires a name");
     }
 
     @Test

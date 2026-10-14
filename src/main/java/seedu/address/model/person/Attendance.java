@@ -3,6 +3,7 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -31,6 +32,8 @@ public class Attendance {
             }
         }
     }
+    private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
+        DateTimeFormatter.ofPattern("dd-MMM-uuuu", Locale.ENGLISH);
 
     private final LocalDate date;
     private final Status status;
@@ -46,6 +49,13 @@ public class Attendance {
         requireNonNull(status);
         this.date = date;
         this.status = status;
+    }
+
+    /**
+     * Returns this attendance record in a format suitable for display.
+     */
+    public String toDisplayString() {
+        return DISPLAY_DATE_FORMAT.format(date) + "  " + status.toString().toLowerCase(Locale.ROOT);
     }
 
     public LocalDate getDate() {

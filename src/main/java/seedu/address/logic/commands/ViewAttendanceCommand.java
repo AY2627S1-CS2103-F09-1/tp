@@ -2,9 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -25,8 +23,7 @@ public class ViewAttendanceCommand extends Command {
             + "Example: " + COMMAND_WORD + " /name John Tan /class A1";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
     public static final String MESSAGE_NO_RECORDS = "No attendance records.";
-
-    private static final DateTimeFormatter DATE_FORMAT = DateTimeFormatter.ofPattern("dd-MM-uuuu");
+    public static final String MESSAGE_SUCCESS = "Here is the attendance for %s from class %s\n%s";
 
     private final Name name;
     private final ClassName className;
@@ -46,16 +43,13 @@ public class ViewAttendanceCommand extends Command {
                 .filter(person -> person.getName().equals(name) && person.getClassName().equals(className))
                 .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
 
-        String history = student.getAttendanceRecords().stream()
-                .sorted(Comparator.comparing(Attendance::getDate))
-                .map(record -> DATE_FORMAT.format(record.getDate()) + "  "
-                        + record.getStatus().name().toLowerCase(Locale.ROOT)).collect(Collectors.joining("\n"));
+        String history = student.getAttendanceRecords().stream().sorted(Comparator.comparing(Attendance::getDate))
+                .map(Attendance::toDisplayString).collect(Collectors.joining("\n"));
         if (history.isEmpty()) {
             history = MESSAGE_NO_RECORDS;
         }
 
-        return new CommandResult(String.format("Here is the attendance for %s from class %s\n%s",
-                student.getName(), student.getClassName(), history));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), history));
     }
 
     @Override

@@ -1,9 +1,7 @@
 package seedu.address.ui;
 
-import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Locale;
 import java.util.stream.Collectors;
 
 import javafx.fxml.FXML;
@@ -21,8 +19,6 @@ import seedu.address.model.tag.Tag;
 public class PersonCard extends UiPart<Region> {
 
     private static final String FXML = "PersonListCard.fxml";
-    private static final DateTimeFormatter ATTENDANCE_DATE_FORMAT =
-        DateTimeFormatter.ofPattern("dd-MMM-uuuu");
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -91,8 +87,8 @@ public class PersonCard extends UiPart<Region> {
             .sorted(Comparator.comparing(Attendance::getDate).reversed()).limit(3).toList();
 
         String recordLines = recentRecords.stream()
-            .map(record -> ATTENDANCE_DATE_FORMAT.format(record.getDate())
-            + "  " + record.getStatus().name().toLowerCase(Locale.ROOT)).collect(Collectors.joining("\n"));
+            .map(record -> record.toDisplayString())
+            .collect(Collectors.joining("\n"));
 
         int olderRecordCount = attRecords.size() - recentRecords.size();
         if (olderRecordCount > 0) {
