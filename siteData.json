@@ -53,6 +53,7 @@
         "deleting-a-contact-feature": "Deleting a contact feature",
         "order-of-contacts-feature": "Order of contacts feature",
         "linking-contacts-to-a-group-feature": "Linking contacts to a group feature",
+        "importing-contacts-from-a-file-feature": "Importing contacts from a file feature",
         "proposed-undo-redo-feature": "[Proposed] Undo/redo feature",
         "documentation-logging-testing-dev-ops": "Documentation, logging, testing, dev-ops",
         "appendix-requirements": "Appendix: Requirements",
