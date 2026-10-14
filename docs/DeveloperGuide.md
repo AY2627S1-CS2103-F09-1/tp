@@ -571,7 +571,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC08).
 
-UC01, UC07 and UC09 describe planned features that are not implemented yet. The other use cases describe what the application does now.
+UC01 and UC09 describe planned features that are not implemented yet. The other use cases describe what the application does now.
 
 **Use case: UC01 - View known student's grades**
 
@@ -757,18 +757,28 @@ UC01, UC07 and UC09 describe planned features that are not implemented yet. The 
 
 **Use case: UC07 - Record grades for a known student**
 
-*(Planned feature, not implemented yet.)*
-
 **MSS**
-1. User requests to record a grade for an assessment for the student.
-2. CM records the grade and displays a success message.
+1. User requests to record a grade, giving the index of a student in the displayed list, an assessment name and a score.
+2. CM records the grade for the student and displays a success message.
 
    Use case ends.
 
 **Extensions**
 
-* 1a. The command format is invalid, the student does not exist, or the grade is out of range (not between 0 and 100).
+* 1a. The command format is invalid, e.g. the index, assessment name or score is missing, or the assessment name or score is given more than once.
   * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1b. The index is not a positive integer, or no student is displayed at that index.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters or has characters other than English letters, digits, spaces and hyphens, or the score is not a number from 0 to 100.
+  * 1c1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1d. The student already has a grade for the assessment. Assessment names are compared ignoring case.
+  * 1d1. CM keeps the existing grade and displays an error message.
 
     Use case resumes at step 1.
 

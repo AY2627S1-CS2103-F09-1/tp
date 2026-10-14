@@ -13,8 +13,10 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
+import java.util.List;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -102,6 +104,18 @@ public class PersonTest {
 
         assertEquals(1, tagged.getTags().size());
         assertEquals("Group A", tagged.getTags().iterator().next().tagName);
+    }
+
+    @Test
+    public void withTag_personWithRecords_keepsAttendanceAndGradeRecords() {
+        Attendance attendance = new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT);
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
+        Person person = new PersonBuilder().build().withAttendance(attendance).withGrade(grade);
+
+        Person tagged = person.withTag(new Tag("Group A"));
+
+        assertEquals(List.of(attendance), tagged.getAttendanceRecords());
+        assertEquals(List.of(grade), tagged.getGradeRecords());
     }
 
     @Test
@@ -245,7 +259,8 @@ public class PersonTest {
     public void toStringMethod() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", className="
                 + ALICE.getClassName() + ", email=" + ALICE.getEmail().get() + ", tags=" + ALICE.getTags()
-                + ", attendanceRecords=" + ALICE.getAttendanceRecords() + "}";
+                + ", attendanceRecords=" + ALICE.getAttendanceRecords() + ", gradeRecords="
+                + ALICE.getGradeRecords() + "}";
         assertEquals(expected, ALICE.toString());
     }
 
@@ -286,4 +301,36 @@ public class PersonTest {
 
         assertFalse(personWithoutAttendance.equals(personWithAttendance));
     }
+
+    @Test
+    public void equals_differentGradeRecords_returnsFalse() {
+        Person personWithoutGrades = new PersonBuilder().build();
+        Person personWithGrade = personWithoutGrades.withGrade(new Grade("Quiz 1", new BigDecimal("90")));
+
+        assertFalse(personWithoutGrades.equals(personWithGrade));
+    }
+
+    @Test
+    public void withGrade_addsGrade() {
+        Person original = new PersonBuilder().build();
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
+
+        Person updated = original.withGrade(grade);
+
+        assertTrue(original.getGradeRecords().isEmpty());
+        assertEquals(List.of(grade), updated.getGradeRecords());
+
+        assertThrows(IllegalArgumentException.class, () ->
+            updated.withGrade(new Grade("Assignment 1", BigDecimal.ONE)));
+        assertThrows(UnsupportedOperationException.class, () -> updated.getGradeRecords().clear());
+    }
+
+    @Test
+    public void withGrade_sameAssessmentDifferentCase_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build().withGrade(new Grade("Quiz 1", new BigDecimal("90")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+            person.withGrade(new Grade("quiz 1", new BigDecimal("80"))));
+    }
+
 }

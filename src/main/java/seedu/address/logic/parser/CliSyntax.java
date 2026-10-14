@@ -14,5 +14,7 @@ public class CliSyntax {
     public static final Prefix PREFIX_MEMBERS = new Prefix("/members");
     public static final Prefix PREFIX_DATE = new Prefix("/date");
     public static final Prefix PREFIX_STATUS = new Prefix("/status");
+    public static final Prefix PREFIX_ASSESSMENT = new Prefix("/assessment");
+    public static final Prefix PREFIX_SCORE = new Prefix("/score");
 
 }

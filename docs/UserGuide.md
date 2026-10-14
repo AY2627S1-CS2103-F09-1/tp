@@ -278,6 +278,40 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | The file is unreadable, is a directory, contains malformed CSV syntax, or another I/O error occurs | `Failed to import from <filepath>`                   |
 
 
+### Recording grades: `grade`
+
+Records a score for a contact in an assessment.
+
+Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
+
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain only English letters, digits, spaces and hyphens, such as `Assignment 1` or `Mid-term`. Spaces at the start and end are ignored.
+* `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
+* `/assessment` and `/score` can each be given at most once.
+* Grades are saved with the contact data. ClassMates does not show recorded grades yet.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter is given more than once | `Each parameter can only be specified once`
+The index is missing | `Missing index. Please provide the index of the person.`
+`/assessment` is missing or has nothing after it | `Assessment name missing`
+`/score` is missing or has nothing after it | `Score missing`
+The index is not a positive integer | `Index must be a positive integer.`
+The assessment name is not valid | `Assessment name must be 1 to 80 characters and contain only English letters, digits, spaces and hyphens.`
+The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
+The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The contact already has a grade for the assessment | `Grade for this assessment already exists`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Grade of SCORE recorded for ASSESSMENT_NAME for student NAME in class CLASS.`, for example `Grade of 97.5 recorded for Assignment 1 for student Alex Yeoh in class A1.` Zeros at the end of a decimal score are not shown, so `97.50` appears as `97.5`.
+
+Examples:
+* `grade 5 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for the 5th contact in the displayed list.
+* `list Betsy` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list Betsy` command.
+
 ### Recording attendance: `attendance`
 
 Records whether a contact was present, absent or late on a date.
@@ -415,6 +449,7 @@ Action     | Format, Examples
 **Attendance** | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`
 **Clear**  | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
+**Grade**  | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`
 **Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Import** | `import PATH`<br> e.g., `import data/students.csv`
