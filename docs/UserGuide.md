@@ -411,7 +411,7 @@ ClassMates automatically saves data after every command. You do not need to save
 
 ### Editing the data file
 
-ClassMates data is saved automatically as a JSON file `[JAR file location]/data/addressbook.json`. Advanced users are welcome to update data directly by editing that data file.
+ClassMates data is saved automatically as a JSON file `[JAR file location]/data/classmates.json`. Advanced users are welcome to update data directly by editing that data file.
 
 <box type="warning" seamless>
 
@@ -432,7 +432,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: Close ClassMates, delete the `data` folder in the folder that contains the JAR file, and start ClassMates again. All your current contacts are lost.
 
 **Q**: Where is my data stored, and do I need to save it?<br>
-**A**: ClassMates saves after every command to `[JAR file location]/data/addressbook.json`. There is no save command, and exiting does not lose data.
+**A**: ClassMates saves after every command to `[JAR file location]/data/classmates.json`. There is no save command, and exiting does not lose data.
 
 **Q**: Can I add two contacts with the same name?<br>
 **A**: Yes, if they are in different classes. A contact is identified by name and class together, ignoring case and extra spaces, so the same name cannot be added twice to the same class.
@@ -450,7 +450,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
 
 **Q**: ClassMates started with an empty list. What happened?<br>
-**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `addressbook.json`, or delete the `data` folder to start with the sample contacts.
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
 
 --------------------------------------------------------------------------------------------------------------------
 

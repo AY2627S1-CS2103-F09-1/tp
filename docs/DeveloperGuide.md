@@ -1173,7 +1173,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data. List all contacts using the `list` command. Alex Yeoh is at index 1.
 
    1. Test case: `attendance 1 /date 01-01-2024 /status present`<br>
-      Expected: The status message shows `Attendance for Alex Yeoh on 01-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/addressbook.json`.
+      Expected: The status message shows `Attendance for Alex Yeoh on 01-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/classmates.json`.
 
    1. Test case: `attendance 1 /date 02-01-2024 /status LATE`<br>
       Expected: The status message shows `Attendance for Alex Yeoh on 02-01-2024 recorded as late.`. Case is ignored.
