@@ -1,16 +1,16 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.logic.parser.ViewAttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.ViewAttendanceCommand;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 
 public class ViewAttendanceCommandParserTest {
 
@@ -18,18 +18,23 @@ public class ViewAttendanceCommandParserTest {
 
     @Test
     public void parse_validArguments_success() {
-        ViewAttendanceCommand expected = new ViewAttendanceCommand(
-                new Name("John Tan"), new ClassName("A1"));
+        ViewAttendanceCommand expected = new ViewAttendanceCommand("John Tan", "A1");
 
         assertParseSuccess(parser, " /name John Tan /class A1", expected);
     }
 
     @Test
     public void parse_reversedOrderAndWhitespace_success() {
-        ViewAttendanceCommand expected = new ViewAttendanceCommand(
-                new Name("John Tan"), new ClassName("A1"));
+        ViewAttendanceCommand expected = new ViewAttendanceCommand("John Tan", "A1");
 
         assertParseSuccess(parser, " /class  A1  /name  John Tan  ", expected);
+    }
+
+    @Test
+    public void parse_nameAndClassNotValidForAdding_success() {
+        ViewAttendanceCommand expected = new ViewAttendanceCommand("@@@", "!!!");
+
+        assertParseSuccess(parser, " /name @@@ /class !!!", expected);
     }
 
     @Test
@@ -48,6 +53,16 @@ public class ViewAttendanceCommandParserTest {
     }
 
     @Test
+    public void parse_blankName_reportsMissingName() {
+        assertParseFailure(parser, " /name   /class A1", MESSAGE_MISSING_NAME);
+    }
+
+    @Test
+    public void parse_blankClass_reportsMissingClass() {
+        assertParseFailure(parser, " /name John Tan /class   ", MESSAGE_MISSING_CLASS);
+    }
+
+    @Test
     public void parse_duplicateNamePrefix_failure() {
         assertParseFailure(parser,
                 " /name John Tan /name Jane Doe /class A1",
@@ -62,13 +77,20 @@ public class ViewAttendanceCommandParserTest {
     }
 
     @Test
-    public void parse_invalidName_failure() {
-        assertParseFailure(parser, " /name John@Tan /class A1", Name.MESSAGE_CONSTRAINTS);
+    public void parse_unknownParameter_failure() {
+        assertParseFailure(parser, " /name John Tan /class A1 /foo bar", MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, " /name John Tan /class A1 /email john@example.com", MESSAGE_UNKNOWN_PARAMETER);
     }
 
     @Test
-    public void parse_invalidClass_failure() {
-        assertParseFailure(parser, " /name John Tan /class A1!", ClassName.MESSAGE_CONSTRAINTS);
+    public void parse_unknownParameterAndRepeatedParameter_reportsUnknownParameter() {
+        assertParseFailure(parser, " /name John Tan /name Jane Doe /class A1 /foo bar", MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_textBeforeFirstParameter_failure() {
+        assertParseFailure(parser, " John /name John Tan /class A1",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAttendanceCommand.MESSAGE_USAGE));
     }
 
 }
