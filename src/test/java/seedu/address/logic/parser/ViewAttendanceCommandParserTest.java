@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -32,17 +34,17 @@ public class ViewAttendanceCommandParserTest {
 
     @Test
     public void parse_missingName_failure() {
-        assertParseFailure(parser, " /class A1", "Command requires a name");
+        assertParseFailure(parser, " /class A1", MESSAGE_MISSING_NAME);
     }
 
     @Test
     public void parse_missingClass_failure() {
-        assertParseFailure(parser, " /name John Tan", "Command requires a class");
+        assertParseFailure(parser, " /name John Tan", MESSAGE_MISSING_CLASS);
     }
 
     @Test
     public void parse_missingBothFields_reportsMissingName() {
-        assertParseFailure(parser, "", "Command requires a name");
+        assertParseFailure(parser, "", MESSAGE_MISSING_NAME);
     }
 
     @Test

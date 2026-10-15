@@ -2,7 +2,9 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -22,7 +24,7 @@ public class ViewAttendanceCommand extends Command {
             + "Parameters: /name NAME /class CLASS\n"
             + "Example: " + COMMAND_WORD + " /name John Tan /class A1";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
-    public static final String MESSAGE_NO_RECORDS = "No attendance records.";
+    public static final String MESSAGE_NO_ATTENDANCE = "No attendance records.";
     public static final String MESSAGE_SUCCESS = "Here is the attendance for %s from class %s\n%s";
 
     private final Name name;
@@ -43,13 +45,14 @@ public class ViewAttendanceCommand extends Command {
                 .filter(person -> person.getName().equals(name) && person.getClassName().equals(className))
                 .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
 
-        String history = student.getAttendanceRecords().stream().sorted(Comparator.comparing(Attendance::getDate))
-                .map(Attendance::toDisplayString).collect(Collectors.joining("\n"));
-        if (history.isEmpty()) {
-            history = MESSAGE_NO_RECORDS;
+        List<Attendance> attRecords = new ArrayList<>(student.getAttendanceRecords());
+        Collections.reverse(attRecords);
+        String attendance = attRecords.stream().map(Attendance::toDisplayString).collect(Collectors.joining("\n"));
+        if (attendance.isEmpty()) {
+            attendance = MESSAGE_NO_ATTENDANCE;
         }
 
-        return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), history));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), attendance));
     }
 
     @Override

@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -10,6 +12,7 @@ import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
 import seedu.address.model.person.Attendance;
+import seedu.address.model.person.Grade;
 import seedu.address.model.person.Person;
 import seedu.address.model.tag.Tag;
 
@@ -19,6 +22,13 @@ import seedu.address.model.tag.Tag;
 public class PersonCard extends UiPart<Region> {
 
     private static final String FXML = "PersonListCard.fxml";
+    private static final int MAX_RECENT_RECORDS = 3;
+    private static final String MESSAGE_NO_ATTENDANCE = "Recent attendance: none";
+    private static final String MESSAGE_OLDER_RECORDS = "+%d older record(s)";
+    private static final String HEADER_RECENT_ATTENDANCE = "Recent attendance:\n";
+    private static final String MESSAGE_NO_GRADES = "Recent grades: none";
+    private static final String MESSAGE_OLDER_GRADES = "+%d older grade(s)";
+    private static final String HEADER_RECENT_GRADES = "Recent grades:\n";
 
     /**
      * Note: Certain keywords such as "location" and "resources" are reserved keywords in JavaFX.
@@ -44,6 +54,8 @@ public class PersonCard extends UiPart<Region> {
     private FlowPane tags;
     @FXML
     private Label attendance;
+    @FXML
+    private Label grades;
 
     /**
      * Creates a {@code PersonCard} with the given {@code Person} and index to display.
@@ -56,6 +68,7 @@ public class PersonCard extends UiPart<Region> {
         className.setText(person.getClassName().value);
         person.getEmail().ifPresentOrElse(personEmail -> email.setText(personEmail.value), () -> hide(email));
         attendance.setText(formatRecentAttendance(person));
+        grades.setText(formatRecentGrades(person));
         getSortedTags(person).forEach(tag -> tags.getChildren().add(new Label(tag.tagName)));
     }
 
@@ -80,22 +93,40 @@ public class PersonCard extends UiPart<Region> {
         List<Attendance> attRecords = person.getAttendanceRecords();
 
         if (attRecords.isEmpty()) {
-            return "Recent attendance: none";
+            return MESSAGE_NO_ATTENDANCE;
         }
 
-        List<Attendance> recentRecords = attRecords.stream()
-            .sorted(Comparator.comparing(Attendance::getDate).reversed()).limit(3).toList();
+        List<Attendance> newestFirst = new ArrayList<>(attRecords);
+        Collections.reverse(newestFirst);
+        List<Attendance> recentAttendance = newestFirst.stream().limit(MAX_RECENT_RECORDS).toList();
+        String recordLines =
+            recentAttendance.stream().map(Attendance::toDisplayString).collect(Collectors.joining("\n"));
 
-        String recordLines = recentRecords.stream()
-            .map(record -> record.toDisplayString())
-            .collect(Collectors.joining("\n"));
-
-        int olderRecordCount = attRecords.size() - recentRecords.size();
+        int olderRecordCount = attRecords.size() - recentAttendance.size();
         if (olderRecordCount > 0) {
-            recordLines += "\n+" + olderRecordCount + " older record(s)";
+            recordLines += "\n" + String.format(MESSAGE_OLDER_RECORDS, olderRecordCount);
         }
 
-        return "Recent attendance:\n" + recordLines;
+        return HEADER_RECENT_ATTENDANCE + recordLines;
+    }
+
+    static String formatRecentGrades(Person person) {
+        List<Grade> gradeRecords = person.getGradeRecords();
+
+        if (gradeRecords.isEmpty()) {
+            return MESSAGE_NO_GRADES;
+        }
+
+        List<Grade> newestFirst = new ArrayList<>(gradeRecords);
+        Collections.reverse(newestFirst);
+        List<Grade> recentGrades = newestFirst.stream().limit(MAX_RECENT_RECORDS).toList();
+        String gradeLines = recentGrades.stream().map(Grade::toString).collect(Collectors.joining("\n"));
+        int olderGradeCount = gradeRecords.size() - recentGrades.size();
+        if (olderGradeCount > 0) {
+            gradeLines += "\n" + String.format(MESSAGE_OLDER_GRADES, olderGradeCount);
+        }
+
+        return HEADER_RECENT_GRADES + gradeLines;
     }
 
 }
