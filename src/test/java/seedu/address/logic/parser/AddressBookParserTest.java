@@ -140,6 +140,13 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_commandWordWithDifferentCase_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("LIST"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () ->
+                parser.parseCommand("viewa /name John Tan /class A1"));
+    }
+
+    @Test
     public void parseCommand_attendance() throws Exception {
         LocalDate date = LocalDate.of(2026, 9, 16);
         AttendanceCommand expected = new AttendanceCommand(
