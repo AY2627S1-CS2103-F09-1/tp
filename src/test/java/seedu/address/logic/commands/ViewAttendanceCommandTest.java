@@ -58,7 +58,7 @@ public class ViewAttendanceCommandTest {
         ViewAttendanceCommand command = new ViewAttendanceCommand("  john   TAN ", "a1");
 
         assertEquals("Here is the attendance for John Tan from class A1\n"
-                + ViewAttendanceCommand.MESSAGE_NO_RECORDS, command.execute(testModel).getFeedbackToUser());
+                + ViewAttendanceCommand.MESSAGE_NO_ATTENDANCE, command.execute(testModel).getFeedbackToUser());
     }
 
     @Test
