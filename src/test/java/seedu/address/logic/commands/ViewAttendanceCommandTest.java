@@ -35,7 +35,7 @@ public class ViewAttendanceCommandTest {
         CommandResult result = command.execute(model);
 
         assertEquals("Here is the attendance for " + person.getName() + " from class " + person.getClassName()
-                + "\n16-Sep-2026  absent\n23-Sep-2026  present", result.getFeedbackToUser());
+                + "\n23-Sep-2026  present\n16-Sep-2026  absent", result.getFeedbackToUser());
     }
 
     @Test

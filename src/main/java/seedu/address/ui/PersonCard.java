@@ -96,9 +96,8 @@ public class PersonCard extends UiPart<Region> {
             return MESSAGE_NO_ATTENDANCE;
         }
 
-        List<Attendance> newestFirst = new ArrayList<>(attRecords);
-        Collections.reverse(newestFirst);
-        List<Attendance> recentAttendance = newestFirst.stream().limit(MAX_RECENT_RECORDS).toList();
+        List<Attendance> recentAttendance = attRecords.stream()
+            .sorted(Comparator.comparing(Attendance::getDate).reversed()).limit(MAX_RECENT_RECORDS).toList();
         String recordLines =
             recentAttendance.stream().map(Attendance::toDisplayString).collect(Collectors.joining("\n"));
 

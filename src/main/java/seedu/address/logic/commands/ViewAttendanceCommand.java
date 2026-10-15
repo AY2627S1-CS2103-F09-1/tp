@@ -2,9 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
+import java.util.Comparator;
 import java.util.stream.Collectors;
 
 import seedu.address.commons.util.ToStringBuilder;
@@ -45,9 +43,9 @@ public class ViewAttendanceCommand extends Command {
                 .filter(person -> person.getName().equals(name) && person.getClassName().equals(className))
                 .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
 
-        List<Attendance> attRecords = new ArrayList<>(student.getAttendanceRecords());
-        Collections.reverse(attRecords);
-        String attendance = attRecords.stream().map(Attendance::toDisplayString).collect(Collectors.joining("\n"));
+        String attendance = student.getAttendanceRecords().stream()
+            .sorted(Comparator.comparing(Attendance::getDate).reversed()).map(Attendance::toDisplayString)
+            .collect(Collectors.joining("\n"));
         if (attendance.isEmpty()) {
             attendance = MESSAGE_NO_ATTENDANCE;
         }
