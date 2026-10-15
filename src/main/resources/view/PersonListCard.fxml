@@ -38,6 +38,10 @@
         <VBox minWidth="220" alignment="CENTER_LEFT">
           <Label fx:id="attendance" styleClass="cell_small_label" wrapText="true" />
         </VBox>
+
+        <VBox minWidth="220" alignment="CENTER_LEFT">
+          <Label fx:id="grades" styleClass="cell_small_label" wrapText="true" />
+        </VBox>
       </HBox>
     </VBox>
   </GridPane>

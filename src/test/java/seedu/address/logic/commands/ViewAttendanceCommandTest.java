@@ -34,7 +34,7 @@ public class ViewAttendanceCommandTest {
         CommandResult result = command.execute(model);
 
         assertEquals("Here is the attendance for " + person.getName() + " from class " + person.getClassName()
-                + "\n16-Sep-2026  absent\n23-Sep-2026  present", result.getFeedbackToUser());
+                + "\n23-Sep-2026  present\n16-Sep-2026  absent", result.getFeedbackToUser());
     }
 
     @Test
@@ -46,7 +46,7 @@ public class ViewAttendanceCommandTest {
         CommandResult result = command.execute(model);
 
         assertEquals("Here is the attendance for " + person.getName() + " from class " + person.getClassName()
-                + "\n" + ViewAttendanceCommand.MESSAGE_NO_RECORDS, result.getFeedbackToUser());
+                + "\n" + ViewAttendanceCommand.MESSAGE_NO_ATTENDANCE, result.getFeedbackToUser());
     }
 
     @Test
@@ -58,7 +58,7 @@ public class ViewAttendanceCommandTest {
         ViewAttendanceCommand command = new ViewAttendanceCommand("  john   TAN ", "a1");
 
         assertEquals("Here is the attendance for John Tan from class A1\n"
-                + ViewAttendanceCommand.MESSAGE_NO_RECORDS, command.execute(testModel).getFeedbackToUser());
+                + ViewAttendanceCommand.MESSAGE_NO_ATTENDANCE, command.execute(testModel).getFeedbackToUser());
     }
 
     @Test
