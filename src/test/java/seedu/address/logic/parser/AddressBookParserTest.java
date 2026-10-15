@@ -31,9 +31,7 @@ import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Attendance;
-import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Grade;
-import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonMatchesKeyword;
 import seedu.address.model.tag.Tag;
@@ -160,8 +158,7 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_viewAttendance() throws Exception {
-        ViewAttendanceCommand expected = new ViewAttendanceCommand(
-                new Name("John Tan"), new ClassName("A1"));
+        ViewAttendanceCommand expected = new ViewAttendanceCommand("John Tan", "A1");
 
         assertEquals(expected, parser.parseCommand("viewA /name John Tan /class A1"));
     }

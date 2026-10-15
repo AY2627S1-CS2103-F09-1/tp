@@ -96,16 +96,18 @@ public class ImportCommand extends Command {
 
     /**
      * Validates that a resolved path refers to a readable CSV file.
+     * Problems are reported in this order: the file does not exist, the file is not a CSV file, and the path
+     * is not a readable regular file.
      *
      * @param path Resolved path to validate.
      * @throws CommandException If the path is not a readable CSV file.
      */
     private void validatePath(Path path) throws CommandException {
-        if (!path.toString().endsWith(CSV_EXTENSION)) {
-            throw new CommandException(MESSAGE_CSV_ONLY);
-        }
         if (!Files.exists(path)) {
             throw new CommandException(String.format(MESSAGE_FILE_NOT_FOUND, filePath));
+        }
+        if (!path.toString().endsWith(CSV_EXTENSION)) {
+            throw new CommandException(MESSAGE_CSV_ONLY);
         }
         if (!Files.isRegularFile(path) || !Files.isReadable(path)) {
             throw new CommandException(String.format(MESSAGE_FAILURE, filePath));

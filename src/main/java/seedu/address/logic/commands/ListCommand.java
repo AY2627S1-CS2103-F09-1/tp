@@ -19,7 +19,7 @@ public class ListCommand extends Command {
 
     public static final String COMMAND_WORD = "list";
 
-    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists all contacts in the address book. "
+    public static final String MESSAGE_USAGE = COMMAND_WORD + ": Lists all contacts in ClassMates. "
             + "If a keyword is given, lists only the contacts whose name, class or tags contain it "
             + "(case-insensitive).\n"
             + "Parameters: [KEYWORD]\n"

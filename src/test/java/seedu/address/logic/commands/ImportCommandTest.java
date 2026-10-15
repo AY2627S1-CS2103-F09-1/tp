@@ -156,6 +156,26 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_missingFileWithInvalidExtension_reportsFileNotFound() throws ParseException {
+        Path txt = tempDir.resolve("missing.txt");
+        ImportCommand command = new ImportCommandParser().parse(txt.toString());
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
+
+        assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, txt), exception.getMessage());
+    }
+
+    @Test
+    public void execute_existingDirectoryWithoutCsvExtension_reportsCsvOnly() throws IOException, ParseException {
+        Path directory = Files.createDirectory(tempDir.resolve("folder"));
+        ImportCommand command = new ImportCommandParser().parse(directory.toString());
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
+
+        assertEquals(ImportCommand.MESSAGE_CSV_ONLY, exception.getMessage());
+    }
+
+    @Test
     public void execute_missingFile_reportsFileNotFound() throws ParseException {
         Path csv = tempDir.resolve("missing.csv");
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
