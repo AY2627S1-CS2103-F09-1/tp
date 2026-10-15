@@ -15,8 +15,6 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Attendance;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -31,7 +29,8 @@ public class ViewAttendanceCommandTest {
                 .withAttendance(new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.ABSENT));
         model.setPerson(person, updated);
 
-        ViewAttendanceCommand command = new ViewAttendanceCommand(person.getName(), person.getClassName());
+        ViewAttendanceCommand command = new ViewAttendanceCommand(
+                person.getName().toString(), person.getClassName().toString());
         CommandResult result = command.execute(model);
 
         assertEquals("Here is the attendance for " + person.getName() + " from class " + person.getClassName()
@@ -41,7 +40,8 @@ public class ViewAttendanceCommandTest {
     @Test
     public void execute_studentWithoutRecords_showsEmptyMessage() throws Exception {
         Person person = model.getAddressBook().getPersonList().get(0);
-        ViewAttendanceCommand command = new ViewAttendanceCommand(person.getName(), person.getClassName());
+        ViewAttendanceCommand command = new ViewAttendanceCommand(
+                person.getName().toString(), person.getClassName().toString());
 
         CommandResult result = command.execute(model);
 
@@ -50,8 +50,29 @@ public class ViewAttendanceCommandTest {
     }
 
     @Test
+    public void execute_caseAndExtraSpacesDiffer_findsStudent() throws Exception {
+        Person person = new PersonBuilder().withName("John Tan").withClassName("A1").build();
+        Model testModel = new ModelManager();
+        testModel.addPerson(person);
+
+        ViewAttendanceCommand command = new ViewAttendanceCommand("  john   TAN ", "a1");
+
+        assertEquals("Here is the attendance for John Tan from class A1\n"
+                + ViewAttendanceCommand.MESSAGE_NO_RECORDS, command.execute(testModel).getFeedbackToUser());
+    }
+
+    @Test
     public void execute_unknownStudent_throwsCommandException() {
-        ViewAttendanceCommand command = new ViewAttendanceCommand(new Name("Unknown Student"), new ClassName("A1"));
+        ViewAttendanceCommand command = new ViewAttendanceCommand("Unknown Student", "A1");
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(ViewAttendanceCommand.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+    }
+
+    @Test
+    public void execute_nameAndClassNotValidForAdding_throwsContactNotFound() {
+        ViewAttendanceCommand command = new ViewAttendanceCommand("@@@", "!!!");
 
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
 
@@ -70,8 +91,7 @@ public class ViewAttendanceCommandTest {
         testModel.addPerson(otherClassPerson);
         testModel.addPerson(targetPerson);
 
-        ViewAttendanceCommand command =
-            new ViewAttendanceCommand(targetPerson.getName(), targetPerson.getClassName());
+        ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");
 
         String output = command.execute(testModel).getFeedbackToUser();
 
@@ -81,24 +101,22 @@ public class ViewAttendanceCommandTest {
 
     @Test
     public void equals() {
-        ViewAttendanceCommand command = new ViewAttendanceCommand(new Name("Alex Tan"), new ClassName("A1"));
+        ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");
 
         assertTrue(command.equals(command));
-        assertTrue(command.equals(new ViewAttendanceCommand(new Name("Alex Tan"), new ClassName("A1"))));
+        assertTrue(command.equals(new ViewAttendanceCommand("Alex Tan", "A1")));
         assertFalse(command.equals(null));
         assertFalse(command.equals("not a ViewAttendanceCommand"));
-        assertFalse(command.equals(new ViewAttendanceCommand(new Name("Jamie Tan"), new ClassName("A1"))));
-        assertFalse(command.equals(new ViewAttendanceCommand(new Name("Alex Tan"), new ClassName("A2"))));
+        assertFalse(command.equals(new ViewAttendanceCommand("Jamie Tan", "A1")));
+        assertFalse(command.equals(new ViewAttendanceCommand("Alex Tan", "A2")));
     }
 
     @Test
     public void toStringMethod() {
-        Name name = new Name("Alex Tan");
-        ClassName className = new ClassName("A1");
-        ViewAttendanceCommand command = new ViewAttendanceCommand(name, className);
+        ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");
 
         String expected = ViewAttendanceCommand.class.getCanonicalName()
-            + "{name=" + name + ", className=" + className + "}";
+            + "{name=Alex Tan, className=A1}";
 
         assertEquals(expected, command.toString());
     }

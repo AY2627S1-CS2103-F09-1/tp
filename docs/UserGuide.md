@@ -280,6 +280,8 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
 | The file is unreadable, is a directory, contains malformed CSV syntax, or another I/O error occurs | `Failed to import from <filepath>`                   |
 
+If more than one problem applies, only the first one in the table above is reported. For example, a file that does not exist is reported as `File not found`, even if its name does not end with `.csv`.
+
 
 ### Recording grades: `grade`
 
@@ -357,6 +359,7 @@ Format: `viewA /name NAME /class CLASS`
 
 * `NAME` and `CLASS` identify the contact whose attendance you want to view. Both must match a contact in ClassMates.
 * The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
+* The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * `/name` and `/class` can be given in either order, but each must be given exactly once.
 * All attendance records for the contact are shown in chronological order, from earliest to latest.
 * Each record is shown as the date followed by the status, separated by two spaces, such as `16-Sep-2026  absent`. The month is shown as three letters here, unlike the `DD-MM-YYYY` format used to record attendance.
@@ -366,12 +369,14 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-`/name` is missing or has nothing after it | `Missing student name.`
-`/class` is missing or has nothing after it | `Missing class.`
+A parameter other than `/name` or `/class` is given, such as `/email` | `Unknown parameter. Use /name or /class`
 A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `viewA John /class A1` | `Invalid command format!` followed by the usage of `viewA`
+`/name` is missing or has nothing after it | `Command requires a name`
+`/class` is missing or has nothing after it | `Command requires a class`
 No contact matches the given name and class | `Contact not found`
 
-If more than one problem applies, only the first one reported by the parser is shown.<br>
+If more than one problem applies, only the first one in the table above is reported.<br>
 On success, ClassMates shows `Here is the attendance for NAME from class CLASS`, followed by one line for each record. For example:
 
 ```
@@ -391,6 +396,8 @@ Examples:
 Clears all contacts from ClassMates.
 
 Format: `clear`
+
+On success, ClassMates shows `ClassMates has been cleared!`.
 
 ### Exiting the program: `exit`
 

@@ -332,7 +332,7 @@ The `import` command adds multiple contacts from a CSV file. It is implemented b
 
 * `ImportCommandParser#parse(String)` removes leading and trailing whitespace from the path while preserving spaces within it. It rejects empty paths and paths containing line breaks.
 * `ImportCommand#resolvePath(String)` normalizes the supplied path. An absolute path is used directly. A relative path is resolved from the project working directory. If the application is packaged and run as a JAR file, it is resolved from the folder containing the JAR file.
-* `ImportCommand#validatePath(Path)` checks that the path has the `.csv` extension and refers to an existing, readable regular file. `FileUtil#readFromFile(Path)` then reads the complete file as UTF-8 text. Leading and trailing whitespace surrounding the CSV content is ignored.
+* `ImportCommand#validatePath(Path)` checks that the path refers to an existing file, has the `.csv` extension and is a readable regular file, and reports the first check that fails in that order. `FileUtil#readFromFile(Path)` then reads the complete file as UTF-8 text. Leading and trailing whitespace surrounding the CSV content is ignored.
 * `CsvParser#parse(String)` parses the CSV syntax and validates the header. Its state-based parser supports comma-separated fields, quoted fields, escaped double quotes, embedded line endings, `LF` and `CRLF` record endings, and a UTF-8 byte-order mark at the start of the file.
 * The header is converted into a `CsvHeader`, which records the index of each column. Column names are compared without case sensitivity and can appear in any order. The `name` and `class` columns are mandatory, while `email` is optional. Unknown and repeated columns are rejected.
 * Each data row is represented by a `CsvRecord`, which retains its row number for error reporting. Blank rows are ignored. `ImportCommand#parsePerson(CsvRecord, CsvHeader)` checks the number of fields and uses the same `ParserUtil` methods as `add` command to validate the name, class and optional email.
@@ -402,8 +402,8 @@ The `attendance` command records one attendance entry for a contact on a specifi
 
 The `viewA` command displays all attendance records for a contact. It is implemented by `ViewAttendanceCommandParser` and `ViewAttendanceCommand`.
 
-* `ViewAttendanceCommandParser#parse(String)` uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It checks that both values are present and that neither prefix is repeated, then creates a `ViewAttendanceCommand` with the parsed `Name` and `ClassName`.
-* `ViewAttendanceCommand#execute(Model)` searches the address book for a contact whose name and class match the command arguments. If no contact matches, it throws a `CommandException`.
+* `ViewAttendanceCommandParser#parse(String)` uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It reports unrecognized prefixes first, then repeated prefixes, then text before the first prefix, and finally a missing or blank name or class. It then creates a `ViewAttendanceCommand` with the name and class as plain strings. They are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS`.
+* `ViewAttendanceCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
 * If a contact is found, the command formats all of that contact’s attendance records in chronological order and returns them in the command result. If there are no records, it returns the no-attendance-records message instead.
 
 #### Design considerations
@@ -1146,8 +1146,11 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `import missing.csv`, where `missing.csv` does not exist<br>
       Expected: The status message shows `File not found at missing.csv`.
 
-   1. Test case: `import students.txt`<br>
+   1. Test case: `import students.txt`, where `students.txt` exists<br>
       Expected: The status message shows `Only .csv files are supported`.
+
+   1. Test case: `import missing.txt`, where `missing.txt` does not exist<br>
+      Expected: The status message shows `File not found at missing.txt`.
 
    1. Test case: `import empty.csv`, where `empty.csv` is an empty file<br>
       Expected: The status message shows `File empty`.
@@ -1230,6 +1233,12 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `viewA /name Unknown Student /class A1`<br>
       Expected: The status message shows the contact-not-found message.
 
+   1. Test case: `viewA /name Alex Yeoh /class A1 /foo bar`<br>
+      Expected: The status message shows `Unknown parameter. Use /name or /class`.
+
+   1. Test case: `viewA /class A1`<br>
+      Expected: The status message shows `Command requires a name`.
+
 ### Clearing all contacts
 
 1. Clearing all contacts
@@ -1237,7 +1246,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data.
 
    1. Test case: `clear`<br>
-      Expected: All contacts are removed from the list. The status message shows `Address book has been cleared!`.
+      Expected: All contacts are removed from the list. The status message shows `ClassMates has been cleared!`.
 
 ### Viewing help
 

@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Comparator;
 import java.util.stream.Collectors;
@@ -9,8 +10,6 @@ import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Attendance;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 
 /** Displays the full attendance history for a student. */
@@ -25,13 +24,16 @@ public class ViewAttendanceCommand extends Command {
     public static final String MESSAGE_NO_RECORDS = "No attendance records.";
     public static final String MESSAGE_SUCCESS = "Here is the attendance for %s from class %s\n%s";
 
-    private final Name name;
-    private final ClassName className;
+    private final String name;
+    private final String className;
 
-    /** Creates a command to show the attendance history of the named student in the given class. */
-    public ViewAttendanceCommand(Name name, ClassName className) {
-        requireNonNull(name);
-        requireNonNull(className);
+    /**
+     * Creates a command to show the attendance history of the student with the given {@code name} and
+     * {@code className}. Neither needs to be a valid name or class, and case and extra whitespace are
+     * ignored.
+     */
+    public ViewAttendanceCommand(String name, String className) {
+        requireAllNonNull(name, className);
         this.name = name;
         this.className = className;
     }
@@ -40,7 +42,7 @@ public class ViewAttendanceCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         Person student = model.getAddressBook().getPersonList().stream()
-                .filter(person -> person.getName().equals(name) && person.getClassName().equals(className))
+                .filter(person -> person.hasNameAndClass(name, className))
                 .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
 
         String history = student.getAttendanceRecords().stream().sorted(Comparator.comparing(Attendance::getDate))
