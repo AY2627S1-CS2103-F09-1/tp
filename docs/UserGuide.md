@@ -66,6 +66,9 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   The prefix must be separated from the value, and from the preceding parameter, by a space.<br>
   For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.
 
+* Command words are case-sensitive and must be typed exactly as shown.<br>
+  For example, `list` works, but `LIST` and `List` show `Unknown command.`. Likewise, `viewA` needs a capital `A`, so `viewa` shows `Unknown command.`.
+
 * Items in square brackets are optional.<br>
   For example, `/name NAME [/email EMAIL]` can be used as `/name John Doe /email johnd@example.com` or as `/name John Doe`.
 
@@ -356,7 +359,8 @@ Format: `viewA /name NAME /class CLASS`
 * The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
 * `/name` and `/class` can be given in either order, but each must be given exactly once.
 * All attendance records for the contact are shown in chronological order, from earliest to latest.
-* If the contact has no attendance records, ClassMates shows a message indicating that there are no records.
+* Each record is shown as the date followed by the status, separated by two spaces, such as `16-Sep-2026  absent`. The month is shown as three letters here, unlike the `DD-MM-YYYY` format used to record attendance.
+* If the contact has no attendance records, ClassMates shows `No attendance records.` in place of the list.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -367,7 +371,16 @@ Problem | Message
 A parameter is given more than once | `Each parameter can only be specified once`
 No contact matches the given name and class | `Contact not found`
 
-If more than one problem applies, only the first one reported by the parser is shown.
+If more than one problem applies, only the first one reported by the parser is shown.<br>
+On success, ClassMates shows `Here is the attendance for NAME from class CLASS`, followed by one line for each record. For example:
+
+```
+Here is the attendance for John Tan from class A1
+14-Sep-2026  late
+16-Sep-2026  absent
+```
+
+If the contact has no records, the lines after the first are replaced by `No attendance records.`
 
 Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
