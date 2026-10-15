@@ -12,10 +12,12 @@ import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
+import seedu.address.logic.commands.ViewAttendanceCommand;
 
 public class HelpWindowTest {
 
@@ -24,9 +26,11 @@ public class HelpWindowTest {
             AttendanceCommand.COMMAND_WORD,
             ClearCommand.COMMAND_WORD,
             DeleteCommand.COMMAND_WORD,
+            GradeCommand.COMMAND_WORD,
             TagCommand.COMMAND_WORD,
             ListCommand.COMMAND_WORD,
             ImportCommand.COMMAND_WORD,
+            ViewAttendanceCommand.COMMAND_WORD,
             HelpCommand.COMMAND_WORD,
             ExitCommand.COMMAND_WORD);
 
@@ -44,6 +48,12 @@ public class HelpWindowTest {
         assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(line -> line.equals("delete INDEX")));
         assertTrue(HelpWindow.HELP_MESSAGE.lines()
                 .anyMatch(line -> line.equals("delete /name NAME /class CLASS")));
+    }
+
+    @Test
+    public void helpMessage_viewGradesCommand_hasSummaryLine() {
+        assertTrue(HelpWindow.HELP_MESSAGE.lines()
+                .anyMatch(line -> line.equals("viewG /name NAME /class CLASS")));
     }
 
     @Test
