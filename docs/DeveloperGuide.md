@@ -987,114 +987,45 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: The app contains the sample data.
 
-   1. Test case: `add /name John Doe /class A1 /email johnd@example.com`<br>
-      Expected: John Doe is added at the top of the list. The status message shows `John Doe added to contacts`.
-
-   1. Test case: `add /name Betsy Crowe /class A2`<br>
-      Expected: Betsy Crowe is added without an email, at the top of the list above John Doe. The status message shows `Betsy Crowe added to contacts`.
+   1. Test case: `list yeoh`, followed by `add /name John Doe /class A1 /email johnd@example.com`<br>
+      Expected: After the `add` command, all contacts are shown again, even though only Alex Yeoh was shown before, with John Doe at the top of the list. The status message shows `John Doe added to contacts`.
 
    1. Test case: `add /name Alex Yeoh /class B2`<br>
       Expected: Alex Yeoh is added to class B2 at the top of the list. The same name can be added to a different class.
 
-1. Adding a contact while a search is displayed
-
-   1. Prerequisites: The app contains the sample data.
-
-   1. Test case: `list yeoh`, followed by `add /name Betsy Crowe /class A2`<br>
-      Expected: After `list yeoh`, only Alex Yeoh is shown. After the `add` command, all contacts are shown again, with Betsy Crowe at the top, so the new contact is visible.
-
-1. Adding a contact that already exists
+1. Adding a contact unsuccessfully
 
    1. Prerequisites: The app contains the sample data, which has Alex Yeoh in class A1.
 
    1. Test case: `add /name alex  yeoh /class a1`<br>
       Expected: No contact is added. The status message says that the name already exists in the class. Case and extra spaces are ignored.
 
-1. Adding a contact with invalid input
-
    1. Test case: `add /name John Doe`<br>
       Expected: No contact is added. The status message shows `Command requires a class`.
 
-   1. Test case: `add /class A1`<br>
-      Expected: No contact is added. The status message shows `Command requires a name`.
-
-   1. Test case: `add /name John Doe /class A1 /phone 91234567`<br>
-      Expected: No contact is added. The status message shows `Unknown parameter. Use /name, /class or /email`.
-
-   1. Test case: `add /name John Doe /name Jane Doe /class A1`<br>
-      Expected: No contact is added. The status message shows `Each parameter can only be specified once`.
-
-   1. Test case: `add John Doe /class A1`<br>
-      Expected: No contact is added. The status message shows `Invalid command format!` followed by the usage of `add`, because there is text before the first parameter.
-
-   1. Test case: `add /name J0hn /class A1`<br>
-      Expected: No contact is added. The status message describes the characters that a name can contain.
-
-   1. Test case: `add /name John Doe /class A1 /email john`<br>
-      Expected: No contact is added. The status message describes the valid email format.
+   1. Other incorrect add commands to try: `add /class A1`, `add John Doe /class A1`, `add /name J0hn /class A1`, `add /name John Doe /class A1 /email john`<br>
+      Expected: Similar to previous. No contact is added, and the status message describes the problem.
 
 ### Listing and searching contacts
 
-1. Listing all contacts
+1. Listing and searching contacts
 
    1. Prerequisites: The app contains the sample data (Alex Yeoh, Bernice Yu, Charlotte Oliveiro, David Li, Irfan Ibrahim and Roy Balakrishnan).
 
    1. Test case: `list`<br>
       Expected: All six contacts are shown, from Alex Yeoh at the top to Roy Balakrishnan at the bottom.
 
-   1. Test case: `list yeoh`, followed by `list`<br>
-      Expected: After `list yeoh`, only Alex Yeoh is shown. After `list`, all six contacts are shown again.
-
-1. Searching contacts by keyword
-
-   1. Prerequisites: The app contains the sample data.
-
-   1. Test case: `list ALEX`<br>
-      Expected: Only Alex Yeoh is shown. The status message shows that 1 contact is listed. The search ignores case.
-
-   1. Test case: `list li`<br>
-      Expected: Charlotte Oliveiro and David Li are shown. A keyword matches part of a name.
-
-   1. Test case: `list a2`<br>
-      Expected: Charlotte Oliveiro and David Li are shown. A keyword matches a class.
-
    1. Test case: `list friend`<br>
-      Expected: Alex Yeoh and Bernice Yu are shown. A keyword matches a tag.
+      Expected: Alex Yeoh and Bernice Yu are shown, as their tags contain `friend`. The status message shows that 2 contacts are listed. A keyword matches part of a name, a class or a tag.
 
-   1. Test case: `list alex   yeoh`<br>
-      Expected: Only Alex Yeoh is shown. The whole argument is one keyword and extra spaces are ignored.
-
-   1. Test case: `list rid`<br>
-      Expected: No contact is shown. The characters of the keyword must appear next to each other, so it does not match the tag `friends`.
+   1. Test case: `list yeoh`, followed by `list david`<br>
+      Expected: After `list david`, only David Li is shown. The second search covers all contacts, and not only the result of the first search.
 
    1. Test case: `list zzz`<br>
       Expected: No contact is shown, and the status message shows that 0 contacts are listed.
 
-   1. Test case: `list /class A1`<br>
-      Expected: No contact is shown. `list` has no parameters, so the text is searched for as it is typed and does not filter by class.
-
-   1. Test case: `list`, then `tag /group Group A /members 1,2`, then `list group   a`<br>
-      Expected: Only the two contacts that were linked to `Group A` are shown. A keyword with several words matches a tag whose name has spaces.
-
-   1. Test case: `list yeoh`, followed by `list david`<br>
-      Expected: After `list david`, only David Li is shown. The second search covers all contacts, not only the earlier result.
-
-1. Searching contacts that contain special characters
-
-   1. Prerequisites: The app contains the sample data.
-
-   1. Test case: `add /name Tan s/o Kumar /class C1`, followed by `list s/o`<br>
-      Expected: Only Tan s/o Kumar is shown. Characters such as `/` are matched exactly as typed.
-
-1. Order of the listed contacts
-
-   1. Prerequisites: The app contains the sample data.
-
-   1. Test case: `add /name John Doe /class A1`, followed by `add /name Betsy Crowe /class A2`, followed by `list`<br>
-      Expected: Betsy Crowe is at the top, followed by John Doe, and then the six sample contacts from Alex Yeoh down. The contacts are shown from the most recently added to the oldest.
-
-   1. Test case: `list a1`, after the test case above<br>
-      Expected: John Doe, Alex Yeoh and Bernice Yu are shown, in that order. The search results are in the same order as in the whole list.
+   1. Other keywords to try: `list a2` (a class), `list ALEX` (the case is ignored), `list rid` (no contact is shown, because the characters of a keyword must appear next to each other)<br>
+      Expected: The contacts that match, if any, are shown as described.
 
 ### Deleting a contact
 
@@ -1108,18 +1039,12 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `delete 0`<br>
       Expected: No contact is deleted. The status message shows `Invalid command format!` followed by the usage of `delete`, because the index is not a positive integer.
 
-   1. Test case: `delete`, or `delete x` where `x` is not a number<br>
-      Expected: No contact is deleted. The status message is the same as for `delete 0`.
-
-   1. Test case: `delete 99`, where 99 is larger than the number of displayed contacts<br>
-      Expected: No contact is deleted. The status message shows `The contact index provided is invalid.`.
+   1. Other incorrect delete commands to try: `delete`, `delete x` (where `x` is not a number), `delete 99` (where 99 is larger than the number of displayed contacts)<br>
+      Expected: Similar to previous. No contact is deleted, and an error message is shown.
 
 1. Deleting a contact by name and class
 
    1. Prerequisites: The app contains the sample data.
-
-   1. Test case: `delete /name alex yeoh /class a1`<br>
-      Expected: Alex Yeoh is deleted. The status message shows `Alex Yeoh in class A1 has been deleted`. Case is ignored.
 
    1. Test case: `list david`, followed by `delete /name Bernice Yu /class A1`<br>
       Expected: Bernice Yu is deleted, even though she is not displayed after `list david`. The whole address book is searched.
@@ -1127,13 +1052,32 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `delete /name David Li /class B1`<br>
       Expected: No contact is deleted. The status message shows `No contact found`, because both the name and the class must match, and David Li is in class A2.
 
-   1. Test case: `delete /name David Li`<br>
-      Expected: No contact is deleted. The status message shows `Command requires a class`.
-
-   1. Test case: `delete 1 /name David Li /class A2`<br>
-      Expected: No contact is deleted. The status message shows `Invalid command format!` followed by the usage of `delete`, because an index cannot be combined with a name and class.
-
 1. _{ more test cases … }_
+
+### Editing a contact
+
+1. Editing the details of a contact
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command. Alex Yeoh is in `friends`, and Bernice Yu is in `colleagues` and `friends`.
+
+   1. Test case: `edit 1 /name Alex Tan /class B2 /email`<br>
+      Expected: Alex Yeoh is now Alex Tan in class B2 and has no email, because `/email` with no value removes the email. The contact stays at the top of the list, and the groups are unchanged. The status message shows `Alex Tan in class B2 has been edited`.
+
+   1. Test case: `edit 2 /tag Group A /untag colleagues`<br>
+      Expected: Bernice Yu is now in `friends` and `Group A`. A group is added and another one is removed in the same command. The status message shows `Bernice Yu in class A1 has been edited`.
+
+   1. Test case: `attendance 3 /date 01-01-2024 /status present`, then `grade 3 /assessment Quiz 1 /score 80`, then `edit 3 /name Charlotte Lee /class A3`, then `viewA /name Charlotte Lee /class A3` and `viewG /name Charlotte Lee /class A3`<br>
+      Expected: The attendance of 01-01-2024 as present, and the grade of 80 for Quiz 1, are still shown, because editing a contact keeps its attendance records and grades.
+
+1. Editing a contact unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command.
+
+   1. Test case: `edit 1 /name Bernice Yu`<br>
+      Expected: Nothing changes. The status message shows `Bernice Yu already exists in class A1`, because Alex Yeoh is in the same class as Bernice Yu.
+
+   1. Other incorrect edit commands to try: `edit 1` (nothing to edit), `edit x /name Alex Tan`, `edit 1 /phone 91234567`, `edit 1 /tag friends` (Alex Yeoh is already in `friends`), `edit 1 /untag family` (Alex Yeoh is not in `family`), `edit 99 /name Jo`<br>
+      Expected: Similar to previous. Nothing changes, and an error message is shown.
 
 ### Linking contacts to a group
 
@@ -1157,23 +1101,8 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `tag /group Group B /members 1,99`<br>
       Expected: No contact is linked, not even the contact at index 1. The status message shows `Contact index not found: 99`.
 
-   1. Test case: `tag /group Group B /members 1,1`<br>
-      Expected: No contact is linked. The status message shows `Duplicate contact index: 1`.
-
-   1. Test case: `tag /group Group B /members 0`<br>
-      Expected: No contact is linked. The status message shows `Contact index must be a positive integer: 0`.
-
-   1. Test case: `tag /group Group B /members 1,,3`<br>
-      Expected: No contact is linked. The status message shows `Members cannot contain empty entries`.
-
-   1. Test case: `tag /group Group B`<br>
-      Expected: No contact is linked. The status message shows `Missing members`.
-
-   1. Test case: `tag /members 1`<br>
-      Expected: No contact is linked. The status message shows `Missing group name`.
-
-   1. Test case: `tag /group Group! /members 1`<br>
-      Expected: No contact is linked. The status message starts with `Invalid group name.` and describes the characters that a group name can contain.
+   1. Other incorrect tag commands to try: `tag /group Group B`, `tag /members 1`, `tag /group Group! /members 1`, `tag /group Group B /members 1,1`<br>
+      Expected: Similar to previous. No contact is linked, and an error message is shown.
 
 ### Importing contacts from a file
 
@@ -1196,31 +1125,14 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: The app contains the sample data. Create the files in the folder that contains the JAR file as described in each test case.
 
-   1. Test case: `import`<br>
-      Expected: The status message shows `Specify file path`.
-
    1. Test case: `import missing.csv`, where `missing.csv` does not exist<br>
       Expected: The status message shows `File not found at missing.csv`.
 
-   1. Test case: `import students.txt`, where `students.txt` exists<br>
-      Expected: The status message shows `Only .csv files are supported`.
-
-   1. Test case: `import missing.txt`, where `missing.txt` does not exist<br>
-      Expected: The status message shows `File not found at missing.txt`.
-
-   1. Test case: `import empty.csv`, where `empty.csv` is an empty file<br>
-      Expected: The status message shows `File empty`.
-
-   1. Test case: `import no-class.csv`, where the first row of the file is `name,email`<br>
-      Expected: The status message shows `CSV header must contain 'name' and 'class' columns`.
-
-   1. Test case: `import short-row.csv`, where the file has the header `name,class,email` followed by the row `Alice Tan,A1`<br>
-      Expected: The status message shows `Invalid number of fields on row 2`.
-
    1. Test case: `import bad-name.csv`, where the file has the header `name,class` followed by the row `J0hn,A1`<br>
-      Expected: The status message shows `Invalid contact data on row 2`.
+      Expected: No contact is added. The status message shows `Invalid contact data on row 2`. If any row of a file is invalid, none of its contacts is added.
 
-   In every test case above, no contact is added. If any row of a file is invalid, none of its contacts is added.
+   1. Other incorrect import commands to try: `import`, `import students.txt` (where `students.txt` exists), `import empty.csv` (where `empty.csv` is an empty file)<br>
+      Expected: Similar to previous. No contact is added, and an error message is shown.
 
 ### Recording attendance
 
@@ -1231,69 +1143,41 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `attendance 1 /date 01-01-2024 /status present`<br>
       Expected: The status message shows `Attendance for Alex Yeoh on 01-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/classmates.json`.
 
-   1. Test case: `attendance 1 /date 02-01-2024 /status LATE`<br>
-      Expected: The status message shows `Attendance for Alex Yeoh on 02-01-2024 recorded as late.`. Case is ignored.
-
 1. Recording attendance unsuccessfully
 
-   1. Prerequisites: Complete the previous test cases. List all contacts using the `list` command.
+   1. Prerequisites: Complete the previous test case. List all contacts using the `list` command.
 
    1. Test case: `attendance 1 /date 01-01-2024 /status absent`<br>
       Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
 
-   1. Test case: `attendance 1 /date 2024-01-01 /status present`<br>
-      Expected: The status message shows `Invalid date format. Please use the format DD-MM-YYYY.`. The same message is shown for a date that does not exist, such as `30-02-2024`.
-
    1. Test case: `attendance 1 /date 01-01-2999 /status present`<br>
-      Expected: The status message shows `Attendance date cannot be in the future.`.
-
-   1. Test case: `attendance 1 /date 03-01-2024 /status sick`<br>
-      Expected: The status message shows `Invalid status. Please use 'present', 'absent' or 'late'.`.
+      Expected: No record is added. The status message shows `Attendance date cannot be in the future.`.
 
    1. Test case: `attendance 99 /date 03-01-2024 /status present`<br>
-      Expected: The status message shows `The contact index provided is invalid.`.
+      Expected: No record is added. The status message shows `The contact index provided is invalid.`.
 
-   1. Test case: `attendance 0 /date 03-01-2024 /status present`<br>
-      Expected: The status message shows `Index must be a positive integer.`.
-
-   1. Test case: `attendance /date 03-01-2024 /status present`<br>
-      Expected: The status message shows `Missing index. Please provide the index of the person.`.
-
-   1. Test case: `attendance 1 /status present`<br>
-      Expected: The status message shows `Missing date. Please provide the date of attendance.`.
-
-   1. Test case: `attendance 1 /date 03-01-2024`<br>
-      Expected: The status message shows `Missing status. Please provide the attendance status.`.
+   1. Other incorrect attendance commands to try: `attendance 1 /date 2024-01-01 /status present`, `attendance 1 /date 03-01-2024 /status sick`, `attendance 1 /status present`<br>
+      Expected: Similar to previous. No record is added, and an error message is shown.
 
 ### Viewing attendance
 
-1. Viewing attendance successfully
+1. Viewing the attendance of a contact
 
    1. Prerequisites: The app contains the sample data. Record attendance for Alex Yeoh using the `attendance` command above.
 
    1. Test case: `viewA /name Alex Yeoh /class A1`<br>
       Expected: The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by Alex Yeoh's attendance records in chronological order.
 
-   1. Test case: `viewA /class A1 /name Alex Yeoh`<br>
-      Expected: The same attendance records are displayed, because the parameter order does not matter.
+   1. Test case: `viewA /name Bernice Yu /class A1`<br>
+      Expected: The status message shows `Here is the attendance for Bernice Yu from class A1`, followed by `No attendance records.`, as Bernice Yu has no attendance records.
 
-1. Viewing attendance for a contact without records
-
-   1. Prerequisites: Choose a sample contact with no attendance records.
-
-   1. Test case: `viewA /name Betsy Crowe /class A2`<br>
-      Expected: The status message shows the no-attendance-records message.
-
-1. Viewing attendance unsuccessfully
+1. Viewing the attendance of a contact unsuccessfully
 
    1. Test case: `viewA /name Unknown Student /class A1`<br>
-      Expected: The status message shows the contact-not-found message.
+      Expected: The status message shows `Contact not found`.
 
-   1. Test case: `viewA /name Alex Yeoh /class A1 /foo bar`<br>
-      Expected: The status message shows `Unknown parameter. Use /name or /class`.
-
-   1. Test case: `viewA /class A1`<br>
-      Expected: The status message shows `Command requires a name`.
+   1. Other incorrect viewA commands to try: `viewA /class A1`, `viewA /name Alex Yeoh /class A1 /foo bar`<br>
+      Expected: Similar to previous. An error message is shown.
 
 ### Clearing all contacts
 
