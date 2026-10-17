@@ -2,8 +2,11 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+
+import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 
@@ -132,6 +135,18 @@ public class PersonMatchesKeywordTest {
         // the list command never builds this, because it treats a blank argument as no keyword
         assertTrue(new PersonMatchesKeyword("").test(person));
         assertTrue(new PersonMatchesKeyword("   ").test(person));
+    }
+
+    @Test
+    public void test_nullPerson_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonMatchesKeyword("john").test(null));
+    }
+
+    @Test
+    public void test_keywordLongerThanAnyField_returnsFalseQuickly() {
+        PersonMatchesKeyword longKeyword = new PersonMatchesKeyword("a".repeat(100_000));
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () -> assertFalse(longKeyword.test(person)));
     }
 
     @Test

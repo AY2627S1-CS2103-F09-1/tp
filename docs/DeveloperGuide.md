@@ -532,6 +532,14 @@ The code defends itself against bad input and against its own mistakes in four w
 * `ModelManager#deletePerson(Person)` rejects a `null` contact with `requireNonNull`.
 * An index that is too large to be an `int`, such as a 1,000-digit number, is rejected by `ParserUtil#parseIndex(String)` with a `ParseException`, because `StringUtil#isNonZeroUnsignedInteger(String)` catches the `NumberFormatException`.
 
+#### Listing and searching contacts
+
+* `ListCommand#execute(Model)` asserts, after it changes the filter, that the displayed contacts are exactly the contacts of the address book that the predicate accepts (`ListCommand#isShowingExactlyMatchingPersons(Model)`). It would fail if a model hid a matching contact or showed one that does not match. The command also logs how many contacts are displayed out of the total, together with the keyword if one was given.
+* `ListCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. It never throws a `ParseException`, because every text is a valid keyword.
+* `PersonMatchesKeyword#test(Person)` rejects a `null` contact with `requireNonNull`.
+* A keyword is not limited in length. This is safe because the matching is a plain substring test, which stops at once when the keyword is longer than the field it is compared with, and `StringUtil#toComparisonKey(String)` uses a regex that takes time proportional to the length. Unlike the email format regex, there is no input for which it takes much longer.
+* A blank keyword is not rejected by `PersonMatchesKeyword`, which keeps the documented behavior that it matches every contact. The only caller, `ListCommandParser`, never creates one.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
