@@ -24,6 +24,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalPersons.AMY;
 import static seedu.address.testutil.TypicalPersons.BOB;
 
@@ -191,6 +192,15 @@ public class AddCommandParserTest {
         // an email parameter with no value is invalid, not treated as absent
         assertParseFailure(parser, NAME_DESC_BOB + CLASS_DESC_BOB + " " + PREFIX_EMAIL,
                 Email.MESSAGE_CONSTRAINTS);
+
+        // too long email
+        String tooLongEmailDesc = " " + PREFIX_EMAIL + " " + "a".repeat(Email.MAX_LENGTH + 1);
+        assertParseFailure(parser, NAME_DESC_BOB + CLASS_DESC_BOB + tooLongEmailDesc, Email.MESSAGE_TOO_LONG);
+    }
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
 
     @Test

@@ -5,6 +5,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
+import java.util.logging.Logger;
+
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -30,6 +33,8 @@ public class AddCommand extends Command {
     public static final String MESSAGE_SUCCESS = "%1$s added to contacts";
     public static final String MESSAGE_DUPLICATE_PERSON = "%1$s already exists in class %2$s";
 
+    private static final Logger logger = LogsCenter.getLogger(AddCommand.class);
+
     private final Person toAdd;
 
     /**
@@ -45,11 +50,15 @@ public class AddCommand extends Command {
         requireNonNull(model);
 
         if (model.hasPerson(toAdd)) {
+            logger.info("Rejected a duplicate contact: " + toAdd.getName() + " in " + toAdd.getClassName());
             throw new CommandException(
                     String.format(MESSAGE_DUPLICATE_PERSON, toAdd.getName(), toAdd.getClassName()));
         }
 
         model.addPerson(toAdd);
+        assert model.hasPerson(toAdd) : "The contact must be in the model after it is added";
+
+        logger.info("Added contact: " + toAdd.getName() + " in " + toAdd.getClassName());
         return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd.getName()));
     }
 

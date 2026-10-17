@@ -3,11 +3,22 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 
+import java.util.Optional;
+
 /**
  * Represents a Person's email in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidEmail(String)}
  */
 public class Email {
+
+    /**
+     * The maximum number of characters in an email. The length is checked before the format because matching
+     * {@link #VALIDATION_REGEX} against a long input takes time that grows quickly with the length.
+     */
+    public static final int MAX_LENGTH = 254;
+
+    /** Message for an email that has more than {@link #MAX_LENGTH} characters. */
+    public static final String MESSAGE_TOO_LONG = "Email is too long";
 
     private static final String SPECIAL_CHARACTERS = "+_.-";
     public static final String MESSAGE_CONSTRAINTS = "Emails should be of the format local-part@domain "
@@ -48,7 +59,22 @@ public class Email {
      * Returns true if a given string is a valid email.
      */
     public static boolean isValidEmail(String test) {
-        return test.matches(VALIDATION_REGEX);
+        return getConstraintViolation(test).isEmpty();
+    }
+
+    /**
+     * Returns the error message for the first constraint that {@code test} violates as an email, or an empty
+     * {@code Optional} if {@code test} is a valid email.
+     */
+    public static Optional<String> getConstraintViolation(String test) {
+        requireNonNull(test);
+        if (test.length() > MAX_LENGTH) {
+            return Optional.of(MESSAGE_TOO_LONG);
+        }
+        if (!test.matches(VALIDATION_REGEX)) {
+            return Optional.of(MESSAGE_CONSTRAINTS);
+        }
+        return Optional.empty();
     }
 
     @Override
