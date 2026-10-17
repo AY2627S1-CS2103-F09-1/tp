@@ -469,6 +469,7 @@ Action     | Format, Examples
 **Attendance** | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`
 **Clear**  | `clear`
 **Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
+**Edit**   | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]] [/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /tag Group A,Team 2 /untag Group B`
 **Grade**  | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`
 **Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
 **List**   | `list [KEYWORD]`<br> e.g., `list John`

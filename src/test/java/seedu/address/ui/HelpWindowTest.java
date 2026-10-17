@@ -11,6 +11,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.commands.HelpCommand;
@@ -26,6 +27,7 @@ public class HelpWindowTest {
             AttendanceCommand.COMMAND_WORD,
             ClearCommand.COMMAND_WORD,
             DeleteCommand.COMMAND_WORD,
+            EditCommand.COMMAND_WORD,
             GradeCommand.COMMAND_WORD,
             TagCommand.COMMAND_WORD,
             ListCommand.COMMAND_WORD,
@@ -48,6 +50,14 @@ public class HelpWindowTest {
         assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(line -> line.equals("delete INDEX")));
         assertTrue(HelpWindow.HELP_MESSAGE.lines()
                 .anyMatch(line -> line.equals("delete /name NAME /class CLASS")));
+    }
+
+    @Test
+    public void helpMessage_editCommand_hasLineForEachDetailThatCanBeEdited() {
+        assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(
+                line -> line.equals("edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]")));
+        assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(
+                line -> line.strip().equals("[/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]")));
     }
 
     @Test
