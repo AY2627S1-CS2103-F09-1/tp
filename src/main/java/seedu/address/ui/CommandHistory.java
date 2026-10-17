@@ -39,7 +39,9 @@ public class CommandHistory {
     /**
      * Returns the next older command, or an empty {@code Optional} if there is no command to recall.
      * The first call after {@link #add(String)} remembers {@code currentText} so that {@link #next()} can
-     * give it back. At the oldest command, the oldest command is returned again.
+     * give it back. If {@code currentText} is the most recent command, as it is after a command fails and
+     * stays in the command box, that command is skipped. At the oldest command, the oldest command is
+     * returned again.
      */
     public Optional<String> previous(String currentText) {
         requireNonNull(currentText);
@@ -48,6 +50,7 @@ public class CommandHistory {
         }
         if (!isBrowsing()) {
             draft = currentText;
+            position = isMostRecent(currentText) ? commands.size() - 1 : commands.size();
         }
         position = Math.max(position - 1, 0);
         return Optional.of(commands.get(position));

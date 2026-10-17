@@ -60,6 +60,25 @@ public class CommandHistoryTest {
     }
 
     @Test
+    public void previous_currentTextIsMostRecentCommand_skipsToOlderCommand() {
+        CommandHistory history = historyOf("list", "help");
+
+        assertEquals(Optional.of("list"), history.previous("help"));
+        assertEquals(Optional.of("help"), history.next());
+        assertEquals(Optional.of("help"), history.next());
+    }
+
+    @Test
+    public void previous_currentTextIsOnlyCommand_returnsThatCommand() {
+        assertEquals(Optional.of("help"), historyOf("help").previous("help"));
+    }
+
+    @Test
+    public void previous_currentTextIsOlderCommand_returnsMostRecentCommand() {
+        assertEquals(Optional.of("help"), historyOf("list", "help").previous("list"));
+    }
+
+    @Test
     public void next_afterPrevious_walksForwardAndRestoresDraft() {
         CommandHistory history = historyOf("list", "help");
         history.previous(DRAFT);
