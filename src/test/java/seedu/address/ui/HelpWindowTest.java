@@ -18,6 +18,7 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
+import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
 
 public class HelpWindowTest {
@@ -30,6 +31,7 @@ public class HelpWindowTest {
             EditCommand.COMMAND_WORD,
             GradeCommand.COMMAND_WORD,
             TagCommand.COMMAND_WORD,
+            UntagCommand.COMMAND_WORD,
             ListCommand.COMMAND_WORD,
             ImportCommand.COMMAND_WORD,
             ViewAttendanceCommand.COMMAND_WORD,
@@ -50,6 +52,14 @@ public class HelpWindowTest {
         assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(line -> line.equals("delete INDEX")));
         assertTrue(HelpWindow.HELP_MESSAGE.lines()
                 .anyMatch(line -> line.equals("delete /name NAME /class CLASS")));
+    }
+
+    @Test
+    public void helpMessage_tagAndUntagCommands_haveSummaryLines() {
+        assertTrue(HelpWindow.HELP_MESSAGE.lines()
+                .anyMatch(line -> line.equals("tag /group GROUP_NAME /members INDEX[,INDEX]...")));
+        assertTrue(HelpWindow.HELP_MESSAGE.lines()
+                .anyMatch(line -> line.equals("untag /group GROUP_NAME /members INDEX[,INDEX]...")));
     }
 
     @Test
