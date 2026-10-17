@@ -414,7 +414,7 @@ Keys: `↑` and `↓` in the command box
 * Press `↑` to show the command you entered last. Press it again to go further back, one command at a time. When you reach the oldest command, it stays shown.
 * Press `↓` to go forward again. After the newest command, `↓` brings back the text that you had typed before you pressed `↑`.
 * The cursor is placed at the end of the recalled command, so that you can edit it straight away.
-* Commands that failed are remembered too. When a command fails, its text stays in the command box, so press `↑` to show the command that you entered before it.
+* Commands that failed are remembered too. When a command fails, its text stays in the command box, so press `↑` to show the command that you entered before it, if there is one.
 * If you enter the same command several times in a row, it is remembered once.
 * ClassMates remembers your last 100 commands. They are forgotten when you exit ClassMates.
 

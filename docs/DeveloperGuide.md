@@ -429,7 +429,7 @@ The user can press the Up and Down keys in the command box to recall the command
 * `CommandHistory#add(String)` adds a command and stops browsing. A blank command, or a command identical to the most recent one, is not added. When there are more than `CommandHistory#MAX_SIZE` (100) commands, the oldest one is dropped.
 * `CommandHistory#previous(String)` is called with the text of the command box. It saves that text as the draft if the user was not browsing, moves to the next older command, and returns it. At the oldest command, it returns the oldest command again. It returns an empty `Optional` if there are no commands.
 * `CommandHistory#next()` moves to the next newer command and returns it. After the newest command, it returns the draft. It returns an empty `Optional` if the user is not browsing, so that the text is left as it is.
-* A command that fails stays in the command box, and it is also the most recent command. If the text given to `CommandHistory#previous(String)` is the most recent command, that command is skipped. Otherwise, the first press of the Up key would seem to do nothing.
+* A command that fails stays in the command box, and it is also the most recent command. If the text given to `CommandHistory#previous(String)` when browsing starts is the most recent command, that command is skipped. Otherwise, the first press of the Up key would seem to do nothing.
 * `CommandBox` adds an event filter for `KeyEvent.KEY_PRESSED` to its text field. For the Up and Down keys, it calls `CommandHistory#previous(String)` or `CommandHistory#next()`, shows the returned text with the caret at its end, and consumes the event.
 * `CommandBox#handleCommandEntered()` calls `CommandHistory#add(String)` before it executes the command, so the commands that fail are remembered as well.
 
@@ -1312,42 +1312,25 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: The app has just been launched, so no commands have been entered.
 
-   1. Test case: Press `↑` in the command box<br>
-      Expected: Nothing changes, as there is no earlier command.
-
-   1. Test case: `list`, then `list a`, then press `↑`<br>
-      Expected: The command box shows `list a`, with the caret at the end of the text.
-
-   1. Test case: Press `↑` again, then `↑` once more<br>
-      Expected: The command box shows `list`, and then stays on `list`, as it is the oldest command.
-
-   1. Test case: Press `↓` twice<br>
-      Expected: The command box shows `list a`, and then it is empty.
-
-1. Recalling commands while text is being typed
-
-   1. Prerequisites: Enter `list`, then `list a`.
+   1. Test case: `list`, then `list a`, then press `↑` three times, and then press `↓` twice<br>
+      Expected: After the first `↑`, the command box shows `list a`, with the caret at the end of the text. The second `↑` shows `list`, and the third one stays on `list`, as it is the oldest command. After the two `↓` presses, the command box shows `list a`, and then it is empty.
 
    1. Test case: Type `abc` without pressing Enter, press `↑`, and then press `↓`<br>
       Expected: After `↑`, the command box shows `list a`. After `↓`, it shows `abc` again.
 
 1. Recalling a command that failed
 
-   1. Prerequisites: Enter `list`.
+   1. Prerequisites: Relaunch the app, so that no commands have been entered.
 
-   1. Test case: Enter `delete`, then press `↑`<br>
-      Expected: `delete` fails and stays in the command box. After `↑`, the command box shows `list`, the command before it. Press `↑` again and it stays on `list`.
+   1. Test case: `list`, then `delete`, and then press `↑`<br>
+      Expected: `delete` fails, and its text stays in the command box. After `↑`, the command box shows `list`, the command that was entered before it, and not `delete` again.
 
-   1. Test case: Press `↓` twice<br>
-      Expected: The command box shows `delete`, and then it is still `delete`, as there is nothing newer.
+1. Recalling a command that was entered several times in a row
 
-1. Repeated commands and the limit
+   1. Prerequisites: Relaunch the app, so that no commands have been entered.
 
-   1. Test case: Enter `list a` twice in a row, then `list b`. Press `↑` three times, and then press `↓` once<br>
-      Expected: The three presses of `↑` show `list b`, `list a` and `list a`. After `↓`, the command box shows `list b`. The repeated `list a` is remembered once, so `↓` does not stop on a second `list a`.
-
-   1. Test case: Enter `list 1`, `list 2` and so on up to `list 101`. Press `↑` 100 times, and then once more<br>
-      Expected: The first command, `list 1`, is no longer remembered. The 100th press shows `list 2`, which is the oldest command that is remembered, and the last press does not change the text.
+   1. Test case: `list a` twice in a row, then `list b`, then press `↑` three times, and then press `↓` once<br>
+      Expected: The three presses of `↑` show `list b`, `list a` and `list a`, which is the oldest command. After `↓`, the command box shows `list b`. The repeated `list a` is remembered once, so `↓` does not stop on a second `list a`.
 
 ### Exiting the application
 
