@@ -8,23 +8,13 @@ import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_CLASS_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_EMAIL_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.INVALID_NAME_DESC;
-import static seedu.address.logic.commands.CommandTestUtil.INVALID_TAG_DESC;
-import static seedu.address.logic.commands.CommandTestUtil.INVALID_UNTAG_DESC;
 import static seedu.address.logic.commands.CommandTestUtil.NAME_DESC_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.TAG_DESC_FRIEND;
-import static seedu.address.logic.commands.CommandTestUtil.TAG_DESC_HUSBAND;
-import static seedu.address.logic.commands.CommandTestUtil.UNTAG_DESC_FRIEND;
-import static seedu.address.logic.commands.CommandTestUtil.UNTAG_DESC_HUSBAND;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_AMY;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_FRIEND;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_UNTAG;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
@@ -85,7 +75,9 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "1" + NAME_DESC_AMY + " /phone 91234567",
                 EditCommandParser.MESSAGE_UNKNOWN_PARAMETER);
 
-        // the prefixes of other commands are not accepted
+        // groups are changed with the tag and untag commands, and not with the edit command
+        assertParseFailure(parser, "1 /tag friend", EditCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /untag friend", EditCommandParser.MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, "1 /group Group A", EditCommandParser.MESSAGE_UNKNOWN_PARAMETER);
 
         // unknown parameters are reported before an invalid index
@@ -94,8 +86,7 @@ public class EditCommandParserTest {
 
     @Test
     public void parse_unknownParameterMessage_listsAllParameters() {
-        String expected = "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + ", " + PREFIX_EMAIL
-                + ", " + PREFIX_TAG + " or " + PREFIX_UNTAG;
+        String expected = "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
         assertParseFailure(parser, "1 /phone 91234567", expected);
     }
 
@@ -104,8 +95,6 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "1" + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, "1" + INVALID_CLASS_DESC, ClassName.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, "1" + INVALID_EMAIL_DESC, Email.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, "1" + INVALID_TAG_DESC, ParserUtil.MESSAGE_INVALID_GROUP_NAME);
-        assertParseFailure(parser, "1" + INVALID_UNTAG_DESC, ParserUtil.MESSAGE_INVALID_GROUP_NAME);
 
         // a name or class without a value
         assertParseFailure(parser, "1 " + PREFIX_NAME, Name.MESSAGE_EMPTY);
@@ -113,65 +102,23 @@ public class EditCommandParserTest {
 
         // invalid name followed by valid email
         assertParseFailure(parser, "1" + INVALID_NAME_DESC + EMAIL_DESC_AMY, Name.MESSAGE_CONSTRAINTS);
-
-        // one invalid group among valid groups
-        assertParseFailure(parser, "1 " + PREFIX_TAG + " friend,hubby*,husband",
-                ParserUtil.MESSAGE_INVALID_GROUP_NAME);
     }
 
     @Test
     public void parse_multipleInvalidValues_reportsFirstInOrder() {
-        // name, then class, then email, then groups to add, then groups to remove
+        // name, then class, then email
         assertParseFailure(parser, "1" + INVALID_EMAIL_DESC + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, "1" + INVALID_EMAIL_DESC + INVALID_CLASS_DESC, ClassName.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, "1" + INVALID_TAG_DESC + INVALID_EMAIL_DESC, Email.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, "1" + INVALID_UNTAG_DESC + INVALID_TAG_DESC + " /name",
-                Name.MESSAGE_EMPTY);
-    }
-
-    @Test
-    public void parse_groupsWithoutValue_failure() {
-        assertParseFailure(parser, "1 " + PREFIX_TAG, TagCommandParser.MESSAGE_MISSING_GROUP);
-        assertParseFailure(parser, "1 " + PREFIX_UNTAG, TagCommandParser.MESSAGE_MISSING_GROUP);
-        assertParseFailure(parser, "1" + NAME_DESC_AMY + " " + PREFIX_TAG, TagCommandParser.MESSAGE_MISSING_GROUP);
-    }
-
-    @Test
-    public void parse_emptyGroupEntry_failure() {
-        assertParseFailure(parser, "1 " + PREFIX_TAG + " friend,,husband", ParserUtil.MESSAGE_EMPTY_GROUP);
-        assertParseFailure(parser, "1 " + PREFIX_TAG + " friend,", ParserUtil.MESSAGE_EMPTY_GROUP);
-        assertParseFailure(parser, "1 " + PREFIX_UNTAG + " ,friend", ParserUtil.MESSAGE_EMPTY_GROUP);
-    }
-
-    @Test
-    public void parse_repeatedGroupName_failure() {
-        assertParseFailure(parser, "1 " + PREFIX_TAG + " friend,Friend",
-                String.format(ParserUtil.MESSAGE_DUPLICATE_GROUP, "Friend"));
-        assertParseFailure(parser, "1 " + PREFIX_UNTAG + " friend,husband,friend",
-                String.format(ParserUtil.MESSAGE_DUPLICATE_GROUP, "friend"));
-    }
-
-    @Test
-    public void parse_groupBothAddedAndRemoved_failure() {
-        assertParseFailure(parser, "1" + TAG_DESC_FRIEND + UNTAG_DESC_FRIEND,
-                String.format(EditCommandParser.MESSAGE_CONFLICTING_GROUPS, VALID_TAG_FRIEND));
-
-        // ignoring case, naming every conflicting group as typed in the groups to add
-        assertParseFailure(parser, "1 " + PREFIX_TAG + " Friend,husband,other " + PREFIX_UNTAG
-                + " husband,FRIEND", String.format(EditCommandParser.MESSAGE_CONFLICTING_GROUPS, "Friend, husband"));
+        assertParseFailure(parser, "1" + INVALID_CLASS_DESC + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS);
     }
 
     @Test
     public void parse_allFieldsSpecified_success() {
         Index targetIndex = INDEX_SECOND_PERSON;
-        String userInput = targetIndex.getOneBased()
-                + " " + PREFIX_TAG + " " + VALID_TAG_HUSBAND + "," + VALID_TAG_FRIEND
-                + " " + PREFIX_UNTAG + " owes"
-                + EMAIL_DESC_AMY + NAME_DESC_AMY + CLASS_DESC_AMY;
+        String userInput = targetIndex.getOneBased() + EMAIL_DESC_AMY + NAME_DESC_AMY + CLASS_DESC_AMY;
 
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(VALID_NAME_AMY)
-                .withClassName(VALID_CLASS_AMY).withEmail(VALID_EMAIL_AMY)
-                .withTagsToAdd(VALID_TAG_HUSBAND, VALID_TAG_FRIEND).withTagsToRemove("owes").build();
+                .withClassName(VALID_CLASS_AMY).withEmail(VALID_EMAIL_AMY).build();
         EditCommand expectedCommand = new EditCommand(targetIndex, descriptor);
 
         assertParseSuccess(parser, userInput, expectedCommand);
@@ -204,14 +151,6 @@ public class EditCommandParserTest {
         // email
         assertParseSuccess(parser, targetIndex.getOneBased() + EMAIL_DESC_AMY, new EditCommand(targetIndex,
                 new EditPersonDescriptorBuilder().withEmail(VALID_EMAIL_AMY).build()));
-
-        // tag to add
-        assertParseSuccess(parser, targetIndex.getOneBased() + TAG_DESC_FRIEND, new EditCommand(targetIndex,
-                new EditPersonDescriptorBuilder().withTagsToAdd(VALID_TAG_FRIEND).build()));
-
-        // tag to remove
-        assertParseSuccess(parser, targetIndex.getOneBased() + UNTAG_DESC_HUSBAND, new EditCommand(targetIndex,
-                new EditPersonDescriptorBuilder().withTagsToRemove(VALID_TAG_HUSBAND).build()));
     }
 
     @Test
@@ -234,17 +173,6 @@ public class EditCommandParserTest {
     }
 
     @Test
-    public void parse_severalGroups_success() {
-        Index targetIndex = INDEX_FIRST_PERSON;
-        EditCommand expectedCommand = new EditCommand(targetIndex, new EditPersonDescriptorBuilder()
-                .withTagsToAdd("Group A", "Team 2").withTagsToRemove(VALID_TAG_FRIEND).build());
-
-        // spaces around the commas and inside the group names are handled
-        assertParseSuccess(parser, targetIndex.getOneBased() + " " + PREFIX_TAG + "  Group   A , Team 2 "
-                + UNTAG_DESC_FRIEND, expectedCommand);
-    }
-
-    @Test
     public void parse_multipleRepeatedFields_failure() {
         Index targetIndex = INDEX_FIRST_PERSON;
 
@@ -260,10 +188,6 @@ public class EditCommandParserTest {
         assertParseFailure(parser, targetIndex.getOneBased() + NAME_DESC_AMY + NAME_DESC_AMY,
                 MESSAGE_DUPLICATE_PARAMETERS);
         assertParseFailure(parser, targetIndex.getOneBased() + CLASS_DESC_AMY + CLASS_DESC_AMY,
-                MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, targetIndex.getOneBased() + TAG_DESC_FRIEND + TAG_DESC_HUSBAND,
-                MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, targetIndex.getOneBased() + UNTAG_DESC_FRIEND + UNTAG_DESC_HUSBAND,
                 MESSAGE_DUPLICATE_PARAMETERS);
 
         // repeated parameters are reported before an invalid index

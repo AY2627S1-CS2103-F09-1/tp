@@ -53,11 +53,9 @@ public class HelpWindowTest {
     }
 
     @Test
-    public void helpMessage_editCommand_hasLineForEachDetailThatCanBeEdited() {
+    public void helpMessage_editCommand_hasSummaryLine() {
         assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(
                 line -> line.equals("edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]")));
-        assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(
-                line -> line.strip().equals("[/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]")));
     }
 
     @Test

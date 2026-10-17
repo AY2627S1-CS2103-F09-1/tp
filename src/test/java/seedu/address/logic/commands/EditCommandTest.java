@@ -8,7 +8,6 @@ import static seedu.address.logic.commands.CommandTestUtil.DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_CLASS_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_EMAIL_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.VALID_NAME_BOB;
-import static seedu.address.logic.commands.CommandTestUtil.VALID_TAG_HUSBAND;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandFailure;
 import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.logic.commands.CommandTestUtil.showPersonAtIndex;
@@ -48,10 +47,9 @@ public class EditCommandTest {
     public void execute_allFieldsSpecifiedUnfilteredList_success() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         Person editedPerson = new PersonBuilder(personToEdit).withName(VALID_NAME_BOB)
-                .withClassName(VALID_CLASS_BOB).withEmail(VALID_EMAIL_BOB).withTags(VALID_TAG_HUSBAND).build();
+                .withClassName(VALID_CLASS_BOB).withEmail(VALID_EMAIL_BOB).build();
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB)
-                .withClassName(VALID_CLASS_BOB).withEmail(VALID_EMAIL_BOB)
-                .withTagsToAdd(VALID_TAG_HUSBAND).withTagsToRemove("friends").build();
+                .withClassName(VALID_CLASS_BOB).withEmail(VALID_EMAIL_BOB).build();
         EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, descriptor);
 
         String expectedMessage = String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS,
@@ -140,39 +138,12 @@ public class EditCommandTest {
     }
 
     @Test
-    public void execute_addTags_success() {
-        Person personToEdit = model.getFilteredPersonList().get(INDEX_THIRD_PERSON.getZeroBased());
-        Person editedPerson = new PersonBuilder(personToEdit).withTags("friends", "owesMoney").build();
-        EditCommand editCommand = new EditCommand(INDEX_THIRD_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToAdd("friends", "owesMoney").build());
-
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
-        expectedModel.setPerson(personToEdit, editedPerson);
-
-        assertCommandSuccess(editCommand, model, String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS,
-                personToEdit.getName(), personToEdit.getClassName()), expectedModel);
-    }
-
-    @Test
-    public void execute_removeOneOfSeveralTags_success() {
-        Person personToEdit = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
-        Person editedPerson = new PersonBuilder(personToEdit).withTags("owesMoney").build();
-        EditCommand editCommand = new EditCommand(INDEX_SECOND_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToRemove("friends").build());
-
-        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
-        expectedModel.setPerson(personToEdit, editedPerson);
-
-        assertCommandSuccess(editCommand, model, String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS,
-                personToEdit.getName(), personToEdit.getClassName()), expectedModel);
-    }
-
-    @Test
-    public void execute_removeTagIgnoringCase_success() {
+    public void execute_removeEmailTakesPriorityOverEmail_success() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-        Person editedPerson = new PersonBuilder(personToEdit).withTags().build();
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToRemove("FRIENDS").build());
+        Person editedPerson = new PersonBuilder(personToEdit).withoutEmail().build();
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withEmail(VALID_EMAIL_BOB)
+                .withoutEmail().build();
+        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, descriptor);
 
         Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
         expectedModel.setPerson(personToEdit, editedPerson);
@@ -197,6 +168,23 @@ public class EditCommandTest {
     }
 
     @Test
+    public void execute_contactWithTags_tagsAreKept() {
+        Person personToEdit = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
+        assertFalse(personToEdit.getTags().isEmpty());
+        EditCommand editCommand = new EditCommand(INDEX_SECOND_PERSON, new EditPersonDescriptorBuilder()
+                .withName(VALID_NAME_BOB).withClassName(VALID_CLASS_BOB).build());
+
+        Model expectedModel = new ModelManager(new AddressBook(model.getAddressBook()), new UserPrefs());
+        expectedModel.setPerson(personToEdit, new PersonBuilder(personToEdit).withName(VALID_NAME_BOB)
+                .withClassName(VALID_CLASS_BOB).build());
+
+        assertCommandSuccess(editCommand, model, String.format(EditCommand.MESSAGE_EDIT_PERSON_SUCCESS,
+                VALID_NAME_BOB, VALID_CLASS_BOB), expectedModel);
+        Person actualPerson = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
+        assertEquals(personToEdit.getTags(), actualPerson.getTags());
+    }
+
+    @Test
     public void execute_contactWithRecords_recordsAreKept() {
         Person originalPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         Person personWithRecords = originalPerson
@@ -218,50 +206,6 @@ public class EditCommandTest {
         Person actualPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         assertEquals(personWithRecords.getAttendanceRecords(), actualPerson.getAttendanceRecords());
         assertEquals(personWithRecords.getGradeRecords(), actualPerson.getGradeRecords());
-    }
-
-    @Test
-    public void execute_addTagThatContactAlreadyHas_failure() {
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToAdd("FRIENDS").build());
-
-        assertCommandFailure(editCommand, model,
-                String.format(EditCommand.MESSAGE_ALREADY_IN_GROUP, "FRIENDS"));
-    }
-
-    @Test
-    public void execute_addSeveralTagsThatContactAlreadyHas_failureNamesAllInOrder() {
-        EditCommand editCommand = new EditCommand(INDEX_SECOND_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToAdd("owesMoney", VALID_TAG_HUSBAND, "friends").build());
-
-        assertCommandFailure(editCommand, model,
-                String.format(EditCommand.MESSAGE_ALREADY_IN_GROUP, "owesMoney, friends"));
-    }
-
-    @Test
-    public void execute_removeTagThatContactDoesNotHave_failure() {
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToRemove(VALID_TAG_HUSBAND).build());
-
-        assertCommandFailure(editCommand, model,
-                String.format(EditCommand.MESSAGE_NOT_IN_GROUP, VALID_TAG_HUSBAND));
-    }
-
-    @Test
-    public void execute_removeTagFromContactWithoutTags_failure() {
-        EditCommand editCommand = new EditCommand(INDEX_THIRD_PERSON,
-                new EditPersonDescriptorBuilder().withTagsToRemove("friends").build());
-
-        assertCommandFailure(editCommand, model, String.format(EditCommand.MESSAGE_NOT_IN_GROUP, "friends"));
-    }
-
-    @Test
-    public void execute_tagProblemAndOtherChanges_failureChangesNothing() {
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptorBuilder()
-                .withName(VALID_NAME_BOB).withTagsToRemove(VALID_TAG_HUSBAND).build());
-
-        assertCommandFailure(editCommand, model,
-                String.format(EditCommand.MESSAGE_NOT_IN_GROUP, VALID_TAG_HUSBAND));
     }
 
     @Test

@@ -3,17 +3,10 @@ package seedu.address.testutil;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_UNTAG;
-
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
-import seedu.address.logic.parser.Prefix;
 import seedu.address.model.person.Person;
-import seedu.address.model.tag.Tag;
 
 /**
  * A utility class for Person.
@@ -53,20 +46,6 @@ public class PersonUtil {
             descriptor.getEmail().ifPresent(email ->
                     sb.append(PREFIX_EMAIL).append(" ").append(email.value).append(" "));
         }
-        appendGroups(sb, PREFIX_TAG, descriptor.getTagsToAdd());
-        appendGroups(sb, PREFIX_UNTAG, descriptor.getTagsToRemove());
         return sb.toString();
-    }
-
-    /**
-     * Appends {@code prefix} followed by the comma-separated names of {@code groups} to {@code sb}, if there
-     * are any groups.
-     */
-    private static void appendGroups(StringBuilder sb, Prefix prefix, Set<Tag> groups) {
-        if (groups.isEmpty()) {
-            return;
-        }
-        String names = groups.stream().map(group -> group.tagName).collect(Collectors.joining(","));
-        sb.append(prefix).append(" ").append(names).append(" ");
     }
 }

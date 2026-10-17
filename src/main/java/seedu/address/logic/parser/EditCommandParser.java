@@ -5,44 +5,35 @@ import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_TAG;
-import static seedu.address.logic.parser.CliSyntax.PREFIX_UNTAG;
 
-import java.util.Collections;
 import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.tag.Tag;
 
 /**
  * Parses input arguments and creates a new EditCommand object
  */
 public class EditCommandParser implements Parser<EditCommand> {
 
-    public static final String MESSAGE_UNKNOWN_PARAMETER = "Unknown parameter. Use " + PREFIX_NAME + ", "
-            + PREFIX_CLASS + ", " + PREFIX_EMAIL + ", " + PREFIX_TAG + " or " + PREFIX_UNTAG;
-    public static final String MESSAGE_CONFLICTING_GROUPS =
-            "A group cannot be added and removed in the same command: %1$s";
+    public static final String MESSAGE_UNKNOWN_PARAMETER =
+            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
 
     private static final Prefix[] EDIT_PREFIXES = {
-        PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL, PREFIX_TAG, PREFIX_UNTAG
+        PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL
     };
 
     /**
      * Parses the given {@code String} of arguments in the context of the EditCommand
      * and returns an EditCommand object for execution.
      * Problems are reported in this order: unrecognized parameters, repeated parameters, an invalid index,
-     * an invalid name, class, email, groups to add or groups to remove, groups that are both added and
-     * removed, and finally that no detail is given. A name or class without a value is invalid, an email
-     * without a value removes the email, and groups to add or remove without a value count as missing.
+     * an invalid name, class or email, and finally that no detail is given. A name or class without a value
+     * is invalid, and an email without a value removes the email.
      * @throws ParseException if the user input does not conform to the expected format
      */
     public EditCommand parse(String args) throws ParseException {
@@ -75,7 +66,7 @@ public class EditCommandParser implements Parser<EditCommand> {
 
     /**
      * Returns an {@code EditPersonDescriptor} with the details given in {@code argMultimap}.
-     * @throws ParseException if a detail is invalid, or a group is both added and removed
+     * @throws ParseException if a detail is invalid
      */
     private static EditPersonDescriptor parseDescriptor(ArgumentMultimap argMultimap) throws ParseException {
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
@@ -88,12 +79,6 @@ public class EditCommandParser implements Parser<EditCommand> {
                     ParserUtil.parseClassName(argMultimap.getValue(PREFIX_CLASS).get()));
         }
         parseEmail(argMultimap, editPersonDescriptor);
-
-        Set<Tag> groupsToAdd = parseGroups(argMultimap, PREFIX_TAG);
-        Set<Tag> groupsToRemove = parseGroups(argMultimap, PREFIX_UNTAG);
-        requireNoConflictingGroups(groupsToAdd, groupsToRemove);
-        editPersonDescriptor.setTagsToAdd(groupsToAdd);
-        editPersonDescriptor.setTagsToRemove(groupsToRemove);
 
         return editPersonDescriptor;
     }
@@ -113,37 +98,6 @@ public class EditCommandParser implements Parser<EditCommand> {
             editPersonDescriptor.setEmailCleared(true);
         } else {
             editPersonDescriptor.setEmail(ParserUtil.parseEmail(email.get()));
-        }
-    }
-
-    /**
-     * Returns the groups given for {@code prefix} in {@code argMultimap}, which is empty if the prefix is
-     * not given.
-     * @throws ParseException if the prefix is given without a value, or the groups are invalid
-     */
-    private static Set<Tag> parseGroups(ArgumentMultimap argMultimap, Prefix prefix) throws ParseException {
-        Optional<String> groups = argMultimap.getValue(prefix);
-        if (groups.isEmpty()) {
-            return Collections.emptySet();
-        }
-        if (groups.get().isBlank()) {
-            throw new ParseException(TagCommandParser.MESSAGE_MISSING_GROUP);
-        }
-        return ParserUtil.parseGroupNames(groups.get());
-    }
-
-    /**
-     * Throws a {@code ParseException} naming the groups that are in both {@code groupsToAdd} and
-     * {@code groupsToRemove}, if there are any.
-     */
-    private static void requireNoConflictingGroups(Set<Tag> groupsToAdd, Set<Tag> groupsToRemove)
-            throws ParseException {
-        String conflictingGroups = groupsToAdd.stream()
-                .filter(groupsToRemove::contains)
-                .map(group -> group.tagName)
-                .collect(Collectors.joining(", "));
-        if (!conflictingGroups.isEmpty()) {
-            throw new ParseException(String.format(MESSAGE_CONFLICTING_GROUPS, conflictingGroups));
         }
     }
 

@@ -21,7 +21,6 @@ public class HelpWindow extends UiPart<Stage> {
 
             add /name NAME /class CLASS [/email EMAIL]
             edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]
-                 [/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]
             attendance INDEX /date DATE /status STATUS
             clear
             delete INDEX
