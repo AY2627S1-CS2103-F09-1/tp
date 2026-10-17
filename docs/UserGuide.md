@@ -35,6 +35,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `add /name John Doe /class A1 /email johnd@example.com` : Adds a contact named `John Doe` in class `A1` to ClassMates.
 
+   * `edit 2 /email newmail@example.com` : Changes the email of the 2nd contact shown in the current list to `newmail@example.com`.
+
    * `delete 3` : Deletes the 3rd contact shown in the current list.
 
    * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
@@ -133,6 +135,57 @@ Examples:
 * `add /name John Doe /class A1 /email johnd@example.com`
 * `add /name Betsy Crowe /class A2`
 
+### Editing a contact: `edit`
+
+Changes the name, class, email or groups of a contact.
+
+Format: `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]] [/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]`
+
+* `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* At least one of `/name`, `/class`, `/email`, `/tag` and `/untag` must be given. Only the details that you give are changed, and everything else about the contact stays the same.
+* `/name`, `/class` and `/email` replace the current value, and they follow the same rules as in [`add`](#adding-a-contact-add).
+* `/email` with nothing after it removes the email of the contact.
+* `/tag` adds the contact to one or more groups, and `/untag` removes the contact from one or more groups. Give the group names separated by commas, as in `/tag Group A,Team 2`. Spaces around a comma are ignored, and a group name follows the same rules as `GROUP_NAME` in [`tag`](#linking-contacts-to-a-group-tag).
+* Group names are compared ignoring case, so `/untag group a` removes the contact from `Group A`.
+* The contact must not already be in a group that you add, and must be in a group that you remove. The same group cannot be in both `/tag` and `/untag`, and a group name can only be given once in the same list.
+* Attendance records and grades of the contact are kept, even if you change the name or class.
+* A contact is identified by the name and class together, so the edited name and class cannot be the same as those of another contact, ignoring case and extra spaces. Changing only the capitalization or spacing of the name of the contact itself is allowed.
+* The command is all or nothing. If any problem is found, nothing about the contact is changed.
+* After the edit, all contacts are shown, even if a search was displayed before, and the edited contact stays at the same position in the list.
+* Only `/name`, `/class`, `/email`, `/tag` and `/untag` are accepted, and each can be given at most once.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/name`, `/class`, `/email`, `/tag` or `/untag` is given, such as `/phone` | `Unknown parameter. Use /name, /class, /email, /tag or /untag`
+A parameter is given more than once | `Each parameter can only be specified once`
+The index is missing, is not a positive integer, or has other text with it, such as `edit John /name Jo` | `Invalid command format!` followed by the usage of `edit`
+The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
+The email is not valid | A description of the valid email format
+`/tag` or `/untag` has nothing after it | `Missing group name`
+An entry of `/tag` or `/untag` is empty, such as in `Group A,,Team 2` | `Group names cannot contain empty entries`
+A group name is too long or has characters that are not allowed | `Invalid group name.` followed by a description of the allowed characters
+The same group is given more than once in `/tag` or in `/untag` | `Duplicate group name: NAME`
+The same group is in both `/tag` and `/untag` | `A group cannot be added and removed in the same command: NAME`
+None of the parameters is given, such as `edit 1` | `At least one detail to edit must be provided`
+The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The contact is already in a group that is added | `The contact is already in the group(s): NAME`
+The contact is not in a group that is removed | `The contact is not in the group(s): NAME`
+The new name and class are the same as those of another contact | `NAME already exists in class CLASS`
+
+If more than one problem applies, only the first one in the table above is reported, except that `/tag` is checked before `/untag`, and that the entries of a group list are checked from left to right.<br>
+If several groups are the problem, all of them are listed in the message, separated by commas.<br>
+On success, ClassMates shows `NAME in class CLASS has been edited`, with the name and class after the edit.
+
+Examples:
+* `edit 2 /email newmail@example.com` changes the email of the 2nd contact in the displayed list.
+* `edit 1 /name John Tann /class A2` changes the name and the class of the 1st contact.
+* `edit 3 /tag Group A,Team 2 /untag Group B` adds the 3rd contact to `Group A` and `Team 2`, and removes the contact from `Group B`.
+* `edit 4 /email` removes the email of the 4th contact.
+* `list Betsy` followed by `edit 1 /class B1` changes the class of the 1st contact in the results of the `list Betsy` command.
+
 ### Listing and searching contacts: `list`
 
 Shows a list of all contacts in ClassMates, or only the contacts that match a keyword.
@@ -205,6 +258,7 @@ Format: `tag /group GROUP_NAME /members INDEX[,INDEX]...`
 * The indices are separated by commas, and spaces around a comma are ignored, so `1,3,5` and `1, 3, 5` are the same. A comma at the start or end, or two commas in a row, is not allowed, and each index can be given only once.
 * The group is shown as a label on each linked contact, in alphabetical order ignoring case.
 * A contact can be in several groups, but cannot be linked to the same group twice.
+* To take a contact out of a group, use [`edit`](#editing-a-contact-edit) with `/untag`, such as `edit 2 /untag Group A`.
 * The command is all or nothing. If any problem is found, none of the contacts are linked.
 * Only `/group` and `/members` are accepted, and each can be given at most once.
 
@@ -436,6 +490,12 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 
 **Q**: Can I add two contacts with the same name?<br>
 **A**: Yes, if they are in different classes. A contact is identified by name and class together, ignoring case and extra spaces, so the same name cannot be added twice to the same class.
+
+**Q**: How do I fix a wrong name, class or email?<br>
+**A**: Use `edit INDEX` with the details to change, such as `edit 2 /name John Tann /class A2`. Attendance records and grades are kept. See [Editing a contact](#editing-a-contact-edit).
+
+**Q**: How do I remove a contact from a group?<br>
+**A**: Use `edit INDEX /untag GROUP_NAME`, such as `edit 2 /untag Group A`. The group is no longer shown on the contact, and other groups are not affected.
 
 **Q**: Why did `delete 3` or `attendance 3` act on a contact I did not expect?<br>
 **A**: The index refers to the contacts currently displayed. After a `list KEYWORD`, index 3 is the 3rd contact in the results, not in the full list. Run `list` first, or use `delete /name NAME /class CLASS`.
