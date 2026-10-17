@@ -118,8 +118,9 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 How the parsing works:
 * When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
-* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser` and `TagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
+* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser`, `EditCommandParser`, `TagCommandParser` and `UntagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
 * `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
+* `TagCommandParser` and `UntagCommandParser` take the same arguments, `/group GROUP_NAME /members INDEX[,INDEX]...`, so both extend the abstract `GroupMembershipCommandParser`, which does the parsing. A subclass only passes the usage message of its command, and creates its command in `GroupMembershipCommandParser#createCommand(Tag, List<Index>)`. See [Linking contacts to a group](#linking-contacts-to-a-group-feature).
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages. `DeleteCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or an index combined with `/name` or `/class`, a missing name, then a missing class. A parameter given without a value counts as missing.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
 * `AttendanceCommandParser` parses the contact index, date and status for the `attendance` command and creates an `AttendanceCommand`. `ViewAttendanceCommandParser` parses the name and class for the `viewA` command and creates a `ViewAttendanceCommand`. Both parsers use `ArgumentTokenizer` to extract their prefixed arguments.
@@ -136,7 +137,7 @@ The `Model` component,
 * identifies a `Person` by its `Name` and `ClassName` (see `Person#isSamePerson(Person)`). Both are compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
 * compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
 * keeps the `Person` objects in the order they are displayed, which is from the most recently added to the oldest (see [Order of contacts](#order-of-contacts-feature)).
-* keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, and `Person#hasTag(Tag)` checks whether the contact is already in it.
+* keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, `Person#withoutTag(Tag)` returns a copy without a tag, which is how a contact is removed from a group, and `Person#hasTag(Tag)` checks whether the contact is in a group.
 * stores each contact's attendance records as a list of `Attendance` objects. Each record contains a date and a status (`PRESENT`, `ABSENT` or `LATE`). `Person#withAttendance(Attendance)` returns a copy of the contact with the new record added.
 * treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the contact has no email.
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
@@ -267,7 +268,7 @@ The contacts are displayed from the most recently added to the oldest. The order
 * `UniquePersonList#add(Person)` inserts the contact at index 0 instead of at the end. `AddCommand#execute(Model)` reaches it through `Model#addPerson(Person)` and `AddressBook#addPerson(Person)`.
 * `ModelManager#addPerson(Person)` also calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, so the new contact is visible at the top even if a search was displayed.
 * A filter only hides contacts and never reorders them, so search results are also shown from the most recently added to the oldest.
-* `Model#setPerson(Person, Person)` replaces a contact in place, so `edit` and `tag` do not change the position of a contact.
+* `Model#setPerson(Person, Person)` replaces a contact in place, so `edit`, `tag` and `untag` do not change the position of a contact.
 * `ImportCommand#execute(Model)` adds the contacts of the file from the last row to the first, so that the first row ends up at the top and the imported contacts appear in the order of the file.
 * Code that builds an address book from a whole list must not add the contacts one by one, as that would reverse their order. `JsonSerializableAddressBook#toModelType()`, `SampleDataUtil#getSampleAddressBook()` and `TypicalPersons#getTypicalAddressBook()` use `AddressBook#setPersons(List)`, which keeps the given order.
 
@@ -289,10 +290,10 @@ The contacts are displayed from the most recently added to the oldest. The order
 
 #### Implementation
 
-The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups. It is implemented by `TagCommandParser` and `TagCommand`.
+The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups. It is implemented by `TagCommandParser` and `TagCommand`. Most of their work is done by the abstract classes `GroupMembershipCommandParser` and `GroupMembershipCommand`, which they share with the [`untag` command](#removing-contacts-from-a-group-feature).
 
-* `TagCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing.
-* `TagCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then checks that none of the contacts is already in the group (`Person#hasTag(Tag)`). Only after both checks pass does it replace each contact with `Person#withTag(Tag)` using `Model#setPerson(Person, Person)`. The constructor of `TagCommand` asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. `TagCommandParser` guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
+* `GroupMembershipCommandParser#parse(String)` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing. `TagCommandParser` only passes the usage message of `tag` and creates the `TagCommand`.
+* `GroupMembershipCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then calls `GroupMembershipCommand#requireMembersCanBeChanged(List<Person>, Tag)`. `TagCommand` implements it by checking that none of the contacts is already in the group (`Person#hasTag(Tag)`), and it names every contact that is. Only after both checks pass does the command replace each contact with `GroupMembershipCommand#changeMembership(Person, Tag)`, which is `Person#withTag(Tag)` for `tag`, using `Model#setPerson(Person, Person)`. The constructor asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. The parser guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
 * The success message lists the linked contacts in the order the indices were given. It shows the group name with the casing it was typed in, after leading and trailing spaces are removed and repeated spaces are collapsed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
 
 #### Design considerations
@@ -324,43 +325,76 @@ The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the 
   * Pros: Does not depend on the displayed list.
   * Cons: A long command for several members, and easy to mistype.
 
+### Removing contacts from a group feature
+
+#### Implementation
+
+The `untag` command (`untag /group GROUP_NAME /members INDEX[,INDEX]...`) removes the contacts at the given indices of the displayed list from a group. It is the opposite of [`tag`](#linking-contacts-to-a-group-feature), and it is implemented by `UntagCommandParser` and `UntagCommand`.
+
+* `UntagCommandParser` extends `GroupMembershipCommandParser`, as `TagCommandParser` does. It accepts the same arguments, in the same way and with the same problems reported in the same order. It passes the usage message of `untag` and creates the `UntagCommand`.
+* `UntagCommand` extends `GroupMembershipCommand`, as `TagCommand` does, so it also finds every contact first, and is atomic. `UntagCommand#requireMembersCanBeChanged(List<Person>, Tag)` checks that every contact is in the group, with `Person#hasTag(Tag)`, and names every contact that is not. `UntagCommand#changeMembership(Person, Tag)` returns `Person#withoutTag(Tag)`.
+* `Person#withoutTag(Tag)` returns a copy of the contact without the tag. Tags are compared ignoring case, so `group a` removes `Group A`. The other tags, the email, the attendance records and the grade records are kept.
+* The success message lists the contacts in the order the indices were given, and shows the group name with the casing it was typed in. A group is not stored as an object of its own, so it stops existing when the last contact is removed from it.
+
+#### Design considerations
+
+**Aspect: Where contacts are removed from a group**
+
+* **Alternative 1 (current choice):** A separate `untag` command, with the same parameters as `tag`.
+  * Pros: Removes several contacts from a group in one command, which suits groups such as the members of a team. The prefixes, messages and rules are the same as for `tag`, and `edit` stays limited to the details of one contact.
+  * Cons: Moving a contact from one group to another takes two commands, and the second can fail after the first has worked. It is one more command to learn.
+* **Alternative 2:** A `/untag` parameter of `edit`, which removes the groups of one contact.
+  * Pros: One command can change all the details of a contact, and can add and remove groups at the same time.
+  * Cons: Two commands change groups, with different prefixes and messages, and the error messages of `edit` double. Removing many contacts from one group takes one command for each contact.
+
+**Aspect: What happens when a contact is not in the group**
+
+* **Alternative 1 (current choice):** It is an error, and no contact is changed.
+  * Pros: Consistent with `tag`, which rejects a contact that is already in the group. A typo in the name of the group is noticed.
+  * Cons: The same command cannot be run twice, as the second run fails.
+* **Alternative 2:** Ignore the contacts that are not in the group.
+  * Pros: Simpler, and a command can safely be repeated.
+  * Cons: A typo in the name of the group does nothing, and the user is told that the contacts were removed.
+
+**Aspect: How the code of `tag` and `untag` is shared**
+
+* **Alternative 1 (current choice):** Abstract classes `GroupMembershipCommand` and `GroupMembershipCommandParser`, with a few methods that `TagCommand` and `UntagCommand` implement, and `TagCommandParser` and `UntagCommandParser` supply.
+  * Pros: The finding of the contacts, the all-or-nothing rule and the parsing are written once. A change to one command's rules cannot make the two commands differ by accident.
+  * Cons: A reader must look at the base class to see what a command does.
+* **Alternative 2:** One `TagCommand` with a flag that tells whether to add or remove.
+  * Pros: Fewer classes.
+  * Cons: The flag appears in every step, and two commands share a name, a usage message and an error message that should differ.
+* **Alternative 3:** Copy `TagCommand` and `TagCommandParser` for `untag`.
+  * Pros: Each class is simple to read.
+  * Cons: The same code exists twice, and a fix has to be made in both places.
+
 ### Editing a contact feature
 
 #### Implementation
 
-The `edit` command (`edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]] [/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]`) changes the details of the contact at the given index of the displayed list. It is implemented by `EditCommandParser`, `EditCommand` and its nested class `EditPersonDescriptor`.
+The `edit` command (`edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`) changes the name, class or email of the contact at the given index of the displayed list. It is implemented by `EditCommandParser`, `EditCommand` and its nested class `EditPersonDescriptor`.
 
-* `EditPersonDescriptor` stores the details to change. The name, class and email replace the current values when they are set. `EditPersonDescriptor#isEmailCleared()` means that the email is removed, and it takes priority over the email that is set. The tags to add and the tags to remove are kept in two ordered sets, so that a problem with several groups is reported in the order the user typed them. `EditPersonDescriptor#isAnyFieldEdited()` tells whether anything is to be changed.
-* `EditCommandParser#parse(String)` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or text before it, an invalid name, class or email, the groups to add, the groups to remove, a group that is in both, and finally that no detail is given. A name or class without a value is invalid, but an email without a value marks the email as removed. A group list without a value counts as missing, and it uses the message of `TagCommandParser`.
-* `ParserUtil#parseGroupNames(String)` parses a comma-separated list of group names into a set of `Tag`. It reports an empty entry or an invalid group name first, checking the entries from left to right, and a group name that appears more than once, ignoring case, only after that, naming every repeated group.
-* `EditCommand#execute(Model)` first checks that the index is in the displayed list. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` then creates a new `Person`, because `Person` is immutable. A detail that is not set is taken from the contact. The tags are first checked, and a problem lists all the groups that are the cause: every group to add must not be a tag of the contact, and every group to remove must be one. Tags are compared ignoring case, so the case of a group name does not matter. Only then is the new set of tags made, from the tags of the contact without the groups to remove and with the groups to add.
-* The new `Person` is created with the attendance records and the grade records of the contact, which is why an edit never loses them, even if the name or the class changes.
+* `EditPersonDescriptor` stores the details to change. The name, class and email replace the current values when they are set. `EditPersonDescriptor#isEmailCleared()` means that the email is removed, and it takes priority over the email that is set. `EditPersonDescriptor#isAnyFieldEdited()` tells whether anything is to be changed.
+* `EditCommandParser#parse(String)` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or text before it, an invalid name, class or email, and finally that no detail is given. A name or class without a value is invalid, but an email without a value marks the email as removed.
+* `EditCommand#execute(Model)` first checks that the index is in the displayed list. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` then creates a new `Person`, because `Person` is immutable. A detail that is not set is taken from the contact.
+* The new `Person` is created with the tags, the attendance records and the grade records of the contact, which is why an edit never loses them, even if the name or the class changes. The groups of a contact are changed with the `tag` and `untag` commands (see [Linking contacts to a group](#linking-contacts-to-a-group-feature) and [Removing contacts from a group](#removing-contacts-from-a-group-feature)).
 * A contact is identified by its name and class (`Person#isSamePerson(Person)`). If the edited contact is not the same person as the contact before the edit, and `Model#hasPerson(Person)` is true for it, the command fails with the same message as `add`. Because `Person#isSamePerson(Person)` ignores case and extra spaces, changing only the capitalization of a name is allowed, and a contact is never compared with itself.
 * `Model#setPerson(Person, Person)` is called last, after every check has passed, so a failed edit changes nothing. It replaces the contact in place, so the order of the contacts does not change (see [Order of contacts](#order-of-contacts-feature)).
-* `EditCommand#execute(Model)` then calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, as `add` does. An edited name, class or group may no longer match a search that is displayed, and the user would otherwise see the contact disappear.
+* `EditCommand#execute(Model)` then calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, as `add` does. An edited name or class may no longer match a search that is displayed, and the user would otherwise see the contact disappear.
 
 #### Design considerations
 
-**Aspect: How the tags of a contact are changed**
+**Aspect: Where the groups of a contact are changed**
 
-* **Alternative 1 (current choice):** `/tag` adds groups and `/untag` removes groups.
-  * Pros: One group can be removed without typing the others again, and a contact cannot lose all its groups by forgetting a parameter. `tag` can only add contacts to a group, so this is also how a contact is taken out of a group.
-  * Cons: Two parameters, which can conflict, so the parser must reject a group that is in both.
-* **Alternative 2:** `/tag` replaces all the tags of the contact, and `/tag` with no value removes all of them.
-  * Pros: Only one parameter, and no conflict is possible.
+* **Alternative 1 (current choice):** Not in `edit`. Groups are changed with the `tag` and `untag` commands, which work on several contacts at once.
+  * Pros: `edit` stays limited to three details of one contact. Groups are usually changed for many contacts, such as a whole team, so one command does it. The two group commands use the same prefixes and messages.
+  * Cons: Moving a contact from one group to another takes two commands. Changing the details and the groups of a contact at once takes several commands.
+* **Alternative 2:** `/tag` and `/untag` parameters of `edit`.
+  * Pros: One command can change everything about one contact, including moving it between groups.
+  * Cons: Two commands change groups, with different prefixes and messages. The errors of `edit` double, as every group problem also applies to it. Removing many contacts from a group takes one command for each contact.
+* **Alternative 3:** `/tag` replaces all the tags of the contact, as in the AB3 template.
+  * Pros: Only one parameter.
   * Cons: Removing one group means typing all the other groups again, and a group that is left out is removed without a warning.
-* **Alternative 3:** One parameter with a sign for each group, such as `/tag +Group A,-Group B`.
-  * Pros: Only one parameter, and groups can be added and removed in the same list.
-  * Cons: A hyphen is allowed at the start of a group name, so `-Group B` could be a group that is added.
-
-**Aspect: What happens when a group cannot be added or removed**
-
-* **Alternative 1 (current choice):** It is an error if a group to add is already a group of the contact, or a group to remove is not.
-  * Pros: Consistent with `tag`, which rejects a contact that is already in the group, and a typo in the name of a group to remove is noticed.
-  * Cons: The same command cannot be run twice, as the second run fails.
-* **Alternative 2:** Ignore a group that is already added or not there.
-  * Pros: Simpler, and a command can safely be repeated.
-  * Cons: A typo in the name of a group to remove does nothing, and the user is told that the edit worked.
 
 **Aspect: How the contact to edit is identified**
 
@@ -602,6 +636,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
 | `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
 | `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
+| `* *`    | TA coordinating group assignments          | remove students from a group | keep each group correct when the teams change                          |
 | `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
 | `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
 | `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
@@ -913,6 +948,82 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 
    Use case ends.
 
+
+**Use case: UC13 - Edit a contact**
+
+**Guarantees**
+* The contact is only changed if the whole command can be carried out. If any problem is found, nothing about the contact is changed.
+* The attendance records and the grades of the contact are kept.
+
+**MSS**
+1. User requests to <u>list or search student contacts</u> (UC08) to find the contact.
+2. CM displays the matching contacts.
+3. User requests to edit a contact in the displayed list, giving the index of the contact and the details to change. These are any of the name, the class and the email.
+4. CM changes the details of the contact, shows all contacts and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The list is empty.
+
+    Use case ends.
+
+* 3a. The command format is invalid, e.g. the index is missing or is not a positive integer, no detail to change is given, or a parameter is unknown or repeated.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. A detail is invalid, i.e. the name, class or email has characters that are not allowed, or is empty or too long.
+  * 3b1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3c. The index is larger than the number of displayed contacts.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3d. The new name and class are the same as those of another contact. Names and classes are compared ignoring case and extra spaces, so changing only the capitalization of the name of the contact is allowed.
+  * 3d1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3e. User gives the email without a value, to remove the email of the contact.
+  * 3e1. CM removes the email, together with any other change in the command.
+
+    Use case resumes at step 4.
+
+
+**Use case: UC14 - Remove students from groups (by untagging)**
+
+**Guarantees**
+* The contacts are only removed from the group if all of them can be removed. If any problem is found, none of them is removed.
+* The other details, the attendance records and the grades of the contacts are kept.
+
+**MSS**
+1. User requests to <u>list or search student contacts</u> (UC08) to find the students to remove from the group.
+2. CM displays the matching contacts.
+3. User requests to remove the contacts at the given indices of the displayed list from a group, giving the name of the group.
+4. CM removes the contacts from the group and displays a success message.
+
+   Use case ends.
+
+**Extensions**
+
+* 2a. The list is empty.
+
+    Use case ends.
+
+* 3a. The command format is invalid, the group name is invalid, or an index is not a positive integer.
+  * 3a1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3b. An index is repeated, or does not match a contact in the displayed list.
+  * 3b1. CM displays an error message.
+
+    Use case resumes at step 3.
+* 3c. One or more of the contacts are not in the group.
+  * 3c1. CM displays an error message.
+
+    Use case resumes at step 3.
+
 ### Non-Functional Requirements
 
 1. Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
@@ -937,7 +1048,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 * **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
 * **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
 * **Tag**: Any label attached to a student contact used for grouping except class. Tags are compared ignoring case and extra whitespace
-* **Group**: The student contacts that have the same tag, such as the members of a team for an assignment. A group is not stored or modelled as an object of its own, so it exists only as long as at least one contact has the tag. A student can be in several groups, and a group is identified by its tag name, ignoring case
+* **Group**: The student contacts that have the same tag, such as the members of a team for an assignment. A group is not stored or modelled as an object of its own, so it exists only as long as at least one contact has the tag. A student can be in several groups, and a group is identified by its tag name, ignoring case. A student is added to groups with the `tag` command, and is removed from groups with the `untag` command
 * **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
 * **Attendance Record**: A single entry marking a student as present/absent/late on a given date
 * **Attendance History**: The collection of a student's or class' attendance records over time
@@ -1063,8 +1174,8 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `edit 1 /name Alex Tan /class B2 /email`<br>
       Expected: Alex Yeoh is now Alex Tan in class B2 and has no email, because `/email` with no value removes the email. The contact stays at the top of the list, and the groups are unchanged. The status message shows `Alex Tan in class B2 has been edited`.
 
-   1. Test case: `edit 2 /tag Group A /untag colleagues`<br>
-      Expected: Bernice Yu is now in `friends` and `Group A`. A group is added and another one is removed in the same command. The status message shows `Bernice Yu in class A1 has been edited`.
+   1. Test case: `edit 2 /name Bernice Lim`<br>
+      Expected: Bernice Yu is now Bernice Lim, still in `colleagues` and `friends`, and stays 2nd in the list. Editing a contact does not change its groups. The status message shows `Bernice Lim in class A1 has been edited`.
 
    1. Test case: `attendance 3 /date 01-01-2024 /status present`, then `grade 3 /assessment Quiz 1 /score 80`, then `edit 3 /name Charlotte Lee /class A3`, then `viewA /name Charlotte Lee /class A3` and `viewG /name Charlotte Lee /class A3`<br>
       Expected: The attendance of 01-01-2024 as present, and the grade of 80 for Quiz 1, are still shown, because editing a contact keeps its attendance records and grades.
@@ -1076,7 +1187,7 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `edit 1 /name Bernice Yu`<br>
       Expected: Nothing changes. The status message shows `Bernice Yu already exists in class A1`, because Alex Yeoh is in the same class as Bernice Yu.
 
-   1. Other incorrect edit commands to try: `edit 1` (nothing to edit), `edit x /name Alex Tan`, `edit 1 /phone 91234567`, `edit 1 /tag friends` (Alex Yeoh is already in `friends`), `edit 1 /untag family` (Alex Yeoh is not in `family`), `edit 99 /name Jo`<br>
+   1. Other incorrect edit commands to try: `edit 1` (nothing to edit), `edit x /name Alex Tan`, `edit 1 /phone 91234567`, `edit 1 /tag Group A` (groups are changed with `tag` and `untag`), `edit 99 /name Jo`<br>
       Expected: Similar to previous. Nothing changes, and an error message is shown.
 
 ### Linking contacts to a group
@@ -1103,6 +1214,31 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect tag commands to try: `tag /group Group B`, `tag /members 1`, `tag /group Group! /members 1`, `tag /group Group B /members 1,1`<br>
       Expected: Similar to previous. No contact is linked, and an error message is shown.
+
+### Removing contacts from a group
+
+1. Removing contacts from a group successfully
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command. Alex Yeoh, who is at index 1, and Bernice Yu, who is at index 2, are in `friends`. Bernice Yu is also in `colleagues`.
+
+   1. Test case: `untag /group friends /members 1,2`<br>
+      Expected: Alex Yeoh no longer shows the label `friends`. Bernice Yu no longer shows `friends` but still shows `colleagues`. Both stay at the same positions in the list. The status message shows `Contacts successfully removed from group friends: Alex Yeoh (A1), Bernice Yu (A1)`.
+
+   1. Test case: `list colleagues`, followed by `untag /group colleagues /members 1`<br>
+      Expected: Bernice Yu, the first contact in the results, no longer shows `colleagues`, and Roy Balakrishnan still does. The index refers to the contact in the displayed list.
+
+1. Removing contacts from a group unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command. Alex Yeoh, who is at index 1, is in `friends`, and David Li, who is at index 4, is not.
+
+   1. Test case: `untag /group friends /members 1,4`<br>
+      Expected: No contact is changed, not even Alex Yeoh. The status message shows `One or more contacts are not in this group: David Li (A2)`.
+
+   1. Test case: `untag /group friends /members 1,99`<br>
+      Expected: No contact is changed, not even the contact at index 1. The status message shows `Contact index not found: 99`.
+
+   1. Other incorrect untag commands to try: `untag /group friends`, `untag /members 1`, `untag /group Group! /members 1`, `untag /group friends /members 1,1`<br>
+      Expected: Similar to previous. No contact is changed, and an error message is shown.
 
 ### Importing contacts from a file
 
