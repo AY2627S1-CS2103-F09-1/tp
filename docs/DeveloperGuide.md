@@ -324,6 +324,62 @@ The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the 
   * Pros: Does not depend on the displayed list.
   * Cons: A long command for several members, and easy to mistype.
 
+### Editing a contact feature
+
+#### Implementation
+
+The `edit` command (`edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]] [/tag GROUP[,GROUP]...] [/untag GROUP[,GROUP]...]`) changes the details of the contact at the given index of the displayed list. It is implemented by `EditCommandParser`, `EditCommand` and its nested class `EditPersonDescriptor`.
+
+* `EditPersonDescriptor` stores the details to change. The name, class and email replace the current values when they are set. `EditPersonDescriptor#isEmailCleared()` means that the email is removed, and it takes priority over the email that is set. The tags to add and the tags to remove are kept in two ordered sets, so that a problem with several groups is reported in the order the user typed them. `EditPersonDescriptor#isAnyFieldEdited()` tells whether anything is to be changed.
+* `EditCommandParser#parse(String)` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or text before it, an invalid name, class or email, the groups to add, the groups to remove, a group that is in both, and finally that no detail is given. A name or class without a value is invalid, but an email without a value marks the email as removed. A group list without a value counts as missing, and it uses the message of `TagCommandParser`.
+* `ParserUtil#parseGroupNames(String)` parses a comma-separated list of group names into a set of `Tag`. It reports an empty entry or an invalid group name first, checking the entries from left to right, and a group name that appears more than once, ignoring case, only after that, naming every repeated group.
+* `EditCommand#execute(Model)` first checks that the index is in the displayed list. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` then creates a new `Person`, because `Person` is immutable. A detail that is not set is taken from the contact. The tags are first checked, and a problem lists all the groups that are the cause: every group to add must not be a tag of the contact, and every group to remove must be one. Tags are compared ignoring case, so the case of a group name does not matter. Only then is the new set of tags made, from the tags of the contact without the groups to remove and with the groups to add.
+* The new `Person` is created with the attendance records and the grade records of the contact, which is why an edit never loses them, even if the name or the class changes.
+* A contact is identified by its name and class (`Person#isSamePerson(Person)`). If the edited contact is not the same person as the contact before the edit, and `Model#hasPerson(Person)` is true for it, the command fails with the same message as `add`. Because `Person#isSamePerson(Person)` ignores case and extra spaces, changing only the capitalization of a name is allowed, and a contact is never compared with itself.
+* `Model#setPerson(Person, Person)` is called last, after every check has passed, so a failed edit changes nothing. It replaces the contact in place, so the order of the contacts does not change (see [Order of contacts](#order-of-contacts-feature)).
+* `EditCommand#execute(Model)` then calls `Model#updateFilteredPersonList(Predicate)` with `Model#PREDICATE_SHOW_ALL_PERSONS`, as `add` does. An edited name, class or group may no longer match a search that is displayed, and the user would otherwise see the contact disappear.
+
+#### Design considerations
+
+**Aspect: How the tags of a contact are changed**
+
+* **Alternative 1 (current choice):** `/tag` adds groups and `/untag` removes groups.
+  * Pros: One group can be removed without typing the others again, and a contact cannot lose all its groups by forgetting a parameter. `tag` can only add contacts to a group, so this is also how a contact is taken out of a group.
+  * Cons: Two parameters, which can conflict, so the parser must reject a group that is in both.
+* **Alternative 2:** `/tag` replaces all the tags of the contact, and `/tag` with no value removes all of them.
+  * Pros: Only one parameter, and no conflict is possible.
+  * Cons: Removing one group means typing all the other groups again, and a group that is left out is removed without a warning.
+* **Alternative 3:** One parameter with a sign for each group, such as `/tag +Group A,-Group B`.
+  * Pros: Only one parameter, and groups can be added and removed in the same list.
+  * Cons: A hyphen is allowed at the start of a group name, so `-Group B` could be a group that is added.
+
+**Aspect: What happens when a group cannot be added or removed**
+
+* **Alternative 1 (current choice):** It is an error if a group to add is already a group of the contact, or a group to remove is not.
+  * Pros: Consistent with `tag`, which rejects a contact that is already in the group, and a typo in the name of a group to remove is noticed.
+  * Cons: The same command cannot be run twice, as the second run fails.
+* **Alternative 2:** Ignore a group that is already added or not there.
+  * Pros: Simpler, and a command can safely be repeated.
+  * Cons: A typo in the name of a group to remove does nothing, and the user is told that the edit worked.
+
+**Aspect: How the contact to edit is identified**
+
+* **Alternative 1 (current choice):** By its index in the displayed list.
+  * Pros: Short to type. The parameters `/name` and `/class` are free to mean the new values, and it is consistent with `tag`, `grade` and `attendance`.
+  * Cons: The result depends on what is displayed, so the wrong contact is edited if the list is not what the user expects.
+* **Alternative 2:** By name and class, as in `delete /name NAME /class CLASS`.
+  * Pros: Does not depend on the displayed list.
+  * Cons: The new name and class need other parameters, such as `/newname`, which makes the command long and easy to mix up.
+
+**Aspect: How the email of a contact is removed**
+
+* **Alternative 1 (current choice):** `/email` with no value removes the email.
+  * Pros: The email is optional, so removing it needs no extra parameter.
+  * Cons: Differs from `add`, where `/email` with no value is an error, and a user who forgets the value removes the email instead of getting an error.
+* **Alternative 2:** `/email` with no value is an error, and another parameter, such as `/noemail`, removes the email.
+  * Pros: An email cannot be removed by accident.
+  * Cons: One more parameter to learn and to keep consistent.
+
 ### Importing contacts from a file feature
 
 #### Implementation
