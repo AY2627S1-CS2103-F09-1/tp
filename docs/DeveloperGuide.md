@@ -1306,32 +1306,6 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `help` again while the help window is open<br>
       Expected: The existing help window is brought to the front. No second help window opens.
 
-### Recalling earlier commands
-
-1. Recalling commands with the arrow keys
-
-   1. Prerequisites: The app has just been launched, so no commands have been entered.
-
-   1. Test case: `list`, then `list a`, then press `↑` three times, and then press `↓` twice<br>
-      Expected: After the first `↑`, the command box shows `list a`, with the caret at the end of the text. The second `↑` shows `list`, and the third one stays on `list`, as it is the oldest command. After the two `↓` presses, the command box shows `list a`, and then it is empty.
-
-   1. Test case: Type `abc` without pressing Enter, press `↑`, and then press `↓`<br>
-      Expected: After `↑`, the command box shows `list a`. After `↓`, it shows `abc` again.
-
-1. Recalling a command that failed
-
-   1. Prerequisites: Relaunch the app, so that no commands have been entered.
-
-   1. Test case: `list`, then `delete`, and then press `↑`<br>
-      Expected: `delete` fails, and its text stays in the command box. After `↑`, the command box shows `list`, the command that was entered before it, and not `delete` again.
-
-1. Recalling a command that was entered several times in a row
-
-   1. Prerequisites: Relaunch the app, so that no commands have been entered.
-
-   1. Test case: `list a` twice in a row, then `list b`, then press `↑` three times, and then press `↓` once<br>
-      Expected: The three presses of `↑` show `list b`, `list a` and `list a`, which is the oldest command. After `↓`, the command box shows `list b`. The repeated `list a` is remembered once, so `↓` does not stop on a second `list a`.
-
 ### Exiting the application
 
 1. Exiting the application
