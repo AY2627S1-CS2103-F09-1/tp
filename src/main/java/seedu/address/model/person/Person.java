@@ -120,6 +120,17 @@ public class Person {
     }
 
     /**
+     * Returns a copy of this person that does not have {@code tag}. Tags are compared ignoring case.
+     * If this person does not have {@code tag}, the copy has the same tags as this person.
+     */
+    public Person withoutTag(Tag tag) {
+        requireNonNull(tag);
+        Set<Tag> updatedTags = new HashSet<>(tags);
+        updatedTags.remove(tag);
+        return new Person(name, className, getEmail(), updatedTags, attendanceRecords, gradeRecords);
+    }
+
+    /**
      * Returns an immutable view of the attendance records.
      */
     public List<Attendance> getAttendanceRecords() {

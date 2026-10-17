@@ -63,6 +63,70 @@ public class PersonTest {
     }
 
     @Test
+    public void withoutTag_nullTag_throwsNullPointerException() {
+        Person person = new PersonBuilder().build();
+        assertThrows(NullPointerException.class, () -> person.withoutTag(null));
+    }
+
+    @Test
+    public void withoutTag_tagPresent_removesOnlyThatTag() {
+        Person person = new PersonBuilder().withTags("Group A", "Group B").build();
+
+        Person untagged = person.withoutTag(new Tag("Group B"));
+
+        assertEquals(new PersonBuilder(person).withTags("Group A").build(), untagged);
+    }
+
+    @Test
+    public void withoutTag_tagPresentWithDifferentCasingAndSpacing_removesTag() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person untagged = person.withoutTag(new Tag("  gROUP   a "));
+
+        assertTrue(untagged.getTags().isEmpty());
+    }
+
+    @Test
+    public void withoutTag_tagAbsent_keepsTheSameTags() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        Person untagged = person.withoutTag(new Tag("Group B"));
+
+        assertEquals(person.getTags(), untagged.getTags());
+    }
+
+    @Test
+    public void withoutTag_tagPresent_doesNotModifyOriginalPerson() {
+        Person person = new PersonBuilder().withTags("Group A").build();
+
+        person.withoutTag(new Tag("Group A"));
+
+        assertEquals(Set.of(new Tag("Group A")), person.getTags());
+    }
+
+    @Test
+    public void withoutTag_personWithoutEmail_returnsPersonWithoutEmail() {
+        Person person = new PersonBuilder().withoutEmail().withTags("Group A").build();
+
+        Person untagged = person.withoutTag(new Tag("Group A"));
+
+        assertEquals(new PersonBuilder(person).withTags().build(), untagged);
+        assertTrue(untagged.getEmail().isEmpty());
+    }
+
+    @Test
+    public void withoutTag_personWithRecords_keepsAttendanceAndGradeRecords() {
+        Attendance attendance = new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT);
+        Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
+        Person person = new PersonBuilder().withTags("Group A").build().withAttendance(attendance).withGrade(grade);
+
+        Person untagged = person.withoutTag(new Tag("Group A"));
+
+        assertEquals(List.of(attendance), untagged.getAttendanceRecords());
+        assertEquals(List.of(grade), untagged.getGradeRecords());
+    }
+
+    @Test
     public void withTag_nullTag_throwsNullPointerException() {
         Person person = new PersonBuilder().build();
         assertThrows(NullPointerException.class, () -> person.withTag(null));
