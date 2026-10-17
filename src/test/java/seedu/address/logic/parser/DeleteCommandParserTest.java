@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.DeleteCommandParser.MESSAGE_UNKNOWN_PARAMETER;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
 import org.junit.jupiter.api.Test;
@@ -42,6 +43,17 @@ public class DeleteCommandParserTest {
         assertParseFailure(parser, "0", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "-1", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "1 abc", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_outOfRangeIndex_throwsParseException() {
+        assertParseFailure(parser, Long.toString(Integer.MAX_VALUE + 1L), MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "9".repeat(1000), MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
 
     @Test
