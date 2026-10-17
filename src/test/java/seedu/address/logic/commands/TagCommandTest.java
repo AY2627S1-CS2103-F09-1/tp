@@ -53,6 +53,20 @@ public class TagCommandTest {
     }
 
     @Test
+    public void execute_modelDoesNotStoreChangedContact_throwsAssertionError() {
+        Model modelThatKeepsContacts = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
+            @Override
+            public void setPerson(Person target, Person editedPerson) {
+                // Intentionally does nothing, to simulate a model that fails to store the contact
+            }
+        };
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
+
+        // Gradle runs the tests with assertions enabled
+        assertThrows(AssertionError.class, () -> tagCommand.execute(modelThatKeepsContacts));
+    }
+
+    @Test
     public void execute_singleIndex_success() {
         Person contact = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
