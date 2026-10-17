@@ -2,7 +2,9 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_DUPLICATE_GROUP;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_DUPLICATE_MEMBER_INDEX;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_EMPTY_GROUP;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_EMPTY_MEMBER;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_GROUP_NAME;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
@@ -340,6 +342,72 @@ public class ParserUtilTest {
         // every repeated index is reported once, in the order it is first repeated
         assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_MEMBER_INDEX, "2, 1"), () ->
                 ParserUtil.parseMemberIndices("1,2,2,1,1"));
+    }
+
+    @Test
+    public void parseGroupNames_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseGroupNames(null));
+    }
+
+    @Test
+    public void parseGroupNames_validValues_returnsGroupsInOrderGiven() throws Exception {
+        assertEquals(List.of(new Tag("Group A")), List.copyOf(ParserUtil.parseGroupNames("Group A")));
+        assertEquals(List.of(new Tag("Team 2"), new Tag("Group A"), new Tag("x-y_1")),
+                List.copyOf(ParserUtil.parseGroupNames("Team 2,Group A,x-y_1")));
+    }
+
+    @Test
+    public void parseGroupNames_whitespaceAroundEntries_isIgnored() throws Exception {
+        Set<Tag> groups = ParserUtil.parseGroupNames(WHITESPACE + "Group   A " + WHITESPACE + ", Team 2 ");
+
+        assertEquals(List.of(new Tag("Group A"), new Tag("Team 2")), List.copyOf(groups));
+        assertEquals("Group A", groups.iterator().next().tagName);
+    }
+
+    @Test
+    public void parseGroupNames_emptyEntry_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames(""));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames(WHITESPACE));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames("a,,b"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames("a,b,"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames(",a"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames("a, ,b"));
+    }
+
+    @Test
+    public void parseGroupNames_invalidEntry_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () -> ParserUtil.parseGroupNames("Group!"));
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupNames("a,Group!,b"));
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupNames("a".repeat(Tag.MAX_LENGTH + 1)));
+    }
+
+    @Test
+    public void parseGroupNames_multipleProblems_reportsFirstEntryProblem() {
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupNames("a,Group!,,b"));
+        assertThrows(ParseException.class, MESSAGE_EMPTY_GROUP, () -> ParserUtil.parseGroupNames("a,,Group!"));
+    }
+
+    @Test
+    public void parseGroupNames_repeatedGroup_throwsParseExceptionNamingGroup() {
+        assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_GROUP, "Group A"), () ->
+                ParserUtil.parseGroupNames("Group A,x,Group  A"));
+
+        // ignoring case, naming the group as it is repeated
+        assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_GROUP, "group a"), () ->
+                ParserUtil.parseGroupNames("Group A,group a"));
+
+        // every repeated group is named once, in the order it is first repeated
+        assertThrows(ParseException.class, String.format(MESSAGE_DUPLICATE_GROUP, "b, a"), () ->
+                ParserUtil.parseGroupNames("a,b,b,a,a"));
+    }
+
+    @Test
+    public void parseGroupNames_invalidEntryAndRepeatedGroup_reportsInvalidEntryFirst() {
+        assertThrows(ParseException.class, MESSAGE_INVALID_GROUP_NAME, () ->
+                ParserUtil.parseGroupNames("a,a,Group!"));
     }
 
     @Test

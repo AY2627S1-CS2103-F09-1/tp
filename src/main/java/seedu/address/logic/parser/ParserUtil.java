@@ -32,8 +32,11 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_MEMBER_INDEX =
             "Contact index must be a positive integer: %1$s";
     public static final String MESSAGE_DUPLICATE_MEMBER_INDEX = "Duplicate contact index: %1$s";
+    public static final String MESSAGE_EMPTY_GROUP = "Group names cannot contain empty entries";
+    public static final String MESSAGE_DUPLICATE_GROUP = "Duplicate group name: %1$s";
 
     private static final String MEMBER_SEPARATOR = ",";
+    private static final String GROUP_SEPARATOR = ",";
 
     /** Passed to {@code String#split} so that empty entries at the end, such as in "1,3,", are kept. */
     private static final int KEEP_TRAILING_EMPTY_ENTRIES = -1;
@@ -153,6 +156,52 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_GROUP_NAME);
         }
         return new Tag(groupName);
+    }
+
+    /**
+     * Parses a comma-separated {@code String groups} into a set of {@code Tag} that represent the groups,
+     * in the order given. Whitespaces around each group name will be trimmed.
+     * Problems are reported in this order: an empty entry or an invalid group name, checked entry by entry,
+     * and then a group name that is given more than once, ignoring case.
+     *
+     * @throws ParseException if {@code groups} has an invalid entry or a group name more than once.
+     */
+    public static Set<Tag> parseGroupNames(String groups) throws ParseException {
+        requireNonNull(groups);
+        Set<Tag> parsedGroups = new LinkedHashSet<>();
+        Set<Tag> repeatedGroups = new LinkedHashSet<>();
+        for (String group : groups.split(GROUP_SEPARATOR, KEEP_TRAILING_EMPTY_ENTRIES)) {
+            Tag parsedGroup = parseGroupEntry(group.trim());
+            if (!parsedGroups.add(parsedGroup)) {
+                repeatedGroups.add(parsedGroup);
+            }
+        }
+        requireNoRepeatedGroups(repeatedGroups);
+        return parsedGroups;
+    }
+
+    /**
+     * Parses a single, already trimmed {@code String group} into a {@code Tag}.
+     *
+     * @throws ParseException if {@code group} is empty or is not a valid group name.
+     */
+    private static Tag parseGroupEntry(String group) throws ParseException {
+        if (group.isEmpty()) {
+            throw new ParseException(MESSAGE_EMPTY_GROUP);
+        }
+        return parseGroupName(group);
+    }
+
+    /**
+     * Throws a {@code ParseException} naming every group in {@code repeatedGroups}, if there are any.
+     */
+    private static void requireNoRepeatedGroups(Set<Tag> repeatedGroups) throws ParseException {
+        if (!repeatedGroups.isEmpty()) {
+            String names = repeatedGroups.stream()
+                    .map(group -> group.tagName)
+                    .collect(Collectors.joining(", "));
+            throw new ParseException(String.format(MESSAGE_DUPLICATE_GROUP, names));
+        }
     }
 
     /**

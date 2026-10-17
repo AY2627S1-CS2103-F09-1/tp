@@ -1,10 +1,12 @@
 package seedu.address.testutil;
 
+import java.util.LinkedHashSet;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
+import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
@@ -26,13 +28,15 @@ public class EditPersonDescriptorBuilder {
     }
 
     /**
-     * Returns an {@code EditPersonDescriptor} with fields containing {@code person}'s details
+     * Returns an {@code EditPersonDescriptor} with fields containing {@code person}'s details.
+     * The tags of {@code person} are the tags to add.
      */
     public EditPersonDescriptorBuilder(Person person) {
         descriptor = new EditPersonDescriptor();
         descriptor.setName(person.getName());
+        descriptor.setClassName(person.getClassName());
         person.getEmail().ifPresent(descriptor::setEmail);
-        descriptor.setTags(person.getTags());
+        descriptor.setTagsToAdd(person.getTags());
     }
 
     /**
@@ -40,6 +44,14 @@ public class EditPersonDescriptorBuilder {
      */
     public EditPersonDescriptorBuilder withName(String name) {
         descriptor.setName(new Name(name));
+        return this;
+    }
+
+    /**
+     * Sets the {@code ClassName} of the {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withClassName(String className) {
+        descriptor.setClassName(new ClassName(className));
         return this;
     }
 
@@ -52,13 +64,33 @@ public class EditPersonDescriptorBuilder {
     }
 
     /**
-     * Parses the {@code tags} into a {@code Set<Tag>} and sets it to the {@code EditPersonDescriptor}
-     * that we are building.
+     * Marks the email of the {@code EditPersonDescriptor} that we are building as removed.
      */
-    public EditPersonDescriptorBuilder withTags(String... tags) {
-        Set<Tag> tagSet = Stream.of(tags).map(Tag::new).collect(Collectors.toSet());
-        descriptor.setTags(tagSet);
+    public EditPersonDescriptorBuilder withoutEmail() {
+        descriptor.setEmailCleared(true);
         return this;
+    }
+
+    /**
+     * Parses the {@code tags} into a {@code Set<Tag>} and sets it as the tags to add of the
+     * {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withTagsToAdd(String... tags) {
+        descriptor.setTagsToAdd(toTagSet(tags));
+        return this;
+    }
+
+    /**
+     * Parses the {@code tags} into a {@code Set<Tag>} and sets it as the tags to remove of the
+     * {@code EditPersonDescriptor} that we are building.
+     */
+    public EditPersonDescriptorBuilder withTagsToRemove(String... tags) {
+        descriptor.setTagsToRemove(toTagSet(tags));
+        return this;
+    }
+
+    private static Set<Tag> toTagSet(String... tags) {
+        return Stream.of(tags).map(Tag::new).collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     public EditPersonDescriptor build() {
