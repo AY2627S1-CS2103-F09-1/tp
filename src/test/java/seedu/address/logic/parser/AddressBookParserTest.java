@@ -28,6 +28,7 @@ import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
+import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Attendance;
@@ -109,6 +110,14 @@ public class AddressBookParserTest {
         TagCommand command = (TagCommand) parser.parseCommand(
                 TagCommand.COMMAND_WORD + " /group Group A /members 1, 2");
         assertEquals(new TagCommand(new Tag("Group A"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)),
+                command);
+    }
+
+    @Test
+    public void parseCommand_untag() throws Exception {
+        UntagCommand command = (UntagCommand) parser.parseCommand(
+                UntagCommand.COMMAND_WORD + " /group Group A /members 1, 2");
+        assertEquals(new UntagCommand(new Tag("Group A"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)),
                 command);
     }
 

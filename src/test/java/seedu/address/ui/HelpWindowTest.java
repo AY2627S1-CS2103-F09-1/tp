@@ -11,12 +11,14 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
+import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
 
 public class HelpWindowTest {
@@ -26,8 +28,10 @@ public class HelpWindowTest {
             AttendanceCommand.COMMAND_WORD,
             ClearCommand.COMMAND_WORD,
             DeleteCommand.COMMAND_WORD,
+            EditCommand.COMMAND_WORD,
             GradeCommand.COMMAND_WORD,
             TagCommand.COMMAND_WORD,
+            UntagCommand.COMMAND_WORD,
             ListCommand.COMMAND_WORD,
             ImportCommand.COMMAND_WORD,
             ViewAttendanceCommand.COMMAND_WORD,
@@ -48,6 +52,20 @@ public class HelpWindowTest {
         assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(line -> line.equals("delete INDEX")));
         assertTrue(HelpWindow.HELP_MESSAGE.lines()
                 .anyMatch(line -> line.equals("delete /name NAME /class CLASS")));
+    }
+
+    @Test
+    public void helpMessage_tagAndUntagCommands_haveSummaryLines() {
+        assertTrue(HelpWindow.HELP_MESSAGE.lines()
+                .anyMatch(line -> line.equals("tag /group GROUP_NAME /members INDEX[,INDEX]...")));
+        assertTrue(HelpWindow.HELP_MESSAGE.lines()
+                .anyMatch(line -> line.equals("untag /group GROUP_NAME /members INDEX[,INDEX]...")));
+    }
+
+    @Test
+    public void helpMessage_editCommand_hasSummaryLine() {
+        assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(
+                line -> line.equals("edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]")));
     }
 
     @Test
