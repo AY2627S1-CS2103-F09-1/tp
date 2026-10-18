@@ -74,18 +74,31 @@ The **API** of this component is specified in [`Ui.java`](https://github.com/AY2
 
 <puml src="diagrams/UiClassDiagram.puml" alt="Structure of the UI Component"/>
 
-The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. All of these, including `MainWindow`, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
+The UI consists of a `MainWindow` and its parts, such as `CommandBox`, `ResultDisplay`, `PersonListPanel`, and `StatusBarFooter`. `MainWindow` also creates a `HelpWindow` when it starts, which is only shown when the user asks for help. All of these, including `MainWindow`, `HelpWindow` and the `PersonCard` objects that `PersonListPanel` creates, inherit from the abstract `UiPart` class, which captures common behavior among classes that represent visible GUI parts.
 
-The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
+The `UI` component uses the JavaFX UI framework. The layouts of these UI parts are defined in matching `.fxml` files in `src/main/resources/view`, and their styling is defined in `DarkTheme.css` and `Extensions.css` in the same folder. For example, [`MainWindow.fxml`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/resources/view/MainWindow.fxml) specifies the layout of [`MainWindow`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/ui/MainWindow.java).
 
 The `UI` component,
 
-* executes user commands using the `Logic` component.
-* listens for changes to `Model` data so that the UI can be updated with the modified data.
-* keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
+* executes user commands using the `Logic` component. `UiManager` and `MainWindow` keep a reference to `Logic` for this.
+* shows the contacts by binding `PersonListPanel` to the `ObservableList<Person>` returned by `Logic#getFilteredPersonList()`. JavaFX redraws the list whenever that list changes, so the UI does not have to be told to refresh after a command.
 * depends on some classes in the `Model` component because it displays `Person` objects from the model.
 
-Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
+**How the UI handles a command**
+
+1. `MainWindow` passes its `executeCommand` method to `CommandBox` as a `CommandBox.CommandExecutor`. When the user presses Enter on a non-empty command, `CommandBox` calls it.
+2. `MainWindow#executeCommand(String)` calls `Logic#execute(String)` and shows the feedback of the returned `CommandResult` in `ResultDisplay`. `CommandBox` then clears its text.
+3. If `Logic` throws a `ParseException` or a `CommandException`, `MainWindow` shows the message of the exception in `ResultDisplay`, and `CommandBox` keeps the text and takes the `error` style class until the user changes the text.
+4. If the `CommandResult` asks for help, `MainWindow#handleHelp()` opens the `HelpWindow`, or focuses it if it is already open. If it asks to exit, `MainWindow#handleExit()` saves the size and position of the window with `Logic#setGuiSettings(GuiSettings)` and hides the window.
+
+**What the parts show**
+
+* `ResultDisplay` shows the feedback or the error message of the last command.
+* `StatusBarFooter` shows the location of the data file.
+* `HelpWindow` shows how to find the User Guide.
+* `UiManager` shows an error dialog and then exits the app if the window fails to start.
+* Each `PersonCard` shows the displayed index, the name, the class and the tags of a contact. The email is only shown if the contact has one, and the space for it is removed otherwise. The tags are in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
+* A `PersonCard` also shows at most 3 recent attendance records, newest date first, and at most 3 recent grades, last recorded first. If there are more, it adds a line such as `+2 older record(s)` or `+2 older grade(s)`. If there are none, it shows `Recent attendance: none` or `Recent grades: none` (see `PersonCard#formatRecentAttendance(Person)` and `PersonCard#formatRecentGrades(Person)`).
 
 ### Logic component
 
