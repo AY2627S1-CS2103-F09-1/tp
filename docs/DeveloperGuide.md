@@ -190,11 +190,27 @@ The `Model` component,
 
 The `Storage` component,
 * can save both address book data and user preference data in JSON format, and read them back into corresponding objects.
-* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file).
+* is used through the `Storage` interface, which has a read method, a save method and a file path method for each of the two data files: `readAddressBook()`, `saveAddressBook(ReadOnlyAddressBook)` and `getAddressBookFilePath()`, and `readUserPrefs()`, `saveUserPrefs(ReadOnlyUserPrefs)` and `getUserPrefsFilePath()`.
+* is implemented by `StorageManager`, which delegates the actual JSON file access to `JsonAddressBookStorage` and `JsonUserPrefsStorage` (one class per data file). `MainApp` creates them with the files `data/classmates.json` for the address book and `preferences.json` for the user preferences. The preferences file holds the `UserPrefs`, which is currently the size and position of the window.
+* converts the data with the Jackson library, using `JsonUtil` and `FileUtil` from `Commons`. `JsonSerializableAddressBook` holds a list of `JsonAdaptedPerson`, and each `JsonAdaptedPerson` holds the name, the class name, the email, and lists of `JsonAdaptedTag`, `JsonAdaptedAttendance` and `JsonAdaptedGrade`. Each adapter has a `toModelType()` method that rebuilds the model object, and throws an `IllegalValueException` if a value breaks the rules of the model.
 * saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
 * saves each contact's attendance records in the address book JSON file and restores them when the file is loaded (see `JsonAdaptedPerson` and `JsonAdaptedAttendance`).
+* saves each contact's grade records, with the assessment name and the score of each, and restores them when the file is loaded (see `JsonAdaptedPerson` and `JsonAdaptedGrade`).
 * saves the contacts in the order they are displayed, and keeps that order when it reads them back (see `JsonSerializableAddressBook#toModelType()`).
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
+
+**What is checked when the address book is loaded**
+
+* The name, the class name, the email, every tag, every attendance record and every grade record are checked against the rules of `Name`, `ClassName`, `Email`, `Tag`, `Attendance` and `Grade`.
+* A contact must have a name and a class name. The email, and the lists of tags, attendance records and grade records, are optional. A missing email means that the contact has no email, and a missing list is read as an empty list, so a data file that was saved before attendance or grades existed can still be loaded. Properties in the file that the app does not know are ignored.
+* A value that breaks a rule, a missing name or class name, or two contacts with the same name and class makes the whole file invalid. No contact from an invalid file is loaded.
+
+**What happens when the files cannot be loaded or saved**
+
+* `readAddressBook()` returns an empty `Optional` if the data file does not exist, and throws a `DataLoadingException` if the file cannot be read as JSON or is invalid as described above. `readUserPrefs()` behaves the same way for the preferences file.
+* At start-up, `MainApp` uses the sample address book if the data file does not exist, and starts with an empty address book, with a warning in the log, if the data file cannot be loaded. If the preferences file does not exist or cannot be loaded, it uses the default preferences. It then saves the preferences at every start-up, which creates a missing preferences file and replaces an unreadable one.
+* The data file is not changed when it cannot be loaded. However, the next command that succeeds saves the address book, so the unreadable file is then replaced by the new data.
+* `saveAddressBook(ReadOnlyAddressBook)` writes the whole address book each time. It creates the data file and the folders above it if they are missing. An `IOException` is passed on to `LogicManager`, which reports it to the user as a `CommandException` (see [Logic component](#logic-component)).
 
 ### Common classes
 
