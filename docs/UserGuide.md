@@ -266,7 +266,7 @@ The group name is empty, too long or has characters that are not allowed | `Inva
 An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
 An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
 The same index is given more than once | `Duplicate contact index: INDEX`
-An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`, naming at most the first 10 such indices, followed by `and N more` if there are more
 One or more of the contacts are already in the group | `One or more contacts are already in this group: NAME (CLASS)`
 
 If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
@@ -306,7 +306,7 @@ The group name is empty, too long or has characters that are not allowed | `Inva
 An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
 An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
 The same index is given more than once | `Duplicate contact index: INDEX`
-An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`, naming at most the first 10 such indices, followed by `and N more` if there are more
 One or more of the contacts are not in the group | `One or more contacts are not in this group: NAME (CLASS)`
 
 If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>

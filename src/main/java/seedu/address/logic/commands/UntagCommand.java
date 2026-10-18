@@ -30,7 +30,8 @@ public class UntagCommand extends GroupMembershipCommand {
 
     /**
      * Creates an {@code UntagCommand} to remove the contacts at {@code memberIndices} from {@code group}.
-     * The indices must not contain duplicates, as a contact can only be changed once by a command.
+     *
+     * @throws IllegalArgumentException if {@code memberIndices} is empty or contains duplicates.
      */
     public UntagCommand(Tag group, List<Index> memberIndices) {
         super(group, memberIndices);

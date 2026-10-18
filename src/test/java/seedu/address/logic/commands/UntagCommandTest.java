@@ -15,6 +15,8 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -46,10 +48,15 @@ public class UntagCommandTest {
     }
 
     @Test
-    public void constructor_duplicateIndices_throwsAssertionError() {
+    public void constructor_duplicateIndices_throwsIllegalArgumentException() {
         List<Index> indicesWithDuplicate =
                 List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON, INDEX_FIRST_PERSON);
-        assertThrows(AssertionError.class, () -> new UntagCommand(FRIENDS, indicesWithDuplicate));
+        assertThrows(IllegalArgumentException.class, () -> new UntagCommand(FRIENDS, indicesWithDuplicate));
+    }
+
+    @Test
+    public void constructor_noIndices_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new UntagCommand(FRIENDS, List.of()));
     }
 
     @Test
@@ -197,6 +204,21 @@ public class UntagCommandTest {
 
         assertCommandFailure(untagCommand, model,
                 String.format(UntagCommand.MESSAGE_INDEX_NOT_FOUND, (size + 2) + ", " + (size + 1)));
+    }
+
+    @Test
+    public void execute_veryManyIndicesNotInList_messageStaysShort() {
+        int size = model.getFilteredPersonList().size();
+        int missingCount = 100_000;
+        List<Index> missingIndices = IntStream.rangeClosed(size + 1, size + missingCount)
+                .mapToObj(Index::fromOneBased).toList();
+        String firstIndices = IntStream.rangeClosed(size + 1, size + GroupMembershipCommand.MAX_INDICES_SHOWN)
+                .mapToObj(String::valueOf).collect(Collectors.joining(", "));
+
+        assertCommandFailure(new UntagCommand(FRIENDS, missingIndices), model,
+                String.format(UntagCommand.MESSAGE_INDEX_NOT_FOUND, firstIndices
+                        + String.format(UntagCommand.MESSAGE_MORE_INDICES,
+                        missingCount - GroupMembershipCommand.MAX_INDICES_SHOWN)));
     }
 
     @Test
