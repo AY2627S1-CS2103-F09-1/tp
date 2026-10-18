@@ -20,12 +20,14 @@ public class HelpWindow extends UiPart<Stage> {
             Command summary
 
             add /name NAME /class CLASS [/email EMAIL]
+            edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]
             attendance INDEX /date DATE /status STATUS
             clear
             delete INDEX
             delete /name NAME /class CLASS
             grade INDEX /assessment ASSESSMENT_NAME /score SCORE
             tag /group GROUP_NAME /members INDEX[,INDEX]...
+            untag /group GROUP_NAME /members INDEX[,INDEX]...
             list [KEYWORD]
             import PATH
             viewA /name NAME /class CLASS
