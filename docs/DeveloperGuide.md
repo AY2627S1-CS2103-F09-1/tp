@@ -45,9 +45,11 @@ The bulk of the app's work is done by the following four components:
 * [**`UI`**](#ui-component): The UI of the App.
 * [**`Logic`**](#logic-component): The command executor.
 * [**`Model`**](#model-component): Holds the data of the App in memory.
-* [**`Storage`**](#storage-component): Reads data from, and writes data to, the hard disk.
+* [**`Storage`**](#storage-component): Reads and writes the app's saved data (the address book and the user preferences) on the hard disk.
 
 [**`Commons`**](#common-classes) represents a collection of classes used by multiple other components.
+
+**Note:** The `import` command reads the CSV file that the user names directly in `Logic`, using `FileUtil` and `CsvParser` from `Commons`, and does not go through `Storage`. The file is input to a command and not saved data of the app, so `Storage` is only used afterwards to save the updated address book (see [Importing contacts from a file](#importing-contacts-from-a-file-feature)).
 
 **How the architecture components interact with each other**
 
