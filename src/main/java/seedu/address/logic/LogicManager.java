@@ -12,7 +12,9 @@ import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Person;
 import seedu.address.storage.Storage;
 
@@ -20,10 +22,14 @@ import seedu.address.storage.Storage;
  * The main LogicManager of the app.
  */
 public class LogicManager implements Logic {
-    public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
+    public static final String MESSAGE_CHANGE_UNDONE = "\nThe change was undone.";
+
+    public static final String FILE_OPS_ERROR_FORMAT =
+            "Could not save data due to the following error: %s" + MESSAGE_CHANGE_UNDONE;
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
-            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+            "Could not save data to file %s due to insufficient permissions to write to the file or the folder."
+                    + MESSAGE_CHANGE_UNDONE;
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -44,19 +50,40 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
-        CommandResult commandResult;
         Command command = addressBookParser.parseCommand(commandText);
-        commandResult = command.execute(model);
+        ReadOnlyAddressBook addressBookBeforeCommand = new AddressBook(model.getAddressBook());
+        CommandResult commandResult = command.execute(model);
 
+        saveAddressBookOrUndo(addressBookBeforeCommand);
+
+        return commandResult;
+    }
+
+    /**
+     * Saves the address book of the model. If it cannot be saved, the data of the model is set back to
+     * {@code addressBookBeforeCommand}, so that the data in memory is never different from the data in the file
+     * because of a command that appeared to fail.
+     *
+     * @throws CommandException if the address book cannot be saved.
+     */
+    private void saveAddressBookOrUndo(ReadOnlyAddressBook addressBookBeforeCommand) throws CommandException {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (AccessDeniedException e) {
+            undoCommand(addressBookBeforeCommand);
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
         } catch (IOException ioe) {
+            undoCommand(addressBookBeforeCommand);
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
+    }
 
-        return commandResult;
+    /**
+     * Sets the data of the model back to {@code addressBookBeforeCommand}.
+     */
+    private void undoCommand(ReadOnlyAddressBook addressBookBeforeCommand) {
+        logger.warning("The address book could not be saved, so the change of the command is undone");
+        model.setAddressBook(addressBookBeforeCommand);
     }
 
     @Override

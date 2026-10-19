@@ -557,6 +557,12 @@ The code defends itself against bad input and against its own mistakes in four w
 * `EditCommand#execute(Model)` asserts, after `Model#setPerson(Person, Person)`, that the edited contact is in the address book. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` asserts that the edited contact has the same tags, attendance records and grade records as the contact before the edit, which is the guarantee described in [Editing a contact](#editing-a-contact-feature). It also rejects `null` arguments with `requireNonNull`, which replaces an assertion that only ran when assertions were enabled.
 * The command logs a successful edit, with the name and class before and after, an index that is outside the displayed list, and an edit that would duplicate another contact.
 
+#### Saving and loading data
+
+* `LogicManager#execute(String)` copies the address book before it executes a command. If the address book cannot be saved afterwards, `LogicManager` sets the data of the `Model` back to that copy and throws a `CommandException` that says that the change was undone (`LogicManager#MESSAGE_CHANGE_UNDONE`). Without this, the user would be told that the command failed while the contact was changed on the screen, and the next command that saves would store the change anyway. Only the data is restored. The filter of the displayed list is kept as the command left it.
+* `FileUtil#writeToFile(Path, String)` writes the content to a temporary file in the same folder and then moves it over the target file, atomically if the file system supports it. Before this, the target file was emptied before it was written, so a failure in the middle of a save, such as a full disk or a crash, left the data file empty or half written. If the write fails, the old file is kept and the temporary file is deleted. A temporary file is only left behind if the app is killed during a save.
+* `Person` does not accept two attendance records with the same date, or two grade records for the same assessment (compared ignoring case). `Person#withAttendance(Attendance)` and `Person#withGrade(Grade)` already refused a second record, but the constructors did not, so a data file that was edited by hand, or damaged, could create a contact that the commands cannot produce. The constructors now throw an `IllegalArgumentException`, and `JsonAdaptedPerson#toModelType()` reports the same problem as an `IllegalValueException`, which makes the data file invalid like any other broken rule.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation

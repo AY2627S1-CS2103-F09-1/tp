@@ -199,6 +199,29 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_duplicateAttendanceDates_throwsIllegalValueException() {
+        JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL,
+                VALID_TAGS,
+                List.of(new JsonAdaptedAttendance("2026-09-16", "present"),
+                        new JsonAdaptedAttendance("2026-09-16", "absent")),
+                List.of());
+
+        assertThrows(IllegalValueException.class, Person.MESSAGE_DUPLICATE_ATTENDANCE_DATE,
+                adaptedPerson::toModelType);
+    }
+
+    @Test
+    public void toModelType_duplicateAssessments_throwsIllegalValueException() {
+        JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL,
+                VALID_TAGS, List.of(),
+                List.of(new JsonAdaptedGrade("Quiz 1", BigDecimal.valueOf(80)),
+                        new JsonAdaptedGrade("quiz 1", BigDecimal.valueOf(20))));
+
+        assertThrows(IllegalValueException.class, Person.MESSAGE_DUPLICATE_ASSESSMENT,
+                adaptedPerson::toModelType);
+    }
+
+    @Test
     public void toModelType_invalidAttendanceRecord_throwsIllegalValueException() {
         JsonAdaptedAttendance invalidRecord =
             new JsonAdaptedAttendance("31-02-2026", "present");
