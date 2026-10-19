@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
@@ -9,7 +10,9 @@ import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.CollectionUtil;
 import seedu.address.commons.util.ToStringBuilder;
@@ -44,6 +47,8 @@ public class EditCommand extends Command {
     public static final String MESSAGE_NOT_EDITED = "At least one detail to edit must be provided";
     public static final String MESSAGE_DUPLICATE_PERSON = AddCommand.MESSAGE_DUPLICATE_PERSON;
 
+    private static final Logger logger = LogsCenter.getLogger(EditCommand.class);
+
     private final Index index;
     private final EditPersonDescriptor editPersonDescriptor;
 
@@ -52,10 +57,12 @@ public class EditCommand extends Command {
      *
      * @param index of the contact in the filtered person list to edit
      * @param editPersonDescriptor details to edit the contact with
+     * @throws IllegalArgumentException if {@code editPersonDescriptor} has no detail to edit
      */
     public EditCommand(Index index, EditPersonDescriptor editPersonDescriptor) {
         requireNonNull(index);
         requireNonNull(editPersonDescriptor);
+        checkArgument(editPersonDescriptor.isAnyFieldEdited(), MESSAGE_NOT_EDITED);
 
         this.index = index;
         this.editPersonDescriptor = new EditPersonDescriptor(editPersonDescriptor);
@@ -67,6 +74,8 @@ public class EditCommand extends Command {
         List<Person> lastShownList = model.getFilteredPersonList();
 
         if (index.getZeroBased() >= lastShownList.size()) {
+            logger.info("Rejected an index outside the displayed list: " + index.getOneBased()
+                    + " (list size: " + lastShownList.size() + ")");
             throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
         }
 
@@ -74,12 +83,19 @@ public class EditCommand extends Command {
         Person editedPerson = createEditedPerson(personToEdit, editPersonDescriptor);
 
         if (!personToEdit.isSamePerson(editedPerson) && model.hasPerson(editedPerson)) {
+            logger.info("Rejected an edit that would duplicate a contact: " + editedPerson.getName()
+                    + " in " + editedPerson.getClassName());
             throw new CommandException(String.format(MESSAGE_DUPLICATE_PERSON,
                     editedPerson.getName(), editedPerson.getClassName()));
         }
 
         model.setPerson(personToEdit, editedPerson);
+        assert model.getAddressBook().getPersonList().contains(editedPerson)
+                : "The edited contact must be in the address book";
         model.updateFilteredPersonList(PREDICATE_SHOW_ALL_PERSONS);
+
+        logger.info("Edited contact: " + personToEdit.getName() + " in " + personToEdit.getClassName()
+                + " is now " + editedPerson.getName() + " in " + editedPerson.getClassName());
         return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS,
                 editedPerson.getName(), editedPerson.getClassName()));
     }
@@ -90,7 +106,7 @@ public class EditCommand extends Command {
      * kept.
      */
     private static Person createEditedPerson(Person personToEdit, EditPersonDescriptor editPersonDescriptor) {
-        assert personToEdit != null;
+        CollectionUtil.requireAllNonNull(personToEdit, editPersonDescriptor);
 
         Name updatedName = editPersonDescriptor.getName().orElse(personToEdit.getName());
         ClassName updatedClassName = editPersonDescriptor.getClassName().orElse(personToEdit.getClassName());
@@ -98,8 +114,21 @@ public class EditCommand extends Command {
                 ? Optional.empty()
                 : editPersonDescriptor.getEmail().or(personToEdit::getEmail);
 
-        return new Person(updatedName, updatedClassName, updatedEmail, personToEdit.getTags(),
+        Person editedPerson = new Person(updatedName, updatedClassName, updatedEmail, personToEdit.getTags(),
                 personToEdit.getAttendanceRecords(), personToEdit.getGradeRecords());
+        assert hasSameTagsAndRecords(personToEdit, editedPerson)
+                : "An edit must keep the tags, the attendance records and the grade records";
+        return editedPerson;
+    }
+
+    /**
+     * Returns true if {@code editedPerson} has the same tags, attendance records and grade records as
+     * {@code personToEdit}.
+     */
+    private static boolean hasSameTagsAndRecords(Person personToEdit, Person editedPerson) {
+        return personToEdit.getTags().equals(editedPerson.getTags())
+                && personToEdit.getAttendanceRecords().equals(editedPerson.getAttendanceRecords())
+                && personToEdit.getGradeRecords().equals(editedPerson.getGradeRecords());
     }
 
     @Override
