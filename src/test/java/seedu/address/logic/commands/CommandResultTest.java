@@ -4,10 +4,23 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
 public class CommandResultTest {
+    @Test
+    public void constructor_showHelpAndExit_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, CommandResult.MESSAGE_HELP_AND_EXIT, () ->
+                new CommandResult("feedback", true, true));
+    }
+
+    @Test
+    public void constructor_nullFeedback_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new CommandResult(null));
+        assertThrows(NullPointerException.class, () -> new CommandResult(null, true, false));
+    }
+
     @Test
     public void equals() {
         CommandResult commandResult = new CommandResult("feedback");

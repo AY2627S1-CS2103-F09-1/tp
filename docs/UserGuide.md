@@ -82,8 +82,9 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 * Parameters can be in any order.<br>
   For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* Extraneous parameters for commands that take no parameters, such as `help` and `exit`, are ignored.<br>
+  For example, `help 123` is interpreted as `help`.<br>
+  The exception is `clear`, which does not accept anything after it, because it deletes all contacts. For example, `clear 3` shows an error and does not delete anything.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
@@ -481,6 +482,15 @@ Examples:
 Clears all contacts from ClassMates.
 
 Format: `clear`
+
+* Nothing can be written after `clear`. This is so that a command such as `clear 3`, which may be meant to delete one contact, does not delete all of them. Use [`delete`](#deleting-a-contact-delete) to delete one contact.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+Anything is written after `clear`, such as `clear 3` | `Invalid command format!` followed by the usage of `clear`. No contact is deleted.
+The data file cannot be saved | A description of the problem, followed by `The change was undone.` No contact is deleted.
 
 On success, ClassMates shows `ClassMates has been cleared!`.
 

@@ -557,6 +557,13 @@ The code defends itself against bad input and against its own mistakes in four w
 * `EditCommand#execute(Model)` asserts, after `Model#setPerson(Person, Person)`, that the edited contact is in the address book. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` asserts that the edited contact has the same tags, attendance records and grade records as the contact before the edit, which is the guarantee described in [Editing a contact](#editing-a-contact-feature). It also rejects `null` arguments with `requireNonNull`, which replaces an assertion that only ran when assertions were enabled.
 * The command logs a successful edit, with the name and class before and after, an index that is outside the displayed list, and an edit that would duplicate another contact.
 
+#### Clearing all contacts
+
+* `clear` is the only command without arguments that does not ignore extra text, because it deletes all contacts. `ClearCommandParser#parse(String)` throws a `ParseException` with the usage of `clear` (`ClearCommand#MESSAGE_USAGE`) if the arguments are not blank, so a user who types `clear 3`, perhaps expecting to delete one contact, deletes nothing. `AddressBookParser` still creates `HelpCommand` and `ExitCommand` itself and ignores what follows them, as described in the User Guide.
+* `ClearCommand#execute(Model)` asserts that the address book is empty after `Model#setAddressBook(ReadOnlyAddressBook)`, and logs how many contacts were removed, as this is the only command that destroys data.
+* The `CommandResult` constructor rejects a result that both shows help and exits, with an `IllegalArgumentException`. No command produces one, and the UI would otherwise open the help window and then close the app.
+* A `clear` whose save fails is undone like any other command (see [Saving and loading data](#saving-and-loading-data)), so the contacts come back.
+
 #### Saving and loading data
 
 * `LogicManager#execute(String)` copies the address book before it executes a command. If the address book cannot be saved afterwards, `LogicManager` sets the data of the `Model` back to that copy and throws a `CommandException` that says that the change was undone (`LogicManager#MESSAGE_CHANGE_UNDONE`). Without this, the user would be told that the command failed while the contact was changed on the screen, and the next command that saves would store the change anyway. Only the data is restored. The filter of the displayed list is kept as the command left it.
@@ -978,6 +985,13 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 
    Use case ends.
 
+**Extensions**
+
+* 1a. User writes anything after the command word, such as `clear 3`.
+  * 1a1. CM displays an error message and deletes nothing.
+
+    Use case resumes at step 1.
+
 
 **Use case: UC11 - View help**
 
@@ -1378,6 +1392,9 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `clear`<br>
       Expected: All contacts are removed from the list. The status message shows `ClassMates has been cleared!`.
+
+   1. Test case: `clear 3`<br>
+      Expected: No contact is removed. The status message shows `Invalid command format!` followed by the usage of `clear`.
 
 ### Viewing help
 
