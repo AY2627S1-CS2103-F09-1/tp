@@ -19,6 +19,43 @@ public class FileUtilTest {
     public Path temporaryFolder;
 
     @Test
+    public void copyWithSuffix_null_throwsNullPointerException() {
+        Path file = temporaryFolder.resolve("data.json");
+        assertThrows(NullPointerException.class, () -> FileUtil.copyWithSuffix(null, ".bak"));
+        assertThrows(NullPointerException.class, () -> FileUtil.copyWithSuffix(file, null));
+    }
+
+    @Test
+    public void copyWithSuffix_fileExists_createsCopyNextToItAndKeepsFile() throws IOException {
+        Path file = temporaryFolder.resolve("data.json");
+        Files.writeString(file, "{ not valid json");
+
+        Path copy = FileUtil.copyWithSuffix(file, ".unreadable-1");
+
+        assertEquals(temporaryFolder.resolve("data.json.unreadable-1"), copy);
+        assertEquals("{ not valid json", Files.readString(copy));
+        assertEquals("{ not valid json", Files.readString(file));
+    }
+
+    @Test
+    public void copyWithSuffix_copyExists_throwsIoExceptionAndKeepsExistingCopy() throws IOException {
+        Path file = temporaryFolder.resolve("data.json");
+        Files.writeString(file, "new content");
+        Path existingCopy = temporaryFolder.resolve("data.json.bak");
+        Files.writeString(existingCopy, "older copy");
+
+        assertThrows(IOException.class, () -> FileUtil.copyWithSuffix(file, ".bak"));
+
+        assertEquals("older copy", Files.readString(existingCopy));
+    }
+
+    @Test
+    public void copyWithSuffix_fileDoesNotExist_throwsIoException() {
+        Path file = temporaryFolder.resolve("missing.json");
+        assertThrows(IOException.class, () -> FileUtil.copyWithSuffix(file, ".bak"));
+    }
+
+    @Test
     public void writeToFile_null_throwsNullPointerException() {
         Path file = temporaryFolder.resolve("data.json");
         assertThrows(NullPointerException.class, () -> FileUtil.writeToFile(null, "content"));

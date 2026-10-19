@@ -511,7 +511,8 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, ClassMates starts with no contacts at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
+If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and the result box tells you so. ClassMates first copies the invalid file to `classmates.json.unreadable-DATE-TIME` in the same folder, such as `classmates.json.unreadable-20261019-143012`, so that it is not replaced when you run a command (ClassMates saves after every command). You can fix that copy and rename it back to `classmates.json`. Still, we recommend backing up the file before editing it.<br>
+A data file is also invalid if a contact has two attendance records for the same date, or two grades for the same assessment, ignoring case.<br>
 Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
@@ -554,7 +555,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
 
 **Q**: ClassMates started with an empty list. What happened?<br>
-**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts and tells you so in the result box. The invalid file is copied to `classmates.json.unreadable-DATE-TIME` in the `data` folder first, so you can fix it and rename it back to `classmates.json`. Alternatively, restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
 
 --------------------------------------------------------------------------------------------------------------------
 

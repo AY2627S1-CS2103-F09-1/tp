@@ -7,6 +7,7 @@ import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -23,6 +24,10 @@ import seedu.address.storage.Storage;
  */
 public class LogicManager implements Logic {
     public static final String MESSAGE_CHANGE_UNDONE = "\nThe change was undone.";
+
+    public static final String MESSAGE_UNEXPECTED_ERROR =
+            "Something went wrong while carrying out the command. The details are in the log file."
+                    + MESSAGE_CHANGE_UNDONE;
 
     public static final String FILE_OPS_ERROR_FORMAT =
             "Could not save data due to the following error: %s" + MESSAGE_CHANGE_UNDONE;
@@ -50,13 +55,32 @@ public class LogicManager implements Logic {
     public CommandResult execute(String commandText) throws CommandException, ParseException {
         logger.info("----------------[USER COMMAND][" + commandText + "]");
 
-        Command command = addressBookParser.parseCommand(commandText);
         ReadOnlyAddressBook addressBookBeforeCommand = new AddressBook(model.getAddressBook());
-        CommandResult commandResult = command.execute(model);
+        CommandResult commandResult;
+        try {
+            Command command = addressBookParser.parseCommand(commandText);
+            commandResult = command.execute(model);
+        } catch (RuntimeException e) {
+            throw handleUnexpectedError(e, addressBookBeforeCommand);
+        }
 
         saveAddressBookOrUndo(addressBookBeforeCommand);
 
         return commandResult;
+    }
+
+    /**
+     * Records {@code e}, an unexpected {@code RuntimeException}, in the log and sets the data of the model back
+     * to {@code addressBookBeforeCommand}, as the command may have changed it before it failed. {@code Error}s
+     * such as a failed assertion are not handled, so that they are not hidden during development.
+     *
+     * @return the {@code CommandException} to throw, which tells the user that something went wrong.
+     */
+    private CommandException handleUnexpectedError(RuntimeException e,
+            ReadOnlyAddressBook addressBookBeforeCommand) {
+        logger.severe("Unexpected error while executing a command: " + StringUtil.getDetails(e));
+        undoCommand("The command failed unexpectedly", addressBookBeforeCommand);
+        return new CommandException(MESSAGE_UNEXPECTED_ERROR, e);
     }
 
     /**
@@ -70,19 +94,20 @@ public class LogicManager implements Logic {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (AccessDeniedException e) {
-            undoCommand(addressBookBeforeCommand);
+            undoCommand("The address book could not be saved", addressBookBeforeCommand);
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
         } catch (IOException ioe) {
-            undoCommand(addressBookBeforeCommand);
+            undoCommand("The address book could not be saved", addressBookBeforeCommand);
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
     }
 
     /**
-     * Sets the data of the model back to {@code addressBookBeforeCommand}.
+     * Sets the data of the model back to {@code addressBookBeforeCommand}, and logs that this was done
+     * because of {@code reason}.
      */
-    private void undoCommand(ReadOnlyAddressBook addressBookBeforeCommand) {
-        logger.warning("The address book could not be saved, so the change of the command is undone");
+    private void undoCommand(String reason, ReadOnlyAddressBook addressBookBeforeCommand) {
+        logger.warning(reason + ", so the change of the command is undone");
         model.setAddressBook(addressBookBeforeCommand);
     }
 

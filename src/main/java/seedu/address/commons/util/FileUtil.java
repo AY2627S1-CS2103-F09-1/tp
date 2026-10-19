@@ -49,6 +49,19 @@ public class FileUtil {
     }
 
     /**
+     * Copies {@code file} to a file in the same folder whose name is the name of {@code file} followed by
+     * {@code suffix}, and returns the copy. An existing file is never replaced.
+     *
+     * @throws IOException if {@code file} cannot be copied, including when the copy already exists.
+     */
+    public static Path copyWithSuffix(Path file, String suffix) throws IOException {
+        requireAllNonNull(file, suffix);
+        Path copy = file.resolveSibling(file.getFileName() + suffix);
+        Files.copy(file, copy);
+        return copy;
+    }
+
+    /**
      * Writes given string to a file.
      * Will create the file if it does not exist yet.
      * The content is first written to a temporary file in the same folder, which then replaces {@code file}, so

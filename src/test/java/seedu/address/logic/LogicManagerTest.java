@@ -53,6 +53,7 @@ public class LogicManagerTest {
     public Path temporaryFolder;
 
     private Model model = new ModelManager();
+    private StorageManager storage;
     private Logic logic;
 
     @BeforeEach
@@ -60,7 +61,7 @@ public class LogicManagerTest {
         JsonAddressBookStorage addressBookStorage =
                 new JsonAddressBookStorage(addressBookFilePath());
         JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(temporaryFolder.resolve("userPrefs.json"));
-        StorageManager storage = new StorageManager(addressBookStorage, userPrefsStorage);
+        storage = new StorageManager(addressBookStorage, userPrefsStorage);
         logic = new LogicManager(model, storage);
     }
 
@@ -199,6 +200,40 @@ public class LogicManagerTest {
 
         // the newest contact is shown first, as before the command
         assertEquals(List.of(BOB, AMY), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_commandThrowsRuntimeException_throwsCommandExceptionAndUndoesChange() {
+        Model modelThatFailsAfterAdding = new ModelManager() {
+            @Override
+            public void addPerson(Person person) {
+                super.addPerson(person);
+                throw new IllegalStateException("unexpected");
+            }
+        };
+        logic = new LogicManager(modelThatFailsAfterAdding, storage);
+        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + CLASS_DESC_AMY;
+
+        assertThrows(CommandException.class, LogicManager.MESSAGE_UNEXPECTED_ERROR, () ->
+                logic.execute(addCommand));
+
+        // the contact that was added before the failure is removed again, and nothing is saved
+        assertEquals(List.of(), modelThatFailsAfterAdding.getFilteredPersonList());
+        assertFalse(Files.exists(addressBookFilePath()));
+    }
+
+    @Test
+    public void execute_commandThrowsError_isNotHidden() {
+        Model modelThatFailsAnAssertion = new ModelManager() {
+            @Override
+            public void addPerson(Person person) {
+                throw new AssertionError("a bug");
+            }
+        };
+        logic = new LogicManager(modelThatFailsAnAssertion, storage);
+        String addCommand = AddCommand.COMMAND_WORD + NAME_DESC_AMY + CLASS_DESC_AMY;
+
+        assertThrows(AssertionError.class, () -> logic.execute(addCommand));
     }
 
     @Test

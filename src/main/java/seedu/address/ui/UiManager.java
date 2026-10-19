@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -25,6 +27,7 @@ public class UiManager implements Ui {
 
     private Logic logic;
     private Path dataFilePath;
+    private String startupMessage;
     private MainWindow mainWindow;
 
     /**
@@ -32,8 +35,18 @@ public class UiManager implements Ui {
      * to show in the status bar.
      */
     public UiManager(Logic logic, Path dataFilePath) {
+        this(logic, dataFilePath, "");
+    }
+
+    /**
+     * Creates a {@code UiManager} with the given {@code Logic}, the data file path to show in the status bar,
+     * and a {@code startupMessage} to show to the user when the window opens, which is empty if there is none.
+     */
+    public UiManager(Logic logic, Path dataFilePath, String startupMessage) {
+        requireAllNonNull(logic, dataFilePath, startupMessage);
         this.logic = logic;
         this.dataFilePath = dataFilePath;
+        this.startupMessage = startupMessage;
     }
 
     @Override
@@ -44,7 +57,7 @@ public class UiManager implements Ui {
         primaryStage.getIcons().add(getImage(ICON_APPLICATION));
 
         try {
-            mainWindow = new MainWindow(primaryStage, logic, dataFilePath);
+            mainWindow = new MainWindow(primaryStage, logic, dataFilePath, startupMessage);
             mainWindow.show(); //This should be called before creating other UI parts
             mainWindow.fillInnerParts();
 
