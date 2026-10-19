@@ -34,6 +34,7 @@ import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Grade;
 import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
+import seedu.address.model.tag.Tag;
 import seedu.address.testutil.EditPersonDescriptorBuilder;
 import seedu.address.testutil.PersonBuilder;
 
@@ -90,6 +91,38 @@ public class EditCommandTest {
     public void constructor_noDetailToEdit_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, EditCommand.MESSAGE_NOT_EDITED, () ->
                 new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptor()));
+    }
+
+    @Test
+    public void hasSameTagsAndRecords_sameTagsAndRecords_returnsTrue() {
+        Person person = new PersonBuilder().withTags("friends").build();
+        Person renamed = new PersonBuilder(person).withName(VALID_NAME_BOB).build();
+
+        assertTrue(EditCommand.hasSameTagsAndRecords(person, renamed));
+    }
+
+    @Test
+    public void hasSameTagsAndRecords_differentTags_returnsFalse() {
+        Person person = new PersonBuilder().withTags("friends").build();
+
+        assertFalse(EditCommand.hasSameTagsAndRecords(person, person.withTag(new Tag("Group A"))));
+    }
+
+    @Test
+    public void hasSameTagsAndRecords_differentAttendanceRecords_returnsFalse() {
+        Person person = new PersonBuilder().build();
+        Person withAttendance = person
+                .withAttendance(new Attendance(LocalDate.of(2024, 1, 1), Attendance.Status.PRESENT));
+
+        assertFalse(EditCommand.hasSameTagsAndRecords(person, withAttendance));
+    }
+
+    @Test
+    public void hasSameTagsAndRecords_differentGradeRecords_returnsFalse() {
+        Person person = new PersonBuilder().build();
+        Person withGrade = person.withGrade(new Grade("Quiz 1", BigDecimal.valueOf(80)));
+
+        assertFalse(EditCommand.hasSameTagsAndRecords(person, withGrade));
     }
 
     @Test

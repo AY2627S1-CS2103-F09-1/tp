@@ -3,7 +3,6 @@ package seedu.address.commons.util;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.io.IOException;
-import java.nio.file.AtomicMoveNotSupportedException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -65,7 +64,8 @@ public class FileUtil {
      * Writes given string to a file.
      * Will create the file if it does not exist yet.
      * The content is first written to a temporary file in the same folder, which then replaces {@code file}, so
-     * that a failure while writing never leaves {@code file} half written or empty.
+     * that a failure while writing never leaves {@code file} half written or empty. Both files are in the same
+     * folder, so the replacement is a rename, which the file system does in one step.
      *
      * @throws IOException if the content cannot be written. The old content of {@code file} is kept then.
      */
@@ -75,21 +75,9 @@ public class FileUtil {
         Path temporaryFile = Files.createTempFile(folder, file.getFileName().toString(), TEMPORARY_FILE_SUFFIX);
         try {
             Files.write(temporaryFile, content.getBytes(CHARSET));
-            replaceFile(temporaryFile, file);
+            Files.move(temporaryFile, file, StandardCopyOption.REPLACE_EXISTING);
         } finally {
             Files.deleteIfExists(temporaryFile);
-        }
-    }
-
-    /**
-     * Moves {@code source} to {@code target}, replacing {@code target} if it exists. The move is atomic if the
-     * file system supports it.
-     */
-    private static void replaceFile(Path source, Path target) throws IOException {
-        try {
-            Files.move(source, target, StandardCopyOption.ATOMIC_MOVE);
-        } catch (AtomicMoveNotSupportedException e) {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
     }
 

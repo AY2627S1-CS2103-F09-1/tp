@@ -125,7 +125,7 @@ public class EditCommand extends Command {
      * Returns true if {@code editedPerson} has the same tags, attendance records and grade records as
      * {@code personToEdit}.
      */
-    private static boolean hasSameTagsAndRecords(Person personToEdit, Person editedPerson) {
+    static boolean hasSameTagsAndRecords(Person personToEdit, Person editedPerson) {
         return personToEdit.getTags().equals(editedPerson.getTags())
                 && personToEdit.getAttendanceRecords().equals(editedPerson.getAttendanceRecords())
                 && personToEdit.getGradeRecords().equals(editedPerson.getGradeRecords());

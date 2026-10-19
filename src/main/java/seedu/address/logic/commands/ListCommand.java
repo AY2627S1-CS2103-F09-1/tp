@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.util.List;
 import java.util.function.Predicate;
 import java.util.logging.Logger;
 
@@ -72,9 +73,10 @@ public class ListCommand extends Command {
      * that are accepted by the predicate.
      */
     private boolean isShowingExactlyMatchingPersons(Model model) {
-        long expectedCount = model.getAddressBook().getPersonList().stream().filter(predicate).count();
-        return model.getFilteredPersonList().size() == expectedCount
-                && model.getFilteredPersonList().stream().allMatch(predicate);
+        List<Person> expectedPersons = model.getAddressBook().getPersonList().stream()
+                .filter(predicate)
+                .toList();
+        return expectedPersons.equals(model.getFilteredPersonList());
     }
 
     @Override

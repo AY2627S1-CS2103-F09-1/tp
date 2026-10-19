@@ -4,7 +4,6 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 import java.util.logging.Logger;
 
@@ -12,7 +11,6 @@ import javafx.application.Application;
 import javafx.stage.Stage;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.exceptions.DataLoadingException;
-import seedu.address.commons.util.FileUtil;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.Logic;
 import seedu.address.logic.LogicManager;
@@ -23,6 +21,7 @@ import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.ReadOnlyUserPrefs;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.util.SampleDataUtil;
+import seedu.address.storage.DataFileBackup;
 import seedu.address.storage.JsonAddressBookStorage;
 import seedu.address.storage.JsonUserPrefsStorage;
 import seedu.address.storage.Storage;
@@ -40,14 +39,6 @@ public class MainApp extends Application {
     private static final Logger logger = LogsCenter.getLogger(MainApp.class);
     private static final Path USER_PREFS_FILE_PATH = Paths.get("preferences.json");
     private static final Path ADDRESS_BOOK_FILE_PATH = Paths.get("data", "classmates.json");
-
-    private static final String BACKUP_SUFFIX = ".unreadable-";
-    private static final DateTimeFormatter BACKUP_TIME_FORMAT = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss");
-    private static final String MESSAGE_DATA_FILE_BACKED_UP = "The data file could not be read, so ClassMates "
-            + "started with no contacts.\nA copy of the file was saved as %s in the same folder.";
-    private static final String MESSAGE_DATA_FILE_NOT_BACKED_UP = "The data file could not be read, so ClassMates "
-            + "started with no contacts.\nA copy of the file could not be made, so the file will be replaced "
-            + "when you make your next change.";
 
     protected Ui ui;
     protected Logic logic;
@@ -94,29 +85,12 @@ public class MainApp extends Application {
         } catch (DataLoadingException e) {
             logger.warning("Data file at " + storage.getAddressBookFilePath() + " could not be loaded."
                     + " Will be starting with an empty ClassMates.");
-            startupMessage = backUpUnreadableDataFile(storage.getAddressBookFilePath());
+            startupMessage = DataFileBackup.backUpUnreadableFile(storage.getAddressBookFilePath(),
+                    LocalDateTime.now());
             initialData = new AddressBook();
         }
 
         return new ModelManager(initialData, userPrefs);
-    }
-
-    /**
-     * Copies the unreadable data file at {@code dataFile} to a file next to it, so that it is not lost when the
-     * next command that succeeds saves the new data over it.
-     *
-     * @return the message that tells the user that the data file could not be read, and where the copy is.
-     */
-    private String backUpUnreadableDataFile(Path dataFile) {
-        String suffix = BACKUP_SUFFIX + LocalDateTime.now().format(BACKUP_TIME_FORMAT);
-        try {
-            Path backupFile = FileUtil.copyWithSuffix(dataFile, suffix);
-            logger.warning("The unreadable data file was copied to " + backupFile);
-            return String.format(MESSAGE_DATA_FILE_BACKED_UP, backupFile.getFileName());
-        } catch (IOException ioe) {
-            logger.warning("The unreadable data file could not be copied: " + StringUtil.getDetails(ioe));
-            return MESSAGE_DATA_FILE_NOT_BACKED_UP;
-        }
     }
 
     /**
