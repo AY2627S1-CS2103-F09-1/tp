@@ -82,6 +82,7 @@ The `UI` component,
 * listens for changes to `Model` data so that the UI can be updated with the modified data.
 * keeps a reference to the `Logic` component, because the `UI` relies on the `Logic` to execute commands.
 * depends on some classes in the `Model` component because it displays `Person` objects from the model.
+* remembers the commands that the user has entered, so that they can be recalled with the arrow keys (see [Command history](#command-history-feature)).
 
 Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
 
@@ -508,6 +509,50 @@ The `viewA` command displays all attendance records for a contact. It is impleme
   * Pros: Shorter to enter after displaying or searching for contacts.
   * Cons: The index depends on the current list, so the user may view attendance for a different contact if the list changes.
 
+### Command history feature
+
+#### Implementation
+
+The user can press the Up and Down keys in the command box to recall the commands that were entered earlier. It is implemented by `CommandHistory`, `HistoryKeyHandler` and `CommandBox`, and it is only part of the `UI` component. `Logic`, `Model` and `Storage` are not involved.
+
+* `CommandHistory` does not depend on JavaFX, so that it can be tested without a GUI. It keeps the commands in the order they were entered, a position that is used while the user is browsing, and a _draft_, which is the text that the user had typed before browsing started.
+* `CommandHistory#add(String)` adds a command and stops browsing. A blank command, or a command identical to the most recent one, is not added. When there are more than `CommandHistory#MAX_SIZE` (100) commands, the oldest one is dropped.
+* `CommandHistory#previous(String)` is called with the text of the command box. It saves that text as the draft if the user was not browsing, moves to the next older command, and returns it. At the oldest command, it returns the oldest command again. It returns an empty `Optional` if there are no commands.
+* `CommandHistory#next()` moves to the next newer command and returns it. After the newest command, it returns the draft. It returns an empty `Optional` if the user is not browsing, so that the text is left as it is.
+* A command that fails stays in the command box, and it is also the most recent command. If the text given to `CommandHistory#previous(String)` when browsing starts is the most recent command, that command is skipped. Otherwise, the first press of the Up key would seem to do nothing.
+* `HistoryKeyHandler` handles the Up and Down keys. It works with a function that gives the text of the command box and a function that shows a recalled text, and not with a text field, so that it can be tested without a GUI. For the Up key, it calls `CommandHistory#previous(String)` with the text of the command box, and for the Down key, it calls `CommandHistory#next()`. If there is a command to recall, it passes it to the function that shows it. For both keys, it consumes the event, so that the text field does not also use the key to move its caret. Any other key is left alone.
+* `CommandBox` adds a `HistoryKeyHandler` to its text field as an event filter for `KeyEvent.KEY_PRESSED`. A filter is used because it runs before the text field handles the key itself. `CommandBox#showRecalledText(String)` shows a recalled text, with the caret at its end.
+* `CommandBox#handleCommandEntered()` calls `CommandHistory#add(String)` before it executes the command, so the commands that fail are remembered as well.
+
+#### Design considerations
+
+**Aspect: Where the history is kept**
+
+* **Alternative 1 (current choice):** In the `UI` component, in a `CommandHistory` used by `CommandBox`.
+  * Pros: Recalling text for the command box is a convenience of the input field, so `Logic`, `Model` and `Storage` stay unchanged. The class can be tested without JavaFX.
+  * Cons: `Logic` cannot use the history, for example for a `history` command.
+* **Alternative 2:** In the `Logic` component, exposed through the `Logic` API.
+  * Pros: Independent of the GUI, and available to any command or other `UI`.
+  * Cons: Adds to the `Logic` API for a feature that only the command box needs.
+
+**Aspect: Which commands are remembered**
+
+* **Alternative 1 (current choice):** Every command that is not blank, including the ones that fail.
+  * Pros: The user can recall a command with a typo and correct it, even after the box was cleared or other commands were entered.
+  * Cons: The history contains commands that did not work.
+* **Alternative 2:** Only the commands that succeed.
+  * Pros: Every recalled command is a valid one.
+  * Cons: A failed command can no longer be recalled once its text is replaced, which is when it is most useful.
+
+**Aspect: Whether the history is kept after ClassMates exits**
+
+* **Alternative 1 (current choice):** The history is kept for the current session only.
+  * Pros: Simple, and there is no new file or storage format to keep correct.
+  * Cons: The user starts every session with an empty history.
+* **Alternative 2:** Save the history to a file and load it at the next launch.
+  * Pros: Commands from earlier sessions can be recalled.
+  * Cons: Needs a file and a format, with handling for a missing or invalid file. The commands also contain contact details, so the file would hold data that the user has not chosen to save.
+
 ### \[Proposed\] Undo/redo feature
 
 #### Proposed Implementation
@@ -638,6 +683,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
 | `* *`    | TA coordinating group assignments          | remove students from a group | keep each group correct when the teams change                          |
 | `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
+| `* *`    | experienced user                           | recall my earlier commands   | run or correct a command again without typing it out again             |
 | `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
 | `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
 | `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
