@@ -96,9 +96,7 @@ public class AttendanceCommand extends Command {
             }
             person = lastShownList.get(index.get().getZeroBased());
         } else {
-            person = model.getAddressBook().getPersonList().stream()
-                .filter(p -> p.getName().equals(name.get()) && p.getClassName().equals(className.get()))
-                .findFirst()
+            person = model.findPerson(name.get(), className.get())
                 .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
         }
 

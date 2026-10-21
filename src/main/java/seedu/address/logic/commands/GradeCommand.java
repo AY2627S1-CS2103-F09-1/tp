@@ -77,9 +77,8 @@ public class GradeCommand extends Command {
             }
             person = displayedPeople.get(index.get().getZeroBased());
         } else {
-            person = model.getAddressBook().getPersonList().stream()
-                    .filter(p -> p.getName().equals(name.get()) && p.getClassName().equals(className.get()))
-                    .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+            person = model.findPerson(name.get(), className.get())
+                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
         }
         try {
             model.setPerson(person, person.withGrade(grade));
