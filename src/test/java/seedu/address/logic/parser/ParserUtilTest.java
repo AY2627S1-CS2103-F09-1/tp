@@ -4,12 +4,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_DUPLICATE_MEMBER_INDEX;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_EMPTY_MEMBER;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_DATE;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_GROUP_NAME;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_MEMBER_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Set;
 
@@ -54,6 +56,25 @@ public class ParserUtilTest {
 
         // Leading and trailing whitespaces
         assertEquals(INDEX_FIRST_PERSON, ParserUtil.parseIndex("  1  "));
+    }
+
+    @Test
+    public void parseDate_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.parseDate(null));
+    }
+
+    @Test
+    public void parseDate_invalidInput_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate("31-02-2026"));
+        assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate("2026-09-16"));
+    }
+
+    @Test
+    public void parseDate_validInput_success() throws Exception {
+        LocalDate expectedDate = LocalDate.of(2026, 9, 16);
+
+        assertEquals(expectedDate, ParserUtil.parseDate("16-09-2026"));
+        assertEquals(expectedDate, ParserUtil.parseDate("  16-09-2026  "));
     }
 
     @Test
