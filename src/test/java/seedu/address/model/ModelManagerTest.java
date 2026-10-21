@@ -13,6 +13,8 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.GuiSettings;
+import seedu.address.model.person.ClassName;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.PersonMatchesKeyword;
 import seedu.address.testutil.AddressBookBuilder;
 
@@ -77,6 +79,12 @@ public class ModelManagerTest {
     public void findPerson_validNameAndClass_returnsMatchingPerson() {
         modelManager.addPerson(ALICE);
         assertEquals(Optional.of(ALICE), modelManager.findPerson(ALICE.getName(), ALICE.getClassName()));
+    }
+
+    @Test
+    public void findPerson_personNotFound_returnsEmpty() {
+        modelManager.addPerson(ALICE);
+        assertTrue(modelManager.findPerson(new Name("Unknown Student"), new ClassName("A1")).isEmpty());
     }
 
     @Test
