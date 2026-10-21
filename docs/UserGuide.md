@@ -89,6 +89,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `help 123` is interpreted as `help`.<br>
   The exception is `clear`, which does not accept anything after it, because it deletes all contacts. For example, `clear 3` shows an error and does not delete anything.
 
+* A command can have at most 5,000 characters. A longer command shows `The command is too long. It can have at most 5000 characters` and nothing happens.
+
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
 
@@ -341,6 +343,7 @@ Format: `import PATH`
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
 * The imported contacts are shown at the top of the list, in the same order as in the file.
+* The file can be at most 5 MB, and can have at most 5,000 rows after the header row.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
@@ -370,8 +373,10 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | No file path is provided                                                                           | `Specify file path`                                  |
 | The file does not exist                                                                            | `File not found at <filepath>`                       |
 | The file does not use the `.csv` extension                                                         | `Only .csv files are supported`                      |
+| The file is larger than 5 MB                                                                       | `File is too large. It can have at most 5 MB`        |
 | The file is empty or contains only a header row                                                    | `File empty`                                         |
 | The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
+| The file has more than 5,000 rows after the header row                                            | `File has too many rows. It can have at most 5000 rows` |
 | A row has an invalid number of fields                                                              | `Invalid number of fields on row <row number>`       |
 | A contact duplicates an existing contact or an earlier imported contact                            | `Duplicate contact on row <row number>`              |
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |

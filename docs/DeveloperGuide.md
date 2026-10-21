@@ -634,7 +634,7 @@ The code defends itself against bad input and against its own mistakes in four w
 
 * **Exceptions** are for problems that the user can cause. `ParseException` reports invalid input and `CommandException` reports a command that cannot be carried out. Both carry a message that is shown to the user.
 * **`requireNonNull`** is for a caller that passes `null` to a method that does not accept it. It fails fast with a `NullPointerException` at the point of the mistake instead of later and elsewhere.
-* **Assertions** (`assert`) are for conditions that can only be false because of a bug in the code, never because of user input. They are enabled when the tests run, so they catch such bugs during development.
+* **Assertions** (`assert`) are for conditions that can only be false because of a bug in the code, never because of user input. Gradle enables them when the tests run and when the app is started with `gradle run`, so they catch such bugs during development. They are not enabled when the packaged jar is started with `java -jar`, so they cannot be the only protection of the user (see [Unexpected errors](#unexpected-errors)).
 * **Logging** records what happened for the developers. Each command logs at `INFO` level when it changes the data or rejects a change, and `LogicManager` already logs every command that the user enters.
 
 #### Adding a contact
@@ -692,6 +692,18 @@ The code defends itself against bad input and against its own mistakes in four w
 #### Unexpected errors
 
 * `LogicManager#execute(String)` catches any `RuntimeException` thrown while it parses or executes a command. Such an exception is a bug, because the expected problems are reported as a `ParseException` or a `CommandException`. `LogicManager` logs it with its stack trace at `SEVERE` level, sets the data of the `Model` back to what it was before the command, and throws a `CommandException` with `LogicManager#MESSAGE_UNEXPECTED_ERROR`. Without this, the exception would reach the UI, which does not handle it, so the user would see nothing happen while the data may have been changed halfway. An `Error`, such as a failed assertion, is not caught, so that the bugs that assertions find are not hidden during development.
+
+#### Limits on the size of the input
+
+* `AddressBookParser#parseCommand(String)` rejects a command with more than `AddressBookParser.MAX_INPUT_LENGTH` (5,000) characters with a `ParseException`, before it does anything else. The longest real commands, such as one that adds a contact or links a class of 300 students to a group, have well under 5,000 characters. Without the limit, a text that was pasted into the command box, even one of several megabytes, would be matched and tokenized.
+* `LogicManager#execute(String)` writes at most `LogicManager.MAX_LOGGED_COMMAND_LENGTH` (500) characters of a command to the log, followed by how many were left out, so that a very long command does not flood the log. It also rejects a `null` command with `requireNonNull`.
+* `ImportCommand` rejects a file with more than `ImportCommand.MAX_FILE_SIZE_BYTES` (5 MB), before it reads the file, because the whole file is read into memory. It also rejects a file with more than `ImportCommand.MAX_ROWS` (5,000) rows, before it checks any row, because each contact is compared with all contacts before it, so the time to import grows with the square of the number of rows. Both are reported as a `CommandException`, and nothing is imported.
+
+#### Fuzz tests
+
+* `CommandFuzzTest` generates 10,000 random commands and 10,000 commands that have the form of a real one with values that may be wrong, such as an index that is too large, a name with a byte order mark or a repeated parameter. It parses each one and executes it on a new model, and checks that the only exceptions that come out are `ParseException` and `CommandException`. It also fails when an assertion fails, so it checks the assertions of the commands. The commands that read a file are not generated.
+* `DataFileFuzzTest` damages a valid data file in 500 random ways, such as cutting it short or replacing a value with `null`, and checks that the file is either loaded or rejected with a `DataLoadingException`. A file that is loaded must also be saved and read back as the same data.
+* Both tests use a fixed seed, so they run the same each time and a failure can be repeated. The failure message lists the first input that caused each different problem.
 
 ### Viewing grades feature
 

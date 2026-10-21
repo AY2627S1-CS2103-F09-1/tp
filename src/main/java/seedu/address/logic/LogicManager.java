@@ -1,5 +1,7 @@
 package seedu.address.logic;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.logging.Logger;
@@ -36,6 +38,9 @@ public class LogicManager implements Logic {
             "Could not save data to file %s due to insufficient permissions to write to the file or the folder."
                     + MESSAGE_CHANGE_UNDONE;
 
+    /** The most characters of a command that are written to the log. */
+    static final int MAX_LOGGED_COMMAND_LENGTH = 500;
+
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
     private final Model model;
@@ -53,7 +58,8 @@ public class LogicManager implements Logic {
 
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
-        logger.info("----------------[USER COMMAND][" + commandText + "]");
+        requireNonNull(commandText);
+        logger.info("----------------[USER COMMAND][" + shortenForLog(commandText) + "]");
 
         ReadOnlyAddressBook addressBookBeforeCommand = new AddressBook(model.getAddressBook());
         CommandResult commandResult;
@@ -67,6 +73,18 @@ public class LogicManager implements Logic {
         saveAddressBookOrUndo(addressBookBeforeCommand);
 
         return commandResult;
+    }
+
+    /**
+     * Returns {@code commandText}, or its first {@code MAX_LOGGED_COMMAND_LENGTH} characters followed by how
+     * many were left out, so that a very long command does not flood the log.
+     */
+    private static String shortenForLog(String commandText) {
+        if (commandText.length() <= MAX_LOGGED_COMMAND_LENGTH) {
+            return commandText;
+        }
+        return commandText.substring(0, MAX_LOGGED_COMMAND_LENGTH) + "... ("
+                + (commandText.length() - MAX_LOGGED_COMMAND_LENGTH) + " more characters)";
     }
 
     /**

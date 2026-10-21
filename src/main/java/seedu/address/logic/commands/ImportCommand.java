@@ -40,6 +40,20 @@ public class ImportCommand extends Command {
     public static final String MESSAGE_INVALID_CONTACT = "Invalid contact data on row %d";
     public static final String MESSAGE_FAILURE = "Failed to import from %s";
 
+    /** The most bytes that a file can have. The whole file is read into memory. */
+    public static final int MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+
+    /**
+     * The most rows with contacts that a file can have. Each contact is compared with the contacts before it,
+     * so the time to import grows with the square of the number of rows.
+     */
+    public static final int MAX_ROWS = 5000;
+
+    public static final String MESSAGE_FILE_TOO_LARGE = "File is too large. It can have at most "
+            + MAX_FILE_SIZE_BYTES / (1024 * 1024) + " MB";
+    public static final String MESSAGE_TOO_MANY_ROWS = "File has too many rows. It can have at most "
+            + MAX_ROWS + " rows";
+
     private static final String CSV_EXTENSION = ".csv";
 
     private final String filePath;
@@ -61,6 +75,7 @@ public class ImportCommand extends Command {
         validatePath(path);
         String content = readFile(path).strip(); // read file and ignore leading and trailing whitespace
         CsvParser.ParsedCsv csv = parseCsv(content);
+        requireRowCountWithinLimit(csv);
 
         List<Person> persons = parsePersons(csv, model);
         // Each contact is added to the top of the list, so add the last row first to keep the file order
@@ -115,15 +130,31 @@ public class ImportCommand extends Command {
     }
 
     /**
-     * Reads the requested file as UTF-8 content.
+     * Checks that {@code csv} has at most {@code MAX_ROWS} rows after the header.
+     *
+     * @throws CommandException If there are more rows.
+     */
+    private static void requireRowCountWithinLimit(CsvParser.ParsedCsv csv) throws CommandException {
+        if (csv.records().size() > MAX_ROWS) {
+            throw new CommandException(MESSAGE_TOO_MANY_ROWS);
+        }
+    }
+
+    /**
+     * Reads the requested file as UTF-8 content. The size of the file is checked first, so that a huge file is
+     * not read into memory.
      *
      * @param path Path to the readable CSV file.
      * @return File content.
-     * @throws CommandException If the file is empty or cannot be read.
+     * @throws CommandException If the file has more than {@code MAX_FILE_SIZE_BYTES} bytes, is empty or cannot
+     *         be read.
      */
     private String readFile(Path path) throws CommandException {
         String content;
         try {
+            if (Files.size(path) > MAX_FILE_SIZE_BYTES) {
+                throw new CommandException(MESSAGE_FILE_TOO_LARGE);
+            }
             content = FileUtil.readFromFile(path);
         } catch (IOException e) {
             throw new CommandException(String.format(MESSAGE_FAILURE, filePath), e);

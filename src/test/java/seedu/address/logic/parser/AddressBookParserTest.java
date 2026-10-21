@@ -156,6 +156,28 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parseCommand(null));
+    }
+
+    @Test
+    public void parseCommand_inputAtLengthLimit_isParsed() throws Exception {
+        String longKeyword = "a".repeat(AddressBookParser.MAX_INPUT_LENGTH - ListCommand.COMMAND_WORD.length() - 1);
+        String inputAtLimit = ListCommand.COMMAND_WORD + " " + longKeyword;
+
+        assertEquals(AddressBookParser.MAX_INPUT_LENGTH, inputAtLimit.length());
+        assertTrue(parser.parseCommand(inputAtLimit) instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_inputLongerThanLimit_throwsParseException() {
+        String tooLongInput = ListCommand.COMMAND_WORD + " " + "a".repeat(AddressBookParser.MAX_INPUT_LENGTH);
+
+        assertThrows(ParseException.class, AddressBookParser.MESSAGE_INPUT_TOO_LONG, () ->
+                parser.parseCommand(tooLongInput));
+    }
+
+    @Test
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
     }

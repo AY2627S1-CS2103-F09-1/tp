@@ -30,6 +30,7 @@ import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
+import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.TagCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.AddressBook;
@@ -95,6 +96,21 @@ public class LogicManagerTest {
                 LogicManager.FILE_OPS_ERROR_FORMAT, DUMMY_IO_EXCEPTION.getMessage()));
 
         assertEquals(List.of(BOB, AMY), model.getFilteredPersonList());
+    }
+
+    @Test
+    public void execute_veryLongCommand_throwsParseExceptionAndKeepsContacts() {
+        model.addPerson(AMY);
+        String veryLongCommand = "list " + "a".repeat(1_000_000);
+
+        assertParseException(veryLongCommand, AddressBookParser.MESSAGE_INPUT_TOO_LONG);
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
+        assertFalse(Files.exists(addressBookFilePath()));
+    }
+
+    @Test
+    public void execute_nullCommand_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> logic.execute(null));
     }
 
     @Test
