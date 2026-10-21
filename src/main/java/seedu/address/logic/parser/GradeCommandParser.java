@@ -38,6 +38,7 @@ public class GradeCommandParser implements Parser<GradeCommand> {
         }
 
         Index index = ParserUtil.parseIndex(indexArgument);
+        ParserUtil.requireNoEmbeddedPrefix(assessmentArgument, "assessment name");
         Optional<String> assessmentViolation = Grade.getAssessmentNameConstraintViolation(assessmentArgument);
         if (assessmentViolation.isPresent()) {
             throw new ParseException(assessmentViolation.get());

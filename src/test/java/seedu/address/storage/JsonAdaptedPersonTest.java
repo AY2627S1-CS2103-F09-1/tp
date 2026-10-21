@@ -26,7 +26,7 @@ import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
-    private static final String INVALID_NAME = "R@chel";
+    private static final String INVALID_NAME = "R,achel";
     private static final String INVALID_CLASS_NAME = "A1&";
     private static final String INVALID_EMAIL = "example.com";
     private static final String INVALID_TAG = "#friend";
@@ -50,6 +50,15 @@ public class JsonAdaptedPersonTest {
         JsonAdaptedPerson person = new JsonAdaptedPerson(personWithoutEmail);
         assertEquals(personWithoutEmail, person.toModelType());
         assertTrue(person.toModelType().getEmail().isEmpty());
+    }
+
+    @Test
+    public void toModelType_nameWithAccentsAndSymbols_returnsPerson() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson("Jose\u0301 Müller (Joe) #2", "T11/A", null,
+                List.of(), List.of(), List.of());
+        Person modelPerson = person.toModelType();
+        assertEquals("José Müller (Joe) #2", modelPerson.getName().fullName);
+        assertEquals("T11/A", modelPerson.getClassName().value);
     }
 
     @Test

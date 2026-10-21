@@ -77,6 +77,23 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_nameClassWithDigitsSymbolsAndAccents_success() {
+        Person expectedPerson = new PersonBuilder().withName("José Müller (Joe) #2 Jr.")
+                .withClassName("T11/A (Morning)").withoutEmail().build();
+        assertParseSuccess(parser, " /name José Müller (Joe) #2 Jr. /class T11/A (Morning)",
+                new AddCommand(expectedPerson));
+    }
+
+    @Test
+    public void parse_prefixWithoutSpace_failure() {
+        // a parameter stuck to the previous value must not silently become part of it
+        assertParseFailure(parser, NAME_DESC_BOB + "/class B2" + CLASS_DESC_AMY,
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "name", "/class"));
+        assertParseFailure(parser, NAME_DESC_BOB + CLASS_DESC_BOB + "/email bob@example.com",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/email"));
+    }
+
+    @Test
     public void parse_missingName_failure() {
         assertParseFailure(parser, CLASS_DESC_BOB + EMAIL_DESC_BOB, MESSAGE_MISSING_NAME);
         assertParseFailure(parser, CLASS_DESC_BOB, MESSAGE_MISSING_NAME);
@@ -128,7 +145,9 @@ public class AddCommandParserTest {
         assertParseFailure(parser, " /nameBob" + CLASS_DESC_BOB, MESSAGE_UNKNOWN_PARAMETER);
 
         // the old short prefixes are not parameters, so they are taken as part of the previous value
-        assertParseFailure(parser, NAME_DESC_BOB + " p/91234567" + CLASS_DESC_BOB, Name.MESSAGE_CONSTRAINTS);
+        Person expectedPerson = new PersonBuilder(BOB).withName("Bob Choo p/91234567").withTags().build();
+        assertParseSuccess(parser, NAME_DESC_BOB + " p/91234567" + CLASS_DESC_BOB + EMAIL_DESC_BOB,
+                new AddCommand(expectedPerson));
     }
 
     @Test

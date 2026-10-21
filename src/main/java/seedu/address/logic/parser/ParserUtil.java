@@ -9,6 +9,8 @@ import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
 import seedu.address.commons.core.index.Index;
@@ -32,8 +34,17 @@ public class ParserUtil {
     public static final String MESSAGE_INVALID_MEMBER_INDEX =
             "Contact index must be a positive integer: %1$s";
     public static final String MESSAGE_DUPLICATE_MEMBER_INDEX = "Duplicate contact index: %1$s";
+    public static final String MESSAGE_PREFIX_WITHOUT_SPACE = "The %1$s contains '%2$s', which looks like a "
+            + "parameter that is missing a space before it";
 
     private static final String MEMBER_SEPARATOR = ",";
+
+    /** Matches any prefix, in any case, that ends the value it is in, such as the "/class" in "A1/class B". */
+    private static final Pattern EMBEDDED_PREFIX_PATTERN = Pattern.compile(
+            CliSyntax.ALL_PREFIXES.stream()
+                    .map(prefix -> Pattern.quote(prefix.getPrefix()))
+                    .collect(Collectors.joining("|", "(?:", ")(?!\\S)")),
+            Pattern.CASE_INSENSITIVE);
 
     /** Passed to {@code String#split} so that empty entries at the end, such as in "1,3,", are kept. */
     private static final int KEEP_TRAILING_EMPTY_ENTRIES = -1;
@@ -68,14 +79,34 @@ public class ParserUtil {
     }
 
     /**
+     * Checks that {@code value} does not contain a prefix that is stuck to the text before it, such as the
+     * {@code /class} in {@code John/class A1}. Such a prefix is not recognized as a parameter, so it would
+     * silently become part of the value if slashes are allowed in it.
+     *
+     * @param value The value of a parameter.
+     * @param fieldDescription What the value is, such as "name", for the error message.
+     * @throws ParseException if {@code value} contains such a prefix.
+     */
+    public static void requireNoEmbeddedPrefix(String value, String fieldDescription) throws ParseException {
+        requireNonNull(value);
+        requireNonNull(fieldDescription);
+        Matcher matcher = EMBEDDED_PREFIX_PATTERN.matcher(value);
+        if (matcher.find()) {
+            throw new ParseException(String.format(MESSAGE_PREFIX_WITHOUT_SPACE, fieldDescription,
+                    matcher.group()));
+        }
+    }
+
+    /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code name} is invalid.
+     * @throws ParseException if the given {@code name} is invalid or contains a prefix without a space before it.
      */
     public static Name parseName(String name) throws ParseException {
         requireNonNull(name);
         String trimmedName = name.trim();
+        requireNoEmbeddedPrefix(trimmedName, "name");
         Optional<String> constraintViolation = Name.getConstraintViolation(trimmedName);
         if (constraintViolation.isPresent()) {
             throw new ParseException(constraintViolation.get());
@@ -87,11 +118,13 @@ public class ParserUtil {
      * Parses a {@code String className} into a {@code ClassName}.
      * Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException if the given {@code className} is invalid.
+     * @throws ParseException if the given {@code className} is invalid or contains a prefix without a space
+     *         before it.
      */
     public static ClassName parseClassName(String className) throws ParseException {
         requireNonNull(className);
         String trimmedClassName = className.trim();
+        requireNoEmbeddedPrefix(trimmedClassName, "class");
         Optional<String> constraintViolation = ClassName.getConstraintViolation(trimmedClassName);
         if (constraintViolation.isPresent()) {
             throw new ParseException(constraintViolation.get());

@@ -185,7 +185,7 @@ This section describes some noteworthy details on how certain features are imple
 The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
 
 * `ListCommandParser#parse(String)` trims the argument. If it is empty, it returns `new ListCommand()`. Otherwise, it returns `new ListCommand(new PersonMatchesKeyword(keyword))`, where `keyword` is the whole trimmed argument, so a full name or class with spaces is one keyword.
-* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. Email is not checked. Matching is a plain substring test and not a regular expression, so symbols such as `.` and `/` are matched as typed. A tag name can contain spaces, as in the group `Group A`, so a keyword with several words can match a tag. A blank keyword matches every contact, but `ListCommandParser` never creates one, because a blank argument lists all contacts.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which normalizes accented letters, trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. Email is not checked. Matching is a plain substring test and not a regular expression, so symbols such as `.` and `/` are matched as typed. A tag name can contain spaces, as in the group `Group A`, so a keyword with several words can match a tag. A blank keyword matches every contact, but `ListCommandParser` never creates one, because a blank argument lists all contacts.
 * `ListCommand` holds a `Predicate<Person>`, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with it. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search.
 * Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
 * `ListCommand` only changes which contacts are displayed and never modifies the address book.
@@ -286,6 +286,46 @@ The contacts are displayed from the most recently added to the oldest. The order
 * **Alternative 3:** Give each `Person` a timestamp and sort the displayed list by it.
   * Pros: The order survives any change to the stored order.
   * Cons: Adds a field to `Person` and to the data file, and data files from before the change have no timestamps.
+
+### Validation of names, classes and assessment names feature
+
+#### Implementation
+
+A name, a class name and an assessment name are validated when they are created, so that a value from a command, a CSV file or the data file is held to the same rule. The rules reject only what causes a problem, so that names that real students have are not rejected.
+
+* `Name#getConstraintViolation(String)` returns the first problem of a name: it is blank, longer than `Name#MAX_LENGTH` characters, or has a character that is not allowed. `Name#VALIDATION_REGEX` allows a Latin letter followed by any accents, a printable ASCII character other than a comma, and the typographic apostrophes `‘` and `’`. This allows digits and symbols such as `(`, `#` and `/`, and rejects control characters, invisible characters, and letters of other scripts such as Chinese or Cyrillic. The alternatives of the regex do not overlap and its quantifiers are possessive, so a long invalid name is rejected without backtracking.
+* `StringUtil#toNormalizedForm(String)` converts text to Unicode normalization form C. `Name` normalizes the text before it validates and stores it, and `StringUtil#toComparisonKey(String)` normalizes it before it compares. An accented letter is therefore the same whether it was typed as one character or as a letter followed by an accent, so `Name#equals(Object)`, duplicate detection, `delete`, `viewA` and `list` do not treat the two forms as different.
+* `ClassName#VALIDATION_REGEX` allows letters, digits, spaces and `- . _ / ( )`, and the first character must be a letter or a digit. A class name is ASCII only, as class codes are.
+* `Grade#getAssessmentNameConstraintViolation(String)` applies `Name#VALIDATION_REGEX` to an assessment name after normalizing it, so that the two fields accept the same characters.
+* `ParserUtil#requireNoEmbeddedPrefix(String, String)` rejects a value that contains a prefix, such as `/class`, that is followed by a space or the end of the value. `ArgumentTokenizer` only reads a prefix that has a space before it, so for `edit 1 /name John/class B` the `/class` is not a parameter, and it would become part of the name without any error. The method is called by `ParserUtil#parseName(String)` and `ParserUtil#parseClassName(String)`, and by `GradeCommandParser` for the assessment name. The prefixes to look for are taken from `CliSyntax#ALL_PREFIXES`, and are matched ignoring case.
+* The check is in `ParserUtil` and not in `Name` or `ClassName`, as the model must not depend on the command syntax. The values that are read from the data file are therefore only checked by the model rules. `ImportCommand` reads the values of a CSV file with `ParserUtil`, so they are also checked for a missing space.
+* A comma is not allowed in a name, as a comma separates the values of a CSV file. `CsvParser` can read a quoted value that contains a comma, but the name is then rejected, with `Invalid contact data on row N`.
+
+#### Design considerations
+
+**Aspect: Which characters a name can contain**
+
+* **Alternative 1 (current choice):** Latin letters with accents, and printable ASCII other than a comma.
+  * Pros: Covers the names in languages that use Latin letters, such as Spanish or Vietnamese, and names with digits or symbols that are used in practice, such as `Tan (Jun Wei)`. The text can be shown with the fonts of the application.
+  * Cons: A name in another script, such as `李明`, must be written with Latin letters.
+* **Alternative 2:** Any letter of Unicode.
+  * Pros: A name can be written as it is.
+  * Cons: The fonts of the target computers are not known, matching the letters of some scripts is not simple, and the same text can have several forms that look alike.
+* **Alternative 3:** English letters only, as before.
+  * Pros: Simplest.
+  * Cons: Rejects `José`, `O’Brien` and `Tan (Jun Wei)`, so a CSV file of a class with such a name cannot be imported at all.
+
+**Aspect: How a missing space before a parameter is found**
+
+* **Alternative 1 (current choice):** Reject a value that contains a prefix, in `ParserUtil`.
+  * Pros: Small, and the parsing of the other values does not change. The message names the parameter.
+  * Cons: A value that really contains such text, such as the class `A1/name`, is rejected.
+* **Alternative 2:** Do not allow `/` in a class or an assessment name, as before.
+  * Pros: Needs no check.
+  * Cons: Rejects classes such as `T11/A`.
+* **Alternative 3:** Make `ArgumentTokenizer` recognize a prefix that has no space before it.
+  * Pros: One place for all the commands.
+  * Cons: It would split `s/o` and other text that has a `/` in it.
 
 ### Linking contacts to a group feature
 
@@ -910,7 +950,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
   * 1b1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters or has characters other than English letters, digits, spaces and hyphens, or the score is not a number from 0 to 100.
+* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters, has a comma or a letter of another language, or contains a parameter such as `/score` stuck to the text before it, or the score is not a number from 0 to 100.
   * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
@@ -1147,8 +1187,8 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list yeoh`, followed by `add /name John Doe /class A1 /email johnd@example.com`<br>
       Expected: After the `add` command, all contacts are shown again, even though only Alex Yeoh was shown before, with John Doe at the top of the list. The status message shows `John Doe added to contacts`.
 
-   1. Test case: `add /name Alex Yeoh /class B2`<br>
-      Expected: Alex Yeoh is added to class B2 at the top of the list. The same name can be added to a different class.
+   1. Test case: `add /name José Müller (Joe) #2 /class T11/A`<br>
+      Expected: The contact is added with the name and the class as typed. Accents, digits, symbols and a `/` in a class are allowed.
 
 1. Adding a contact unsuccessfully
 
@@ -1157,10 +1197,10 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add /name alex  yeoh /class a1`<br>
       Expected: No contact is added. The status message says that the name already exists in the class. Case and extra spaces are ignored.
 
-   1. Test case: `add /name John Doe`<br>
-      Expected: No contact is added. The status message shows `Command requires a class`.
+   1. Test case: `add /name Tan, John /class A1`<br>
+      Expected: No contact is added. The status message says that a name can only contain English letters, digits, spaces and keyboard symbols, except commas.
 
-   1. Other incorrect add commands to try: `add /class A1`, `add John Doe /class A1`, `add /name J0hn /class A1`, `add /name John Doe /class A1 /email john`<br>
+   1. Other incorrect add commands to try: `add /name John Doe`, `add /name 李明 /class A1`, `add /name John Doe/class A1 /class A2` (a parameter stuck to the name), `add /name John Doe /class A1&`, `add /name John Doe /class A1 /email john`<br>
       Expected: Similar to previous. No contact is added, and the status message describes the problem.
 
 ### Listing and searching contacts
@@ -1310,7 +1350,7 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `import missing.csv`, where `missing.csv` does not exist<br>
       Expected: The status message shows `File not found at missing.csv`.
 
-   1. Test case: `import bad-name.csv`, where the file has the header `name,class` followed by the row `J0hn,A1`<br>
+   1. Test case: `import bad-name.csv`, where the file has the header `name,class` followed by the row `"Tan, John",A1`<br>
       Expected: No contact is added. The status message shows `Invalid contact data on row 2`. If any row of a file is invalid, none of its contacts is added.
 
    1. Other incorrect import commands to try: `import`, `import students.txt` (where `students.txt` exists), `import empty.csv` (where `empty.csv` is an empty file)<br>

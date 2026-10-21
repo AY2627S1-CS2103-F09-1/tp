@@ -33,6 +33,20 @@ public class GradeCommandParserTest {
     }
 
     @Test
+    public void parse_assessmentNameWithSymbolsAndAccents_success() {
+        assertParseSuccess(parser, "1 /assessment Quiz #1 (Part A) /score 90",
+                new GradeCommand(Index.fromOneBased(1), new Grade("Quiz #1 (Part A)", new BigDecimal("90"))));
+        assertParseSuccess(parser, "1 /assessment Examen Finalé /score 90",
+                new GradeCommand(Index.fromOneBased(1), new Grade("Examen Finalé", new BigDecimal("90"))));
+    }
+
+    @Test
+    public void parse_prefixWithoutSpaceInAssessmentName_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz/score 90 /score 80",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "assessment name", "/score"));
+    }
+
+    @Test
     public void parse_missingIndex_failure() {
         assertParseFailure(parser, " /assessment Assignment 1 /score 97",
                 "Missing index. Please provide the index of the person.");
@@ -57,7 +71,7 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_invalidAssessmentName_failure() {
-        assertParseFailure(parser, "1 /assessment Exam_1 /score 90",
+        assertParseFailure(parser, "1 /assessment Exam,1 /score 90",
                 Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
     }
 

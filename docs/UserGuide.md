@@ -106,13 +106,17 @@ Adds a contact to ClassMates.
 
 Format: `add /name NAME /class CLASS [/email EMAIL]`
 
-* `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
-* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
+* `NAME` cannot be empty and can be at most 80 characters long. It can contain English letters, digits, spaces and the symbols on a standard keyboard, such as `'`, `-`, `.`, `/`, `(`, `)` and `#`, as in `Tan s/o Kumar` or `Peter (Pete) Lim`.
+  * Accented letters such as `é`, `ñ` and `ü` are allowed, as in `José Müller` or `Nguyễn Văn An`. Letters of other languages, such as Chinese or Cyrillic letters, are not accepted.
+  * Commas are not allowed, because they separate the values in a CSV file.
+  * A word that starts with `/` after a space is read as a parameter, so a `/` can be used inside a name, but not at the start of a word.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`.
+* A name or class cannot contain a parameter name that is stuck to the text before it, such as `John/class A1`, as this is most likely a missing space. The parameter names that are checked are `/name`, `/class`, `/email`, `/tag`, `/group`, `/members`, `/date`, `/status`, `/assessment` and `/score`, in any case.
 * `EMAIL` is optional. If given, it must be in the format `local-part@domain`.
   * The local-part can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain is made up of one or more labels separated by periods, as in `example.com`. Each label can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last label must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. An accented letter typed as one character and the same letter typed as a letter followed by an accent are also treated as the same.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -125,7 +129,9 @@ A parameter is given more than once | `Each parameter can only be specified once
 There is text before the first parameter, such as `add John /class A1` | `Invalid command format!` followed by the usage of `add`
 `/name` is missing | `Command requires a name`
 `/class` is missing | `Command requires a class`
+The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
 The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
 The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
 The email is not valid, including `/email` with nothing after it | A description of the valid email format
 The same name already exists in the same class | `NAME already exists in class CLASS`
@@ -161,7 +167,9 @@ Problem | Message
 A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` or `/tag` | `Unknown parameter. Use /name, /class or /email`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index is missing, is not a positive integer, or has other text with it, such as `edit John /name Jo` | `Invalid command format!` followed by the usage of `edit`
+The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
 The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
 The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
 The email is not valid | A description of the valid email format
 None of the parameters is given, such as `edit 1` | `At least one detail to edit must be provided`
@@ -337,7 +345,7 @@ The CSV file must follow this format:
 * The column names are not case-sensitive, and the columns can be in any order.
 * No other columns are accepted, and no column can appear more than once.
 * Every other row is one contact, with its values in the same order as the header. Each row must have as many values as the header.
-* Each value follows the same rules as the matching parameter of `add`, so a name or class that `add` would reject is also rejected in the file.
+* Each value follows the same rules as the matching parameter of `add`, so a name or class that `add` would reject is also rejected in the file. For example, a name with a comma, such as `"Tan, John"` in quotes, is rejected as invalid contact data.
 * The `email` value of a contact can be left blank if the contact has no email.
 * Blank rows are ignored.
 * The file must be saved in UTF-8 encoding.
@@ -375,7 +383,7 @@ Records a score for a contact in an assessment.
 Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain only English letters, digits, spaces and hyphens, such as `Assignment 1` or `Mid-term`. Spaces at the start and end are ignored.
+* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain the same characters as a `NAME` in [`add`](#adding-a-contact-add): English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, but no commas. Examples are `Assignment 1`, `Mid-term` and `Quiz #1 (Part A)`. Spaces at the start and end are ignored. Like a name, it cannot contain a parameter name stuck to the text before it, such as `Quiz/score`.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
 * `/assessment` and `/score` can each be given at most once.
@@ -390,7 +398,8 @@ The index is missing | `Missing index. Please provide the index of the person.`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
 The index is not a positive integer | `Index must be a positive integer.`
-The assessment name is not valid | `Assessment name must be 1 to 80 characters and contain only English letters, digits, spaces and hyphens.`
+The assessment name contains a parameter such as `/score` that is stuck to the text before it | `The assessment name contains '/score', which looks like a parameter that is missing a space before it`
+The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`

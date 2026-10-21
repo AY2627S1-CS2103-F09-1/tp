@@ -57,7 +57,7 @@ public class ViewGradeCommandParserTest {
 
     @Test
     public void parse_invalidName_failure() {
-        assertParseFailure(parser, " /name John@Tan /class A1", Name.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, " /name John, Tan /class A1", Name.MESSAGE_CONSTRAINTS);
     }
 
     @Test

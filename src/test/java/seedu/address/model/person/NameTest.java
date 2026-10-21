@@ -2,9 +2,11 @@ package seedu.address.model.person;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
+import java.time.Duration;
 import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
@@ -22,7 +24,8 @@ public class NameTest {
     @Test
     public void constructor_invalidName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new Name(""));
-        assertThrows(IllegalArgumentException.class, () -> new Name("R@chel"));
+        assertThrows(IllegalArgumentException.class, () -> new Name("Tan, John"));
+        assertThrows(IllegalArgumentException.class, () -> new Name("李明"));
         assertThrows(IllegalArgumentException.class, () -> new Name(NAME_OVER_MAX_LENGTH));
     }
 
@@ -34,29 +37,21 @@ public class NameTest {
         // invalid name
         assertFalse(Name.isValidName("")); // empty string
         assertFalse(Name.isValidName(" ")); // spaces only
-        assertFalse(Name.isValidName("^")); // only non-alphanumeric characters
-        assertFalse(Name.isValidName("peter*")); // contains disallowed symbol
-        assertFalse(Name.isValidName("peter (jack)")); // contains parentheses
-        assertFalse(Name.isValidName("12345")); // numbers only
-        assertFalse(Name.isValidName("peter the 2nd")); // contains digits
-        assertFalse(Name.isValidName("-peter")); // starts with a hyphen
-        assertFalse(Name.isValidName("'peter")); // starts with an apostrophe
-        assertFalse(Name.isValidName(".peter")); // starts with a period
-        assertFalse(Name.isValidName(" peter")); // starts with a space
-        assertFalse(Name.isValidName("José")); // accented letter
-        assertFalse(Name.isValidName("李明")); // non-English letters
-        assertFalse(Name.isValidName("peter’s")); // typographic apostrophe
+        assertFalse(Name.isValidName("Tan, John")); // comma
+        assertFalse(Name.isValidName(",")); // only a comma
+        assertFalse(Name.isValidName("李明")); // Chinese letters
+        assertFalse(Name.isValidName("Иван")); // Cyrillic letters
+        assertFalse(Name.isValidName("محمد")); // Arabic letters
+        assertFalse(Name.isValidName("Tan 李明")); // mixed scripts
+        assertFalse(Name.isValidName("peter\tjack")); // tab
+        assertFalse(Name.isValidName("peter\njack")); // new line
+        assertFalse(Name.isValidName("peter\u200Bjack")); // zero-width space
+        assertFalse(Name.isValidName("peter\u00A0jack")); // no-break space
+        assertFalse(Name.isValidName("peter😀")); // emoji
+        assertFalse(Name.isValidName("\u0301")); // an accent with no letter
+        assertFalse(Name.isValidName("1\u0301")); // an accent on a digit
         assertFalse(Name.isValidName(NAME_OVER_MAX_LENGTH)); // too long
-
-        // invalid name: slash not between two letters
-        assertFalse(Name.isValidName("/tan")); // at the start
-        assertFalse(Name.isValidName("tan/")); // at the end
-        assertFalse(Name.isValidName("tan s / o kumar")); // surrounded by spaces
-        assertFalse(Name.isValidName("tan s/ o kumar")); // followed by a space
-        assertFalse(Name.isValidName("tan s /o kumar")); // preceded by a space
-        assertFalse(Name.isValidName("tan s//o kumar")); // repeated
-        assertFalse(Name.isValidName("tan 1/2")); // next to digits
-        assertFalse(Name.isValidName("tan -/o")); // next to other symbols
+        assertFalse(Name.isValidName("a".repeat(Name.MAX_LENGTH) + "李")); // too long and non-English
 
         // valid name
         assertTrue(Name.isValidName("peter jack")); // alphabets only
@@ -69,6 +64,28 @@ public class NameTest {
         assertTrue(Name.isValidName("Tan s/o Kumar")); // slash between letters
         assertTrue(Name.isValidName("Lim d/o Chen")); // slash between letters
         assertTrue(Name.isValidName(NAME_AT_MAX_LENGTH)); // exactly the maximum length
+
+        // valid name: symbols and digits
+        assertTrue(Name.isValidName("peter (jack)")); // parentheses
+        assertTrue(Name.isValidName("Peter the 2nd")); // digits
+        assertTrue(Name.isValidName("12345")); // digits only
+        assertTrue(Name.isValidName("R@chel")); // symbol
+        assertTrue(Name.isValidName("Tan & Lim")); // ampersand
+        assertTrue(Name.isValidName("-peter")); // starts with a hyphen
+        assertTrue(Name.isValidName("'peter")); // starts with an apostrophe
+        assertTrue(Name.isValidName("/tan")); // slash at the start
+        assertTrue(Name.isValidName("tan s / o kumar")); // slash surrounded by spaces
+        assertTrue(Name.isValidName("tan 1/2")); // slash next to digits
+        assertTrue(Name.isValidName("peter\"jack\"")); // quotation marks
+
+        // valid name: accented letters
+        assertTrue(Name.isValidName("José")); // accented letter
+        assertTrue(Name.isValidName("Zoë Müller")); // accents on several letters
+        assertTrue(Name.isValidName("Nguyễn Văn An")); // stacked accents
+        assertTrue(Name.isValidName("Søren Đặng Łukasz")); // Latin letters without a plain base letter
+        assertTrue(Name.isValidName("Jose\u0301")); // letter followed by a separate accent
+        assertTrue(Name.isValidName("Peter O’Brien")); // typographic apostrophe
+        assertTrue(Name.isValidName("Peter O‘Brien")); // typographic opening apostrophe
     }
 
     @Test
@@ -95,9 +112,16 @@ public class NameTest {
 
     @Test
     public void getConstraintViolation_invalidCharacters_returnsConstraintsMessage() {
-        assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation("R@chel"));
-        assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation("Rachel 2nd"));
-        assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation("-Rachel"));
+        assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation("Tan, John"));
+        assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation("李明"));
+        assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation("Rachel\n"));
+    }
+
+    @Test
+    public void getConstraintViolation_longInvalidName_returnsQuickly() {
+        String almostValidName = "a".repeat(Name.MAX_LENGTH - 1) + "李";
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () ->
+                assertEquals(Optional.of(Name.MESSAGE_CONSTRAINTS), Name.getConstraintViolation(almostValidName)));
     }
 
     @Test
@@ -149,6 +173,24 @@ public class NameTest {
     public void toString_keepsTextAsGiven() {
         assertEquals("john   TAN", new Name("john   TAN").toString());
         assertEquals("john   TAN", new Name("john   TAN").fullName);
+    }
+
+    @Test
+    public void constructor_decomposedAccent_storedInNormalizedForm() {
+        Name decomposed = new Name("Jose\u0301");
+
+        assertEquals("José", decomposed.fullName);
+        assertEquals(new Name("José"), decomposed);
+        assertEquals(new Name("José").hashCode(), decomposed.hashCode());
+    }
+
+    @Test
+    public void matches_accentedLetters_ignoresCaseAndNormalizationForm() {
+        Name name = new Name("José Mu\u0308ller");
+
+        assertTrue(name.matches("JOSÉ MÜLLER"));
+        assertTrue(name.matches("Jose\u0301 Müller"));
+        assertFalse(name.matches("Jose Muller")); // an unaccented letter is a different letter
     }
 
     @Test
