@@ -47,6 +47,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `attendance 1 /date 14-10-2026 /status present` : Adds attendance record to contact in the 1st index as `present` on `14-10-2026`
 
+   * `attendance /name John Doe /class A1 /date 14-10-2026 /status present` : Adds attendance record to contact named `John Doe` in class `A1` as `present` on `14-10-2026`
+
    * `viewA /name John Doe /class A1` : Lists the attendance records of `John Doe` in class `A1`
 
    * `clear` : Deletes all contacts.
@@ -372,12 +374,20 @@ If more than one problem applies, only the first one in the table above is repor
 
 Records a score for a contact in an assessment.
 
-Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
+Format: 
+
+`grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
+
+or
+
+`grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
 * `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain only English letters, digits, spaces and hyphens, such as `Assignment 1` or `Mid-term`. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
+* Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
 * `/assessment` and `/score` can each be given at most once.
 * Grades are saved with the contact data. ClassMates does not show recorded grades yet.
 
@@ -386,13 +396,17 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 Problem | Message
 --------|--------
 A parameter is given more than once | `Each parameter can only be specified once`
-The index is missing | `Missing index. Please provide the index of the person.`
+The index and name/class pair are both provided | `Use either an index or name and class, not both.`
+The index, or name and class, is missing | `Missing index. Please provide the index of the person.`
+`/name` is missing when using the name/class format | `Command requires a name`
+`/class` is missing when using the name/class format | `Command requires a class`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
 The index is not a positive integer | `Index must be a positive integer.`
 The assessment name is not valid | `Assessment name must be 1 to 80 characters and contain only English letters, digits, spaces and hyphens.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The name and class do not match any contact | `Contact not found`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -401,24 +415,35 @@ On success, ClassMates shows `Grade of SCORE recorded for ASSESSMENT_NAME for st
 Examples:
 * `grade 5 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for the 5th contact in the displayed list.
 * `list Betsy` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list Betsy` command.
+* `grade /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for Alex Yeoh from class A1.
 
 ### Recording attendance: `attendance`
 
 Records whether a contact was present, absent or late on a date.
 
-Format: `attendance INDEX /date DATE /status STATUS`
+Format: 
+
+`attendance INDEX /date DATE /status STATUS`
+
+or
+
+`attendance /name NAME /class CLASS /date DATE /status STATUS`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
-* `/date` and `/status` can each be given at most once.
+* `/name`, `/class`, `/date` and `/status` can each be given at most once.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-The index is missing | `Missing index. Please provide the index of the person.`
+The index, or name and class, is missing | `Missing index. Please provide the index of the person.`
+`/name` is missing when using the name/class format | `Command requires a name`
+`/class` is missing when using the name/class format | `Command requires a class`
+The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
 A parameter is given more than once | `Each parameter can only be specified once`
@@ -427,6 +452,7 @@ The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. P
 The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
 The date is in the future | `Attendance date cannot be in the future.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The name and class do not match any contact | `Contact not found`
 The contact already has a record for the date | `Attendance record already exists`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -435,6 +461,7 @@ On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, 
 Examples:
 * `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
 * `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
+* `attendance /name Alex Yeoh /class A1 /date 16-09-2026 /status absent` records Alex Yeoh from class A1 as absent on 16 September 2026.
 
 ### Viewing attendance: `viewA`
 

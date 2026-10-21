@@ -469,23 +469,63 @@ The CSV import uses `FileUtil` rather than the `Storage` component. The CSV file
 
 The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, `AttendanceCommand`, and the `Attendance` model class.
 
-* `AttendanceCommandParser#parse(String)` tokenizes the arguments using the `/date` and `/status` prefixes. It reads the contact index from the preamble, checks for missing or repeated parameters, parses the index, validates the date strictly in `DD-MM-YYYY` format, and converts the status to an `Attendance.Status`.
-* `AttendanceCommand#execute(Model)` first rejects a date in the future. It then gets the contact at the specified index from `Model#getFilteredPersonList()`. If the index is invalid, it throws a `CommandException`.
-* To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old person in the model with `Model#setPerson(Person, Person)`.
-* If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
-* On success, the command returns a message naming the contact, date and status.
+`AttendanceCommandParser#parse(String)` supports two ways of identifying a contact:
+
+* `attendance INDEX /date DD-MM-YYYY /status STATUS`
+* `attendance /name NAME /class CLASS /date DD-MM-YYYY /status STATUS`
+
+The parser tokenizes the arguments using the `/name`, `/class`, `/date`, and `/status` prefixes. It verifies that no prefix is repeated and ensures that the user provides either an index or both a name and class, but not both.
+
+The parser then:
+
+* validates the index when the index format is used;
+* validates the name and class when the name/class format is used;
+* validates the date strictly in `DD-MM-YYYY` format;
+* converts the status to an `Attendance.Status`.
+
+`AttendanceCommand#execute(Model)` first rejects a date in the future. It then identifies the contact in one of two ways:
+
+* For the index format, it retrieves the contact from `Model#getFilteredPersonList()` using the displayed index.
+* For the name/class format, it searches the full address book for a contact whose name and class match the supplied values. Name and class comparisons ignore capitalization and extra whitespace.
+
+If no contact matches the supplied name and class, the command throws a `CommandException`.
+
+To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old person in the model using `Model#setPerson(Person, Person)`.
+
+If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
+
+On success, the command returns a message naming the contact, date, and attendance status.
 
 #### Design considerations
 
 **Aspect: How attendance updates a contact**
 
-* **Alternative 1 (current choice):** Select the contact by its index in the displayed list.
-  * Pros: Consistent with commands such as `delete INDEX` and `tag`; users can first use `list` to narrow down the contacts.
-  * Cons: The index depends on the currently displayed list, so users need to check the list before recording attendance.
+* **Alternative 1:** Select the contact by its index in the displayed list.
+  Pros:
+
+* Consistent with commands such as `delete INDEX` and `tag`.
+* Convenient when recording attendance for several contacts from a displayed list.
+* Allows users to first use `list` or `find` to narrow down the contacts.
+
+  Cons:
+
+* The index depends on the currently displayed list.
+* Users need to check the displayed list before recording attendance.
+* The command may refer to a different contact if the displayed list changes.
 
 * **Alternative 2:** Select the contact using `/name NAME /class CLASS`.
-  * Pros: Identifies the contact directly and does not depend on the current list or its indices.
-  * Cons: Requires entering both the name and class, and is less convenient when recording attendance for several contacts from a displayed list.
+  Pros:
+
+* Identifies the contact directly.
+* Does not depend on the currently displayed list or its indices.
+* Works even when the contact is not currently visible in a filtered list.
+* Avoids ambiguity when different contacts have the same name but belong to different classes.
+
+  Cons:
+
+* Requires users to enter both the name and class.
+* Is less convenient when recording attendance for several contacts from a displayed list.
+* Requires the user to know the exact contact name and class.
 
 ### Viewing attendance feature
 
@@ -891,12 +931,70 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 
     Use case resumes at step 1.
 
-
-**Use case: UC07 - Record grades for a known student**
+**Use case: UC07 - Record attendance for a known student**
 
 **MSS**
-1. User requests to record a grade, giving the index of a student in the displayed list, an assessment name and a score.
-2. CM records the grade for the student and displays a success message.
+
+1. User requests to record attendance, providing either the index of a student in the displayed list, or the student’s name and class. The user also provides an attendance date and attendance status.
+2. CM identifies the student using the provided index or name and class.
+3. CM records the attendance entry for the student and displays a success message.
+
+   Use case ends.
+
+Extensions
+
+* 1a. The command format is invalid, e.g. the student identifier, attendance date or attendance status is missing, or the date or status is given more than once.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1b. The user provides an index, but the index is not a positive integer or no student is displayed at that index.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1c. The user provides a name and class, but either the name or class is missing.
+  * 1c1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1d. The provided name and class do not match any student in CM.
+  * 1d1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1e. Both an index and a name/class pair are provided.
+  * 1e1. CM displays an error message instructing the user to provide either an index or a name/class pair, but not both.
+
+    Use case resumes at step 1.
+
+* 1f. The attendance date is invalid, e.g. it does not follow the DD-MM-YYYY format, does not represent a valid date, or is in the future.
+  * 1f1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1g. The attendance status is invalid, e.g. it is not present, absent, or late.
+  * 1g1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1h. The student already has an attendance entry for the specified date.
+  * 1h1. CM keeps the existing attendance entry and displays an error message.
+
+    Use case resumes at step 1.
+
+**Use case: UC08 - Record grades for a known student**
+
+**MSS**
+1. User requests to record a grade, providing either:
+   a. the index of a student in the displayed list; or
+   b. the student's name and class.
+
+   The user also provides an assessment name and score.
+
+2. CM identifies the student using the provided index or name and class.
+
+3. CM records the grade for the student and displays a success message.
 
    Use case ends.
 
@@ -918,9 +1016,20 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
   * 1d1. CM keeps the existing grade and displays an error message.
 
     Use case resumes at step 1.
+* 1e. The user provides a name and class, but either the name or class is missing.
+  * 1e1. CM displays an error message.
 
+    Use case resumes at step 1.
+* 1f. The provided name and class do not match any student in CM.
+  * 1f1. CM displays an error message.
 
-**Use case: UC08 - List or search student contacts**
+    Use case resumes at step 1.
+* 1g. Both an index and a name/class pair are provided.
+  * 1g1. CM displays an error message instructing the user to provide either an index or a name/class pair, but not both.
+
+    Use case resumes at step 1.
+
+**Use case: UC09 - List or search student contacts**
 
 **Guarantees**
 * The search always covers all contacts, whether or not an earlier search is displayed.
@@ -943,9 +1052,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
     Use case ends.
 
 
-**Use case: UC09 - View known student's attendance**
-
-*(Planned feature, not implemented yet.)*
+**Use case: UC10 - View known student's attendance**
 
 **MSS**
 1. User requests to view the attendance of the student.
@@ -961,7 +1068,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
     Use case resumes at step 1.
 
 
-**Use case: UC10 - Clear all contacts**
+**Use case: UC11 - Clear all contacts**
 
 **MSS**
 1. User requests to clear all contacts.
@@ -970,7 +1077,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
    Use case ends.
 
 
-**Use case: UC11 - View help**
+**Use case: UC12 - View help**
 
 **MSS**
 1. User requests to view help.
@@ -986,7 +1093,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
     Use case ends.
 
 
-**Use case: UC12 - Exit the application**
+**Use case: UC13 - Exit the application**
 
 **MSS**
 1. User requests to exit the application.
@@ -995,7 +1102,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
    Use case ends.
 
 
-**Use case: UC13 - Edit a contact**
+**Use case: UC14 - Edit a contact**
 
 **Guarantees**
 * The contact is only changed if the whole command can be carried out. If any problem is found, nothing about the contact is changed.
@@ -1037,7 +1144,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
     Use case resumes at step 4.
 
 
-**Use case: UC14 - Remove students from groups (by untagging)**
+**Use case: UC15 - Remove students from groups (by untagging)**
 
 **Guarantees**
 * The contacts are only removed from the group if all of them can be removed. If any problem is found, none of them is removed.
@@ -1325,18 +1432,33 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `attendance 1 /date 01-01-2024 /status present`<br>
       Expected: The status message shows `Attendance for Alex Yeoh on 01-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/classmates.json`.
 
+   1. Test case: `attendance /name Alex Yeoh /class A1 /date 02-01-2024 /status present`<br>
+      Expected: The status message shows `Attendance for Alex Yeoh on 02-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/classmates.json`.
+
 1. Recording attendance unsuccessfully
 
    1. Prerequisites: Complete the previous test case. List all contacts using the `list` command.
 
    1. Test case: `attendance 1 /date 01-01-2024 /status absent`<br>
       Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
+  
+   1. Test case: `attendance /name Alex Yeoh /class A1 /date 02-01-2024 /status absent`<br>
+      Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
+  
+   1. Test case: `attendance /name Unknown Student /class A1 /date 03-01-2024 /status present`<br>
+      Expected: No record is added. The status message shows `Contact not found`.
+
+   1. Test case: `attendance /name Alex Yeoh /date 03-01-2024 /status present`<br>
+      Expected: No record is added. The status message indicates that the class is missing.
 
    1. Test case: `attendance 1 /date 01-01-2999 /status present`<br>
       Expected: No record is added. The status message shows `Attendance date cannot be in the future.`.
 
    1. Test case: `attendance 99 /date 03-01-2024 /status present`<br>
       Expected: No record is added. The status message shows `The contact index provided is invalid.`.
+  
+   1. Test case: `attendance 1 /name Alex Yeoh /class A1 /date 03-01-2024 /status present`<br>
+      Expected: No record is added. The status message indicates that either an index or a name/class pair should be provided, but not both.
 
    1. Other incorrect attendance commands to try: `attendance 1 /date 2024-01-01 /status present`, `attendance 1 /date 03-01-2024 /status sick`, `attendance 1 /status present`<br>
       Expected: Similar to previous. No record is added, and an error message is shown.

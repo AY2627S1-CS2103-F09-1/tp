@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -11,13 +13,15 @@ import org.junit.jupiter.api.Test;
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.model.person.Attendance;
+import seedu.address.model.person.ClassName;
+import seedu.address.model.person.Name;
 
 public class AttendanceCommandParserTest {
 
     private final AttendanceCommandParser parser = new AttendanceCommandParser();
 
     @Test
-    public void parse_validArguments_success() {
+    public void parse_validIndexArguments_success() {
         String userInput = "1 /date 16-09-2026 /status absent";
         AttendanceCommand expectedCommand = new AttendanceCommand(
                 Index.fromOneBased(1),
@@ -28,10 +32,26 @@ public class AttendanceCommandParserTest {
     }
 
     @Test
-    public void parse_statusCapitalization_success() {
-        String userInput = "2 /date 16-09-2026 /status LaTe";
+    public void parse_validNameAndClassArguments_success() {
+        String userInput = " /name Alex Yeoh /class A1 /date 16-09-2026 /status absent";
+
         AttendanceCommand expectedCommand = new AttendanceCommand(
-                Index.fromOneBased(2),
+                new Name("Alex Yeoh"),
+                new ClassName("A1"),
+                LocalDate.of(2026, 9, 16),
+                Attendance.Status.ABSENT);
+
+        assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_nameAndClassFormatting_success() {
+        String userInput =
+                " /name   alex   yeoh  /class  a1 /date 16-09-2026 /status LaTe";
+
+        AttendanceCommand expectedCommand = new AttendanceCommand(
+                new Name("alex   yeoh"),
+                new ClassName("a1"),
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.LATE);
 
@@ -51,9 +71,38 @@ public class AttendanceCommandParserTest {
     }
 
     @Test
+    public void parse_missingDateWithNameAndClass_failure() {
+        assertParseFailure(parser, " /name Alex Yeoh /class A1 /status absent",
+            "Missing date. Please provide the date of attendance.");
+    }
+
+    @Test
     public void parse_missingStatus_failure() {
         assertParseFailure(parser, "1 /date 16-09-2026",
             "Missing status. Please provide the attendance status.");
+    }
+
+    @Test
+    public void parse_missingStatusWithNameAndClass_failure() {
+        assertParseFailure(parser, " /name Alex Yeoh /class A1 /date 16-09-2026",
+            "Missing status. Please provide the attendance status.");
+    }
+
+    @Test
+    public void parse_missingClass_failure() {
+        assertParseFailure(parser, " /name Alex Yeoh /date 16-09-2026 /status absent", MESSAGE_MISSING_CLASS);
+    }
+
+    @Test
+    public void parse_missingName_failure() {
+        assertParseFailure(parser, " /class A1 /date 16-09-2026 /status absent", MESSAGE_MISSING_NAME);
+    }
+
+    @Test
+    public void parse_bothIndexAndNameAndClass_failure() {
+        assertParseFailure(parser,
+                "1 /name Alex Yeoh /class A1 /date 16-09-2026 /status absent",
+                "Use either an index or name and class, not both.");
     }
 
     @Test
@@ -90,6 +139,20 @@ public class AttendanceCommandParserTest {
     public void parse_repeatedStatusPrefix_failure() {
         assertParseFailure(parser,
                 "1 /date 16-09-2026 /status absent /status present",
+                MESSAGE_DUPLICATE_PARAMETERS);
+    }
+
+    @Test
+    public void parse_repeatedNamePrefix_failure() {
+        assertParseFailure(parser,
+                " /name Alex Yeoh /name John Tan /class A1 " + "/date 16-09-2026 /status absent",
+                MESSAGE_DUPLICATE_PARAMETERS);
+    }
+
+    @Test
+    public void parse_repeatedClassPrefix_failure() {
+        assertParseFailure(parser,
+                "/name Alex Yeoh /class A1 /class A2 " + "/date 16-09-2026 /status absent",
                 MESSAGE_DUPLICATE_PARAMETERS);
     }
 

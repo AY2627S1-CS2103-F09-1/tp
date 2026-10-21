@@ -22,10 +22,12 @@ public class HelpWindow extends UiPart<Stage> {
             add /name NAME /class CLASS [/email EMAIL]
             edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]
             attendance INDEX /date DATE /status STATUS
+            attendance /name NAME /class CLASS /date DATE /status STATUS
             clear
             delete INDEX
             delete /name NAME /class CLASS
             grade INDEX /assessment ASSESSMENT_NAME /score SCORE
+            grade /name NAME /class CLASS /date DATE /status STATUS
             tag /group GROUP_NAME /members INDEX[,INDEX]...
             untag /group GROUP_NAME /members INDEX[,INDEX]...
             list [KEYWORD]
@@ -116,4 +118,5 @@ public class HelpWindow extends UiPart<Stage> {
         url.putString(USERGUIDE_URL);
         clipboard.setContent(url);
     }
+
 }
