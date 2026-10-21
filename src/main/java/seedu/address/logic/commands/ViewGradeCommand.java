@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,8 +23,6 @@ public class ViewGradeCommand extends Command {
             + ": Displays all grades for a student.\n"
             + "Parameters: /name NAME /class CLASS\n"
             + "Example: " + COMMAND_WORD + " /name John Tan /class A1";
-
-    public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
     public static final String MESSAGE_NO_GRADES = "No grades recorded.";
     public static final String MESSAGE_SUCCESS = "Here are the grades for %s from class %s\n%s";
 
