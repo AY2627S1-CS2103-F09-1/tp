@@ -22,7 +22,7 @@ public class ClassNameTest {
     @Test
     public void constructor_invalidClassName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new ClassName(""));
-        assertThrows(IllegalArgumentException.class, () -> new ClassName("A1/B2"));
+        assertThrows(IllegalArgumentException.class, () -> new ClassName("A1&B2"));
         assertThrows(IllegalArgumentException.class, () -> new ClassName(CLASS_NAME_OVER_MAX_LENGTH));
     }
 
@@ -35,8 +35,7 @@ public class ClassNameTest {
         assertFalse(ClassName.isValidClassName("")); // empty string
         assertFalse(ClassName.isValidClassName(" ")); // spaces only
         assertFalse(ClassName.isValidClassName("^")); // only symbols
-        assertFalse(ClassName.isValidClassName("A1/B2")); // slash
-        assertFalse(ClassName.isValidClassName("Math (Adv)")); // parentheses
+        assertFalse(ClassName.isValidClassName("A1&B2")); // ampersand
         assertFalse(ClassName.isValidClassName("Arts & Humanities")); // ampersand
         assertFalse(ClassName.isValidClassName("Class 3A, Group 2")); // comma
         assertFalse(ClassName.isValidClassName("-A1")); // starts with a hyphen
@@ -56,6 +55,10 @@ public class ClassNameTest {
         assertTrue(ClassName.isValidClassName("Sec 3-2")); // space and hyphen
         assertTrue(ClassName.isValidClassName("P5.2")); // period
         assertTrue(ClassName.isValidClassName("CS2103_T11")); // underscore
+        assertTrue(ClassName.isValidClassName("A1/B2")); // slash
+        assertTrue(ClassName.isValidClassName("T11/A")); // slash between letters and digits
+        assertTrue(ClassName.isValidClassName("Math (Adv)")); // parentheses
+        assertTrue(ClassName.isValidClassName("Sec 3 (Morning)")); // space, digit and parentheses
         assertTrue(ClassName.isValidClassName("Math 101")); // letters, space and digits
         assertTrue(ClassName.isValidClassName(CLASS_NAME_AT_MAX_LENGTH)); // exactly the maximum length
     }
@@ -85,7 +88,7 @@ public class ClassNameTest {
 
     @Test
     public void getConstraintViolation_invalidCharacters_returnsConstraintsMessage() {
-        assertEquals(Optional.of(ClassName.MESSAGE_CONSTRAINTS), ClassName.getConstraintViolation("A1/B2"));
+        assertEquals(Optional.of(ClassName.MESSAGE_CONSTRAINTS), ClassName.getConstraintViolation("A1&B2"));
         assertEquals(Optional.of(ClassName.MESSAGE_CONSTRAINTS), ClassName.getConstraintViolation("-A1"));
     }
 
@@ -124,7 +127,7 @@ public class ClassNameTest {
         assertFalse(className.matches("   "));
 
         // text that is not a valid class name does not match and does not throw
-        assertFalse(className.matches("A1/B2"));
+        assertFalse(className.matches("A1&B2"));
         assertFalse(className.matches("a".repeat(ClassName.MAX_LENGTH + 1)));
     }
 

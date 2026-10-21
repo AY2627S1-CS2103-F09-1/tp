@@ -45,6 +45,9 @@ public class TagCommandParserTest {
         // parameters in a different order
         assertParseSuccess(parser, MEMBERS_DESC + GROUP_DESC, expectedCommand);
 
+        // prefixes in any case
+        assertParseSuccess(parser, " /GROUP Group A /Members 1,3", expectedCommand);
+
         // whitespace only preamble
         assertParseSuccess(parser, "\t  \r  \n" + GROUP_DESC + MEMBERS_DESC, expectedCommand);
     }
@@ -142,8 +145,8 @@ public class TagCommandParserTest {
         assertParseFailure(parser, " /name Group A" + MEMBERS_DESC, MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, GROUP_DESC + MEMBERS_DESC + " /tag friends", MESSAGE_UNKNOWN_PARAMETER);
 
-        // matching is case-sensitive and requires the whole token to match
-        assertParseFailure(parser, " /Group Group A" + MEMBERS_DESC, MESSAGE_UNKNOWN_PARAMETER);
+        // matching requires the whole token to match
+        assertParseFailure(parser, " /GROUPS Group A" + MEMBERS_DESC, MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, GROUP_DESC + " /memberss 1", MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, " /groupA" + MEMBERS_DESC, MESSAGE_UNKNOWN_PARAMETER);
 
