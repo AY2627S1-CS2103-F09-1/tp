@@ -610,6 +610,48 @@ The `viewG` command displays all grades of a contact. It is implemented by `View
   * Pros: A name that can never exist is reported as a format error.
   * Cons: The three commands that identify a contact by name and class gave different messages for the same mistake.
 
+### Deleting grades feature
+
+#### Implementation
+
+The `deleteG` command removes one grade, identified by its assessment name, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteGradeCommandParser` returns a `DeleteGradeByIndexCommand` or a `DeleteGradeByNameAndClassCommand` which both extend the abstract `DeleteGradeCommand`.
+
+* `DeleteGradeCommandParser#parse(String)` first rejects unrecognized and repeated parameters. If neither `/name` nor `/class` is present, it reads the contact index from the preamble and creates a `DeleteGradeByIndexCommand`. If either is present, it rejects a non-empty preamble, requires both parameters and creates a `DeleteGradeByNameAndClassCommand`.
+* The parser validates the assessment name using `Grade#getAssessmentNameConstraintViolation(String)` without constructing a `Grade` since deleting a grade does not require a score. It also uses `ParserUtil#requireNoEmbeddedPrefix(String, String)` to detect a parameter that may be missing a space before it.
+* `DeleteGradeByIndexCommand#execute(Model)` selects a contact from `Model#getFilteredPersonList()`, so the index refers to the currently displayed list. `DeleteGradeByNameAndClassCommand#execute(Model)` searches the whole address book using `Person#hasNameAndClass(String, String)`. As with `delete`, `viewA` and `viewG`, the supplied name and class are plain strings and are compared ignoring case and extra whitespace.
+* `DeleteGradeCommand#deleteGrade(Model, Person, String)` contains the deletion shared by both subclasses. It finds the stored grade using `Grade#hasAssessmentName(String)`, which ignores case and extra whitespace, and if there is no match, reports that the grade was not found.
+* The shared operation passes the stored `Grade` to `Person#withoutGrade(Grade)`. This returns a new `Person` with only that grade removed. The command replaces the original person using `Model#setPerson(Person, Person)`. The success message uses the score and assessment name from the stored grade.
+* The constructors reject null arguments and assert that the assessment name has already been validated. After deletion, an assertion checks that the grade is absent from the new person. These checks document assumptions between the parser, command and model layers.
+
+#### Design considerations
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `DeleteGradeCommand` with one subclass for each way of identifying the contact and a shared grade-deletion method.
+  * Pros: Each subclass has one contact-selection responsibility, invalid combinations of identifier fields cannot be represented and deletion logic and messages are kept in one place.
+  * Cons: One command word maps to two command classes so the parser must decide which class to create.
+* **Alternative 2:** A single command with optional fields for the index, name and class.
+  * Pros: Only one command class is needed.
+  * Cons: The command must branch during execution and invalid combinations of optional fields can be represented.
+
+**Aspect: How the grade to remove is represented**
+
+* **Alternative 1 (current choice):** Find the stored `Grade` by assessment name, then pass that object to `Person#withoutGrade(Grade)`.
+  * Pros: No placeholder score is needed and the stored assessment name and score are available for the success message. It also reuses the comparison rules of `Grade`.
+  * Cons: Finding the grade and removing it are separate operations over the grade list.
+* **Alternative 2:** Add a `Person#withoutGrade(String)` method that finds and removes a grade by assessment name.
+  * Pros: Encapsulates the lookup and removal in the model class.
+  * Cons: The command would need another way to obtain the removed grade for its success message and `Person` would need an additional operation that accepts an unvalidated string.
+
+**Aspect: Which contacts a deletion by name and class searches**
+
+* **Alternative 1 (current choice):** The whole address book.
+  * Pros: The command works regardless of the current filter and is consistent with `delete /name NAME /class CLASS`, `viewA` and `viewG`.
+  * Cons: It can modify a contact that is not currently displayed.
+* **Alternative 2:** Only the displayed contacts.
+  * Pros: The affected contact is visible before the command is run.
+  * Cons: A filter can hide the intended contact even though the name and class identify it directly.
+
 ### Command history feature
 
 #### Implementation
