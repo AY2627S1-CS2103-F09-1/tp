@@ -86,6 +86,8 @@ The `UI` component,
 
 Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
 
+The `ResultDisplay` is a read-only `TextArea` that wraps its text (`wrapText="true"` in [`ResultDisplay.fxml`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/resources/view/ResultDisplay.fxml)), so a long message, such as the description of a valid name or an email, is broken into lines that fit the current width of the window, and it is wrapped again when the window is resized. The box has a fixed height of 100 pixels in `MainWindow.fxml`, so a message that needs more lines than that is scrolled vertically.
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
