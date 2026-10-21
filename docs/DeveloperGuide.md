@@ -1555,6 +1555,35 @@ testers are expected to do more *exploratory* testing.
    1. Other incorrect commands to try: `grade 1 /assessment Quiz 2 /score 101`, `grade 1 /assessment Quiz 2 /score 90 /foo bar` (a parameter that is not accepted), `viewG /class A1`<br>
       Expected: Similar to previous. No grade is recorded, and the status message describes the problem.
 
+### Deleting grades
+
+1. Deleting a grade by the index of a displayed contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`, then record two grades using `grade 1 /assessment Quiz #1 /score 80` and `grade 1 /assessment Final Exam /score 95`.
+
+   1. Test case: `deleteG 1 /assessment quiz   #1`<br>
+      Expected: The grade for Quiz #1 is removed from Alex Yeoh. The grade for Final Exam and all other contact details remain unchanged. The status message shows `Grade of 80 for Quiz #1 for student Alex Yeoh in class A1 has been deleted`. The case and extra spaces of the assessment name do not matter.
+
+1. Deleting a grade by name and class
+
+   1. Prerequisites: The app contains the sample data. Run `list bernice`, followed by `grade 1 /assessment Assignment 1 /score 90`, then run `list david` so that Bernice Yu is not displayed.
+
+   1. Test case: `deleteG /name bernice  yu /class a1 /assessment assignment 1`<br>
+      Expected: The grade for Assignment 1 is removed from Bernice Yu, even though she is not displayed. The status message shows `Grade of 90 for Assignment 1 for student Bernice Yu in class A1 has been deleted`. The whole address book is searched, and case and extra spaces do not matter.
+
+1. Deleting a grade unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`.
+
+   1. Test case: `deleteG 1 /assessment Unknown Assessment`<br>
+      Expected: No grade is deleted. The status message shows `Grade for this assessment not found`.
+
+   1. Test case: `deleteG /name Alex Yeoh /class B1 /assessment Quiz #1`<br>
+      Expected: No grade is deleted. The status message shows `No contact found`, because both the name and class must match an existing contact.
+
+   1. Other incorrect commands to try: `deleteG`, `deleteG 0 /assessment Quiz #1`, `deleteG 99 /assessment Quiz #1`, `deleteG 1 /assessment Quiz,1`, `deleteG 1 /score 80`<br>
+      Expected: Similar to previous. No grade is deleted and the status message describes the problem.
+
 ### Clearing all contacts
 
 1. Clearing all contacts
