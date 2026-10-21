@@ -25,12 +25,12 @@ import seedu.address.model.person.Name;
  */
 public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
+    public static final String MESSAGE_UNKNOWN_PARAMETER =
+            "Unknown parameter. Use " + PREFIX_DATE + " or " + PREFIX_STATUS;
     private static final String MESSAGE_MISSING_IDENTIFIERS =
         "Use either an index, or both /name and /class.";
     private static final String MESSAGE_BOTH_IDENTIFIERS =
         "Use either an index or name and class, not both.";
-    public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_DATE + " or " + PREFIX_STATUS;
     private static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
     private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
     private static final String MESSAGE_INVALID_DATE =
