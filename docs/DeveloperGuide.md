@@ -166,6 +166,8 @@ The `Storage` component,
 * saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
 * saves each contact's attendance records in the address book JSON file and restores them when the file is loaded (see `JsonAdaptedPerson` and `JsonAdaptedAttendance`).
 * saves the contacts in the order they are displayed, and keeps that order when it reads them back (see `JsonSerializableAddressBook#toModelType()`).
+* ignores the byte order mark that some editors put at the start of a UTF-8 file (see `JsonUtil#deserializeObjectFromJsonFile(Path, Class)`), and treats an empty (`null`) entry in a list of the data file as invalid data, and not as a program error (see `JsonSerializableAddressBook#toModelType()` and `JsonAdaptedPerson#toModelType()`).
+* writes a file by writing a temporary file first, which then replaces the file in one step (see `FileUtil#writeToFile(Path, String)`), so that a failure while writing keeps the old content of the file.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -326,6 +328,41 @@ A name, a class name and an assessment name are validated when they are created,
 * **Alternative 3:** Make `ArgumentTokenizer` recognize a prefix that has no space before it.
   * Pros: One place for all the commands.
   * Cons: It would split `s/o` and other text that has a `/` in it.
+
+### Protecting the data file feature
+
+#### Implementation
+
+The data file holds everything that a user has entered, and users are allowed to edit it by hand. The following makes sure that a file that cannot be read, or a failure while saving, does not lose their contacts.
+
+* `JsonUtil#deserializeObjectFromJsonFile(Path, Class)` removes the byte order mark at the start of the text before it is parsed, as the JSON parser rejects it. This applies to the data file and to `preferences.json`. `CsvParser` does the same for the files that `import` reads.
+* `JsonSerializableAddressBook#toModelType()` and `JsonAdaptedPerson#toModelType()` throw an `IllegalValueException` for a `null` entry in the list of contacts, tags, attendance records or grades. Without this, the `NullPointerException` was not caught by `MainApp` and the application stopped before it showed a window.
+* `MainApp#initModelManager(Storage, ReadOnlyUserPrefs)` catches the `DataLoadingException` of a file that cannot be read, and calls `MainApp#keepUnreadableDataFile(Storage)`. This method renames the file with `FileUtil#moveToBackup(Path)`, to the name of the file followed by `.bad-` and the time (`yyyyMMdd-HHmmss-SSS`), and then saves an empty address book to the original path. The empty file is needed because the sample data is only used when there is no data file, so that the next run would otherwise show the sample data again.
+* `MainApp#keepUnreadableDataFile(Storage)` returns a message for the user. `MainApp` gives it to `UiManager`, which gives it to `MainWindow`, and `MainWindow#fillInnerParts()` shows it in the `ResultDisplay`. If the file cannot be renamed, for example because another program has locked it, the file is left as it is, nothing is saved, and the message says that the next command replaces the file.
+* `FileUtil#writeToFile(Path, String)` writes the text to a file with the same name followed by `.tmp` in the same folder, and then moves it over the target with `Files.move`, using `ATOMIC_MOVE` and `REPLACE_EXISTING`. If the file system cannot move atomically, it moves without `ATOMIC_MOVE`. The temporary file is deleted in a `finally` block. The temporary file is in the same folder so that it is on the same file system, which is needed for a move in one step.
+
+#### Design considerations
+
+**Aspect: What to do with a data file that cannot be read**
+
+* **Alternative 1 (current choice):** Rename the file, start with an empty list, save the empty list, and tell the user.
+  * Pros: The content is never lost, the next run is clean, and the user knows what happened and where the file is.
+  * Cons: The user has to rename the file back by hand, and each failure leaves another file in the folder.
+* **Alternative 2:** Start with an empty list and leave the file, as before.
+  * Pros: Nothing to implement.
+  * Cons: The next command saves the empty list over the file, and the content is lost.
+* **Alternative 3:** Show an error and do not start.
+  * Pros: The file is never touched.
+  * Cons: The user cannot use the application until the file is fixed, which is hard for someone who does not know JSON.
+
+**Aspect: How a file is written**
+
+* **Alternative 1 (current choice):** Write a temporary file, then replace the target with it.
+  * Pros: The target is either the old content or the new content, whatever happens while writing.
+  * Cons: A temporary file is left behind if the process is killed between the two steps, and the folder must allow new files.
+* **Alternative 2:** Write the target directly, as before.
+  * Pros: Simplest.
+  * Cons: The target is cut to zero length before the new content is written, so a crash or a full disk leaves it empty or half written.
 
 ### Linking contacts to a group feature
 
@@ -1176,7 +1213,13 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
+1. Dealing with a data file that cannot be read
+
+   1. Close the app. Open `data/classmates.json` in a text editor, delete its last `}`, and save the file. Launch the app.<br>
+      Expected: The GUI opens with no contacts. The result box says that ClassMates could not read the data file and shows the name of the kept file. The `data` folder has a file named `classmates.json.bad-` followed by the time, which still holds the broken content, and `classmates.json` holds an empty list.
+
+   1. Close the app and launch it again.<br>
+      Expected: The GUI opens with no contacts and no message, as the empty `classmates.json` is read.
 
 ### Adding a contact
 

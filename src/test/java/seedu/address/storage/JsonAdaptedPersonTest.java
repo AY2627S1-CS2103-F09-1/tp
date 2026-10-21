@@ -208,6 +208,36 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_nullTag_throwsIllegalValueException() {
+        List<JsonAdaptedTag> tagsWithNull = new ArrayList<>(VALID_TAGS);
+        tagsWithNull.add(null);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tagsWithNull,
+            List.of(), List.of());
+        String expectedMessage = String.format(JsonAdaptedPerson.EMPTY_ENTRY_MESSAGE_FORMAT, "tags");
+        assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullAttendanceRecord_throwsIllegalValueException() {
+        List<JsonAdaptedAttendance> recordsWithNull = new ArrayList<>();
+        recordsWithNull.add(null);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            recordsWithNull, List.of());
+        String expectedMessage = String.format(JsonAdaptedPerson.EMPTY_ENTRY_MESSAGE_FORMAT, "attendanceRecords");
+        assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullGradeRecord_throwsIllegalValueException() {
+        List<JsonAdaptedGrade> recordsWithNull = new ArrayList<>();
+        recordsWithNull.add(null);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            List.of(), recordsWithNull);
+        String expectedMessage = String.format(JsonAdaptedPerson.EMPTY_ENTRY_MESSAGE_FORMAT, "gradeRecords");
+        assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
     public void toModelType_invalidAttendanceRecord_throwsIllegalValueException() {
         JsonAdaptedAttendance invalidRecord =
             new JsonAdaptedAttendance("31-02-2026", "present");

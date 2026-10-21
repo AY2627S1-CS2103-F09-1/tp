@@ -524,8 +524,9 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, ClassMates starts with no contacts at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
-Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid.<br>
+If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and tells you so in the result box. Your file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the same folder, such as `classmates.json.bad-20261021-101500-123`, and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. If ClassMates cannot rename the file, it says so, and the next command that you run replaces the file. We still recommend backing up the file before editing it.<br>
+Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid, and are kept in the same way.<br>
+The file can be saved in UTF-8 with or without a byte order mark, so editors such as Notepad can be used.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
