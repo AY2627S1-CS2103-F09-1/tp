@@ -52,7 +52,7 @@ public class GradeCommandParserTest {
 
         assertParseSuccess(parser, userInput, expectedCommand);
     }
-  
+
     @Test
     public void parse_unknownParameter_failure() {
         assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /foo bar",
