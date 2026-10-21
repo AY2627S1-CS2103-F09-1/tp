@@ -3,16 +3,19 @@ package seedu.address.logic.parser;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 
+import java.util.Map;
 import java.util.logging.Logger;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.GradeCommand;
@@ -37,7 +40,36 @@ public class AddressBookParser {
     private static final Logger logger = LogsCenter.getLogger(AddressBookParser.class);
 
     /**
-     * Parses user input into command for execution.
+     * Maps each command word, in lower case, to the parser of its arguments. The commands that take no
+     * arguments ignore them, except {@code clear}, which rejects them because it deletes all contacts. Two
+     * command words must not differ only in case, as the lookup ignores case.
+     */
+    private static final Map<String, Parser<? extends Command>> COMMAND_PARSERS = Map.ofEntries(
+            entry(AddCommand.COMMAND_WORD, new AddCommandParser()),
+            entry(EditCommand.COMMAND_WORD, new EditCommandParser()),
+            entry(DeleteCommand.COMMAND_WORD, new DeleteCommandParser()),
+            entry(ClearCommand.COMMAND_WORD, new ClearCommandParser()),
+            entry(ListCommand.COMMAND_WORD, new ListCommandParser()),
+            entry(TagCommand.COMMAND_WORD, new TagCommandParser()),
+            entry(UntagCommand.COMMAND_WORD, new UntagCommandParser()),
+            entry(ExitCommand.COMMAND_WORD, arguments -> new ExitCommand()),
+            entry(HelpCommand.COMMAND_WORD, arguments -> new HelpCommand()),
+            entry(AttendanceCommand.COMMAND_WORD, new AttendanceCommandParser()),
+            entry(ViewAttendanceCommand.COMMAND_WORD, new ViewAttendanceCommandParser()),
+            entry(ImportCommand.COMMAND_WORD, new ImportCommandParser()),
+            entry(GradeCommand.COMMAND_WORD, new GradeCommandParser()),
+            entry(ViewGradeCommand.COMMAND_WORD, new ViewGradeCommandParser()),
+            entry(DeleteGradeCommand.COMMAND_WORD, new DeleteGradeCommandParser())
+    );
+
+    private static Map.Entry<String, Parser<? extends Command>> entry(String commandWord,
+            Parser<? extends Command> parser) {
+        return Map.entry(StringUtil.toAsciiLowerCase(commandWord), parser);
+    }
+
+    /**
+     * Parses user input into command for execution. The command word is matched ignoring the case of its
+     * English letters, so {@code LIST} and {@code viewa} are the commands {@code list} and {@code viewA}.
      *
      * @param userInput full user input string
      * @return the command based on the user input
@@ -57,26 +89,12 @@ public class AddressBookParser {
         // Lower level log messages are used sparingly to minimize noise in the code.
         logger.fine("Command word: " + commandWord + "; Arguments: " + arguments);
 
-        return switch (commandWord) {
-            case AddCommand.COMMAND_WORD -> new AddCommandParser().parse(arguments);
-            case EditCommand.COMMAND_WORD -> new EditCommandParser().parse(arguments);
-            case DeleteCommand.COMMAND_WORD -> new DeleteCommandParser().parse(arguments);
-            case ClearCommand.COMMAND_WORD -> new ClearCommandParser().parse(arguments);
-            case ListCommand.COMMAND_WORD -> new ListCommandParser().parse(arguments);
-            case TagCommand.COMMAND_WORD -> new TagCommandParser().parse(arguments);
-            case UntagCommand.COMMAND_WORD -> new UntagCommandParser().parse(arguments);
-            case ExitCommand.COMMAND_WORD -> new ExitCommand();
-            case HelpCommand.COMMAND_WORD -> new HelpCommand();
-            case AttendanceCommand.COMMAND_WORD -> new AttendanceCommandParser().parse(arguments);
-            case ViewAttendanceCommand.COMMAND_WORD -> new ViewAttendanceCommandParser().parse(arguments);
-            case ImportCommand.COMMAND_WORD -> new ImportCommandParser().parse(arguments);
-            case GradeCommand.COMMAND_WORD -> new GradeCommandParser().parse(arguments);
-            case ViewGradeCommand.COMMAND_WORD -> new ViewGradeCommandParser().parse(arguments);
-            default -> {
-                logger.finer("This user input caused a ParseException: " + userInput);
-                throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
-            }
-        };
+        Parser<? extends Command> parser = COMMAND_PARSERS.get(StringUtil.toAsciiLowerCase(commandWord));
+        if (parser == null) {
+            logger.finer("This user input caused a ParseException: " + userInput);
+            throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
+        }
+        return parser.parse(arguments);
     }
 
 }

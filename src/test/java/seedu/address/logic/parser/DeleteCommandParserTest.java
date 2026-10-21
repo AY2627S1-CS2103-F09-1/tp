@@ -76,6 +76,11 @@ public class DeleteCommandParserTest {
     }
 
     @Test
+    public void parse_prefixesInAnyCase_returnsDeleteByNameAndClassCommand() {
+        assertParseSuccess(parser, " /NAME John Tan /Class A1", new DeleteByNameAndClassCommand("John Tan", "A1"));
+    }
+
+    @Test
     public void parse_nameAndClassAreNotValidated_returnsDeleteByNameAndClassCommand() {
         // values that could never be a name or class are accepted, and simply will not be found
         assertParseSuccess(parser, " /name R@chel 2 /class A1/B2",
@@ -119,8 +124,8 @@ public class DeleteCommandParserTest {
         // an unknown parameter is reported even if the rest is an index
         assertParseFailure(parser, "1 /phone 91234567", MESSAGE_UNKNOWN_PARAMETER);
 
-        // matching is case-sensitive and requires the whole token to match
-        assertParseFailure(parser, " /Name John Tan /class A1", MESSAGE_UNKNOWN_PARAMETER);
+        // matching requires the whole token to match
+        assertParseFailure(parser, " /NAMES John Tan /class A1", MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, " /name John Tan /classes A1", MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, " /nameJohn /class A1", MESSAGE_UNKNOWN_PARAMETER);
     }

@@ -39,6 +39,16 @@ public class JsonUtilTest {
         assertEquals(serializableTestClass.getMapOfIntegerToString(), SerializableTestClass.getHashMapTestValues());
     }
 
+    @Test
+    public void deserializeObjectFromJsonFile_fileWithByteOrderMark_noExceptionThrown() throws IOException {
+        FileUtil.writeToFile(SERIALIZATION_FILE, "\uFEFF" + SerializableTestClass.JSON_STRING_REPRESENTATION);
+
+        SerializableTestClass serializableTestClass = JsonUtil
+                .deserializeObjectFromJsonFile(SERIALIZATION_FILE, SerializableTestClass.class);
+
+        assertEquals(serializableTestClass.getName(), SerializableTestClass.getNameTestValue());
+    }
+
     //TODO: @Test jsonUtil_readJsonStringToObjectInstance_correctObject()
 
     //TODO: @Test jsonUtil_writeThenReadObjectToJson_correctObject()

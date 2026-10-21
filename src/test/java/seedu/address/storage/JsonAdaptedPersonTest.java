@@ -26,7 +26,7 @@ import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class JsonAdaptedPersonTest {
-    private static final String INVALID_NAME = "R@chel";
+    private static final String INVALID_NAME = "R,achel";
     private static final String INVALID_CLASS_NAME = "A1&";
     private static final String INVALID_EMAIL = "example.com";
     private static final String INVALID_TAG = "#friend";
@@ -50,6 +50,15 @@ public class JsonAdaptedPersonTest {
         JsonAdaptedPerson person = new JsonAdaptedPerson(personWithoutEmail);
         assertEquals(personWithoutEmail, person.toModelType());
         assertTrue(person.toModelType().getEmail().isEmpty());
+    }
+
+    @Test
+    public void toModelType_nameWithAccentsAndSymbols_returnsPerson() throws Exception {
+        JsonAdaptedPerson person = new JsonAdaptedPerson("Jose\u0301 Müller (Joe) #2", "T11/A", null,
+                List.of(), List.of(), List.of());
+        Person modelPerson = person.toModelType();
+        assertEquals("José Müller (Joe) #2", modelPerson.getName().fullName);
+        assertEquals("T11/A", modelPerson.getClassName().value);
     }
 
     @Test
@@ -219,6 +228,36 @@ public class JsonAdaptedPersonTest {
 
         assertThrows(IllegalValueException.class, Person.MESSAGE_DUPLICATE_ASSESSMENT,
                 adaptedPerson::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullTag_throwsIllegalValueException() {
+        List<JsonAdaptedTag> tagsWithNull = new ArrayList<>(VALID_TAGS);
+        tagsWithNull.add(null);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, tagsWithNull,
+            List.of(), List.of());
+        String expectedMessage = String.format(JsonAdaptedPerson.EMPTY_ENTRY_MESSAGE_FORMAT, "tags");
+        assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullAttendanceRecord_throwsIllegalValueException() {
+        List<JsonAdaptedAttendance> recordsWithNull = new ArrayList<>();
+        recordsWithNull.add(null);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            recordsWithNull, List.of());
+        String expectedMessage = String.format(JsonAdaptedPerson.EMPTY_ENTRY_MESSAGE_FORMAT, "attendanceRecords");
+        assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
+    }
+
+    @Test
+    public void toModelType_nullGradeRecord_throwsIllegalValueException() {
+        List<JsonAdaptedGrade> recordsWithNull = new ArrayList<>();
+        recordsWithNull.add(null);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL, VALID_TAGS,
+            List.of(), recordsWithNull);
+        String expectedMessage = String.format(JsonAdaptedPerson.EMPTY_ENTRY_MESSAGE_FORMAT, "gradeRecords");
+        assertThrows(IllegalValueException.class, expectedMessage, person::toModelType);
     }
 
     @Test

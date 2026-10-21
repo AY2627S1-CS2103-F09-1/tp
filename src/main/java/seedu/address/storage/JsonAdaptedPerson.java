@@ -25,6 +25,7 @@ import seedu.address.model.tag.Tag;
 class JsonAdaptedPerson {
 
     public static final String MISSING_FIELD_MESSAGE_FORMAT = "Person's %s field is missing!";
+    public static final String EMPTY_ENTRY_MESSAGE_FORMAT = "Person's %s list contains an empty entry!";
 
     private final String name;
     private final String className;
@@ -79,16 +80,16 @@ class JsonAdaptedPerson {
      */
     public Person toModelType() throws IllegalValueException {
         final List<Tag> personTags = new ArrayList<>();
-        for (JsonAdaptedTag tag : tags) {
+        for (JsonAdaptedTag tag : requireNoEmptyEntries(tags, "tags")) {
             personTags.add(tag.toModelType());
         }
         List<Attendance> modelAttendanceRecords = new ArrayList<>();
-        for (JsonAdaptedAttendance attendance : attendanceRecords) {
+        for (JsonAdaptedAttendance attendance : requireNoEmptyEntries(attendanceRecords, "attendanceRecords")) {
             modelAttendanceRecords.add(attendance.toModelType());
         }
 
         List<Grade> modelGradeRecords = new ArrayList<>();
-        for (JsonAdaptedGrade grade : gradeRecords) {
+        for (JsonAdaptedGrade grade : requireNoEmptyEntries(gradeRecords, "gradeRecords")) {
             modelGradeRecords.add(grade.toModelType());
         }
         requireNoDuplicateRecords(modelAttendanceRecords, modelGradeRecords);
@@ -124,6 +125,21 @@ class JsonAdaptedPerson {
         if (!Person.hasUniqueAssessments(gradeRecords)) {
             throw new IllegalValueException(Person.MESSAGE_DUPLICATE_ASSESSMENT);
         }
+    }
+
+    /**
+     * Returns {@code entries} if none of them is {@code null}, which happens when the data file has
+     * {@code null} as an entry of a list.
+     *
+     * @param listName The name of the list in the data file, for the error message.
+     * @throws IllegalValueException if an entry is {@code null}.
+     */
+    private static <T> List<T> requireNoEmptyEntries(List<T> entries, String listName)
+            throws IllegalValueException {
+        if (entries.contains(null)) {
+            throw new IllegalValueException(String.format(EMPTY_ENTRY_MESSAGE_FORMAT, listName));
+        }
+        return entries;
     }
 
     /**

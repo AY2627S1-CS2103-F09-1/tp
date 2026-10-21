@@ -105,6 +105,34 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_prefixesInAnyCase_success() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(VALID_NAME_AMY)
+                .withClassName(VALID_CLASS_AMY).withEmail(VALID_EMAIL_AMY).build();
+
+        assertParseSuccess(parser, "1 /NAME " + VALID_NAME_AMY + " /Class " + VALID_CLASS_AMY
+                + " /eMail " + VALID_EMAIL_AMY, new EditCommand(INDEX_FIRST_PERSON, descriptor));
+    }
+
+    @Test
+    public void parse_prefixWithoutSpace_failure() {
+        // the stuck parameter must not silently become part of the name or class
+        assertParseFailure(parser, "1 /name John/class B",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "name", "/class"));
+        assertParseFailure(parser, "1 /class A1/name Bob",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/name"));
+        assertParseFailure(parser, "1 /class A1/NAME Bob",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/NAME"));
+    }
+
+    @Test
+    public void parse_nameAndClassWithSymbolsAndAccents_success() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName("José Müller (Joe) #2")
+                .withClassName("T11/A").build();
+        assertParseSuccess(parser, "1 /name José Müller (Joe) #2 /class T11/A",
+                new EditCommand(INDEX_FIRST_PERSON, descriptor));
+    }
+
+    @Test
     public void parse_multipleInvalidValues_reportsFirstInOrder() {
         // name, then class, then email
         assertParseFailure(parser, "1" + INVALID_EMAIL_DESC + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS);

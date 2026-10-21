@@ -8,11 +8,11 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.tag.Tag;
 
@@ -86,12 +86,12 @@ public class Person {
 
     /**
      * Returns true if no two of {@code gradeRecords} are for the same assessment. Assessment names are
-     * compared ignoring case, as in {@link Grade#isSameAssessment(Grade)}.
+     * compared ignoring case and extra spaces, as in {@link Grade#isSameAssessment(Grade)}.
      */
     public static boolean hasUniqueAssessments(List<Grade> gradeRecords) {
         requireNonNull(gradeRecords);
         return gradeRecords.stream()
-                .map(grade -> grade.getAssessmentName().toLowerCase(Locale.ROOT))
+                .map(grade -> StringUtil.toComparisonKey(grade.getAssessmentName()))
                 .distinct()
                 .count() == gradeRecords.size();
     }
@@ -198,6 +198,23 @@ public class Person {
         }
         List<Grade> newGradeRecords = new ArrayList<>(gradeRecords);
         newGradeRecords.add(grade);
+        return new Person(name, className, Optional.ofNullable(email), tags, attendanceRecords, newGradeRecords);
+    }
+
+    /**
+     * Returns a new Person without the given grade record.
+     * The original person and all other records are unchanged.
+     *
+     * @param grade Grade to remove.
+     * @return A new Person with the given grade record removed.
+     * @throws IllegalArgumentException If a record does not exist for that assessment.
+     */
+    public Person withoutGrade(Grade grade) {
+        requireNonNull(grade);
+        List<Grade> newGradeRecords = new ArrayList<>(gradeRecords);
+        if (!newGradeRecords.remove(grade)) {
+            throw new IllegalArgumentException("Grade record does not exist");
+        }
         return new Person(name, className, Optional.ofNullable(email), tags, attendanceRecords, newGradeRecords);
     }
 

@@ -54,8 +54,8 @@ public abstract class GroupMembershipCommandParser<T extends GroupMembershipComm
             throw new ParseException(invalidFormatMessage);
         }
 
-        String groupValue = getNonBlankValue(argMultimap, PREFIX_GROUP, MESSAGE_MISSING_GROUP);
-        String membersValue = getNonBlankValue(argMultimap, PREFIX_MEMBERS, MESSAGE_MISSING_MEMBERS);
+        String groupValue = ParserUtil.getNonBlankValue(argMultimap, PREFIX_GROUP, MESSAGE_MISSING_GROUP);
+        String membersValue = ParserUtil.getNonBlankValue(argMultimap, PREFIX_MEMBERS, MESSAGE_MISSING_MEMBERS);
 
         Tag group = ParserUtil.parseGroupName(groupValue);
         List<Index> memberIndices = ParserUtil.parseMemberIndices(membersValue);
@@ -68,17 +68,5 @@ public abstract class GroupMembershipCommandParser<T extends GroupMembershipComm
      * contain duplicates.
      */
     protected abstract T createCommand(Tag group, List<Index> memberIndices);
-
-    /**
-     * Returns the value of {@code prefix} in {@code argMultimap}.
-     *
-     * @throws ParseException with {@code missingMessage} if the prefix is absent or its value is blank.
-     */
-    private static String getNonBlankValue(ArgumentMultimap argMultimap, Prefix prefix, String missingMessage)
-            throws ParseException {
-        return argMultimap.getValue(prefix)
-                .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParseException(missingMessage));
-    }
 
 }

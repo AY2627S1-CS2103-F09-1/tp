@@ -75,4 +75,8 @@ shadowJar {
     archiveFileName = 'classmates.jar'
 }
 
+run {
+    enableAssertions = true
+}
+
 defaultTasks 'clean', 'test'
