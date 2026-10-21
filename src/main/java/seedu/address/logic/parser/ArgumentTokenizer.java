@@ -8,6 +8,8 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.util.StringUtil;
+
 /**
  * Tokenizes arguments string of the form: {@code preamble <prefix> value <prefix> value ...}<br>
  *     e.g. {@code some preamble text /t 11.00 /t 12.00 /k /m July}  where prefixes are {@code /t /k /m}.<br>
@@ -53,14 +55,14 @@ public class ArgumentTokenizer {
      */
     public static List<String> findUnrecognizedPrefixes(String argsString, Prefix... knownPrefixes) {
         Set<String> knownPrefixStrings = Arrays.stream(knownPrefixes)
-                .map(prefix -> toAsciiLowerCase(prefix.getPrefix()))
+                .map(prefix -> StringUtil.toAsciiLowerCase(prefix.getPrefix()))
                 .collect(Collectors.toSet());
 
         List<String> unrecognizedPrefixes = new ArrayList<>();
         Matcher matcher = PREFIX_LIKE_TOKEN.matcher(argsString);
         while (matcher.find()) {
             String token = matcher.group();
-            if (!knownPrefixStrings.contains(toAsciiLowerCase(token))) {
+            if (!knownPrefixStrings.contains(StringUtil.toAsciiLowerCase(token))) {
                 unrecognizedPrefixes.add(token);
             }
         }
@@ -129,21 +131,7 @@ public class ArgumentTokenizer {
      * Returns -1 if there is no such occurrence.
      */
     private static int indexOfIgnoringCase(String text, String target, int fromIndex) {
-        return toAsciiLowerCase(text).indexOf(toAsciiLowerCase(target), fromIndex);
-    }
-
-    /**
-     * Returns {@code text} with the English letters {@code A-Z} converted to lower case and everything else
-     * unchanged. Unlike {@link String#toLowerCase()}, it never changes the length of the text and never
-     * makes a letter of another language equal to an English letter.
-     */
-    private static String toAsciiLowerCase(String text) {
-        StringBuilder lowerCaseText = new StringBuilder(text.length());
-        for (char character : text.toCharArray()) {
-            boolean isUpperCaseEnglishLetter = character >= 'A' && character <= 'Z';
-            lowerCaseText.append(isUpperCaseEnglishLetter ? (char) (character - 'A' + 'a') : character);
-        }
-        return lowerCaseText.toString();
+        return StringUtil.toAsciiLowerCase(text).indexOf(StringUtil.toAsciiLowerCase(target), fromIndex);
     }
 
     /**

@@ -71,8 +71,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.<br>
   Prefixes are not case-sensitive. For example, `/NAME John Doe` and `/Name John Doe` are the same as `/name John Doe`.
 
-* Command words are case-sensitive and must be typed exactly as shown.<br>
-  For example, `list` works, but `LIST` and `List` show `Unknown command.`. Likewise, `viewA` needs a capital `A`, so `viewa` shows `Unknown command.`.
+* Command words are not case-sensitive.<br>
+  For example, `list`, `LIST` and `List` are the same command, and `viewA` can also be typed as `viewa` or `VIEWA`.
 
 * Items in square brackets are optional.<br>
   For example, `/name NAME [/email EMAIL]` can be used as `/name John Doe /email johnd@example.com` or as `/name John Doe`.

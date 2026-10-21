@@ -26,6 +26,24 @@ public class StringUtil {
     }
 
     /**
+     * Returns {@code s} with the English letters {@code A-Z} converted to lower case and everything else
+     * unchanged. Unlike {@link String#toLowerCase()}, it never changes the length of the text and never
+     * makes a letter of another language equal to an English letter, so it is used to compare syntax such as
+     * command words and prefixes.
+     *
+     * @param s cannot be null
+     */
+    public static String toAsciiLowerCase(String s) {
+        requireNonNull(s);
+        StringBuilder lowerCaseText = new StringBuilder(s.length());
+        for (char character : s.toCharArray()) {
+            boolean isUpperCaseEnglishLetter = character >= 'A' && character <= 'Z';
+            lowerCaseText.append(isUpperCaseEnglishLetter ? (char) (character - 'A' + 'a') : character);
+        }
+        return lowerCaseText.toString();
+    }
+
+    /**
      * Returns {@code s} in lower case with leading and trailing whitespace removed and repeated whitespace
      * collapsed into a single space, so that strings that only differ in these respects have the same key.
      * Accented letters are compared in their normalized form (see {@link #toNormalizedForm(String)}).
