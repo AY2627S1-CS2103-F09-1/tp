@@ -70,7 +70,6 @@ public class GradeCommandParser implements Parser<GradeCommand> {
             throw new ParseException(MESSAGE_DUPLICATE_PARAMETERS);
         }
 
-        Index index = ParserUtil.parseIndex(indexArgument);
         ParserUtil.requireNoEmbeddedPrefix(assessmentArgument, "assessment name");
         Optional<String> assessmentViolation = Grade.getAssessmentNameConstraintViolation(assessmentArgument);
         if (assessmentViolation.isPresent()) {
