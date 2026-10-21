@@ -71,8 +71,8 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
      */
     private static DeleteGradeByNameAndClassCommand parseByNameAndClass(ArgumentMultimap argMultimap)
             throws ParseException {
-        String name = getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
-        String className = getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
+        String name = ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
+        String className = ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
         return new DeleteGradeByNameAndClassCommand(name, className, parseAssessmentName(argMultimap));
     }
 
@@ -82,24 +82,14 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
      * @throws ParseException If the assessment name is invalid or missing.
      */
     private static String parseAssessmentName(ArgumentMultimap argMultimap) throws ParseException {
-        String assessmentName = getNonBlankValue(argMultimap, PREFIX_ASSESSMENT, MESSAGE_MISSING_ASSESSMENT);
+        String assessmentName = ParserUtil.getNonBlankValue(
+                argMultimap, PREFIX_ASSESSMENT, MESSAGE_MISSING_ASSESSMENT);
+        ParserUtil.requireNoEmbeddedPrefix(assessmentName, "assessment name");
         Optional<String> constraintViolation = Grade.getAssessmentNameConstraintViolation(assessmentName);
         if (constraintViolation.isPresent()) {
             throw new ParseException(constraintViolation.get());
         }
         return assessmentName;
-    }
-
-    /**
-     * Returns the non-blank value associated with {@code prefix} in {@code argMultimap}.
-     *
-     * @throws ParseException With {@code missingMessage} if the prefix is absent or has a blank value.
-     */
-    private static String getNonBlankValue(ArgumentMultimap argMultimap, Prefix prefix, String missingMessage)
-            throws ParseException {
-        return argMultimap.getValue(prefix)
-                .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParseException(missingMessage));
     }
 
 }

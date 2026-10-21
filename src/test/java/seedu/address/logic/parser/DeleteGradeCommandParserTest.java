@@ -39,6 +39,14 @@ public class DeleteGradeCommandParserTest {
     }
 
     @Test
+    public void parse_prefixesInAnyCase_success() {
+        DeleteGradeByNameAndClassCommand expected =
+                new DeleteGradeByNameAndClassCommand("John Tan", "A1", "Quiz #1 (Part A)");
+
+        assertParseSuccess(parser, " /Name John Tan /CLASS A1 /ASSESSMENT Quiz #1 (Part A)", expected);
+    }
+
+    @Test
     public void parse_missingAssessment_failure() {
         assertParseFailure(parser, "1", MESSAGE_MISSING_ASSESSMENT);
         assertParseFailure(parser, " /name John Tan /class A1", MESSAGE_MISSING_ASSESSMENT);
@@ -58,7 +66,13 @@ public class DeleteGradeCommandParserTest {
 
     @Test
     public void parse_invalidAssessment_failure() {
-        assertParseFailure(parser, "1 /assessment Quiz_1", Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
+        assertParseFailure(parser, "1 /assessment Quiz,1", Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
+    }
+
+    @Test
+    public void parse_prefixWithoutSpaceInAssessmentName_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz/name John",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "assessment name", "/name"));
     }
 
     @Test

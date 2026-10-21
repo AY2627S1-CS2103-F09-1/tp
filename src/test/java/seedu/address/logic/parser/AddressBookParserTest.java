@@ -172,7 +172,8 @@ public class AddressBookParserTest {
                 DeleteCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD, ListCommand.COMMAND_WORD,
                 TagCommand.COMMAND_WORD, UntagCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD,
                 HelpCommand.COMMAND_WORD, AttendanceCommand.COMMAND_WORD, ViewAttendanceCommand.COMMAND_WORD,
-                ImportCommand.COMMAND_WORD, GradeCommand.COMMAND_WORD, ViewGradeCommand.COMMAND_WORD);
+                ImportCommand.COMMAND_WORD, GradeCommand.COMMAND_WORD, ViewGradeCommand.COMMAND_WORD,
+                DeleteGradeCommand.COMMAND_WORD);
 
         for (String commandWord : commandWords) {
             for (String variant : List.of(commandWord.toUpperCase(), commandWord.toLowerCase())) {
