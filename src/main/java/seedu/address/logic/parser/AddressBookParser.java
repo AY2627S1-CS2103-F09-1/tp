@@ -14,6 +14,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.DeleteAttendanceCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -58,6 +59,7 @@ public class AddressBookParser {
             entry(ImportCommand.COMMAND_WORD, new ImportCommandParser()),
             entry(GradeCommand.COMMAND_WORD, new GradeCommandParser()),
             entry(ViewGradeCommand.COMMAND_WORD, new ViewGradeCommandParser()),
+            entry(DeleteAttendanceCommand.COMMAND_WORD, new DeleteAttendanceCommandParser()),
             entry(DeleteGradeCommand.COMMAND_WORD, new DeleteGradeCommandParser())
     );
 
