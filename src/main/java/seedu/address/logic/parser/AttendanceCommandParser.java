@@ -47,8 +47,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE,
                 PREFIX_STATUS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);
-
-        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_DATE, PREFIX_STATUS);
+        
         String indexArgument = argMultimap.getPreamble();
         String nameArgument = argMultimap.getValue(PREFIX_NAME).orElse("").trim();
         String classArgument = argMultimap.getValue(PREFIX_CLASS).orElse("").trim();
