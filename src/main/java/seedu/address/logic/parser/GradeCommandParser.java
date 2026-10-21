@@ -21,10 +21,10 @@ import seedu.address.model.person.Name;
 /** Parses arguments and creates a {@link GradeCommand}. */
 public class GradeCommandParser implements Parser<GradeCommand> {
 
-    private static final String MESSAGE_MISSING_IDENTIFIERS =
-        "Use either an index, or both /name and /class.";
     public static final String MESSAGE_UNKNOWN_PARAMETER =
             "Unknown parameter. Use " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE;
+    private static final String MESSAGE_MISSING_IDENTIFIERS =
+        "Use either an index, or both /name and /class.";
     private static final String MESSAGE_MISSING_ASSESSMENT = "Assessment name missing";
     private static final String MESSAGE_MISSING_SCORE = "Score missing";
     private static final String MESSAGE_BOTH_IDENTIFIERS =
