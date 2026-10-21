@@ -20,6 +20,9 @@ import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteByIndexCommand;
 import seedu.address.logic.commands.DeleteByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteGradeByIndexCommand;
+import seedu.address.logic.commands.DeleteGradeByNameAndClassCommand;
+import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
@@ -180,4 +183,18 @@ public class AddressBookParserTest {
         assertEquals(expected, parser.parseCommand("grade 1 /assessment Assignment 1 /score 97.5"));
     }
 
+    @Test
+    public void parseCommand_deleteGrade() throws Exception {
+        DeleteGradeCommand expected = new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Assignment 1");
+
+        assertEquals(expected, parser.parseCommand("deleteG 1 /assessment Assignment 1"));
+    }
+
+    @Test
+    public void parseCommand_deleteGradeByNameAndClass() throws Exception {
+        DeleteGradeCommand command = (DeleteGradeCommand) parser.parseCommand(
+                DeleteGradeCommand.COMMAND_WORD + " /name John Tan /class A1 /assessment WA2");
+        assertEquals(new DeleteGradeByNameAndClassCommand("John Tan", "A1", "WA2"),
+                command);
+    }
 }
