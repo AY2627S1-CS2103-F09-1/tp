@@ -46,12 +46,9 @@ public abstract class DeleteAttendanceCommand extends Command {
                 .findFirst()
                 .orElseThrow(() -> new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND));
 
-        Person personWithoutAttendance;
-        try {
-            personWithoutAttendance = person.withoutAttendance(attendance);
-        } catch (IllegalArgumentException e) {
-            throw new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND, e);
-        }
+        // previous operation catches nonexistent attendance record
+        // so following operation need not check for it again
+        Person personWithoutAttendance = person.withoutAttendance(attendance);
         assert personWithoutAttendance.getAttendanceRecords().stream()
                 .noneMatch(record -> record.getDate().equals(date)) : "Attendance record was not removed";
 
