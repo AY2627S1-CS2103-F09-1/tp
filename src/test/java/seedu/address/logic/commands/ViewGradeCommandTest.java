@@ -93,7 +93,7 @@ public class ViewGradeCommandTest {
             new ViewGradeCommand("Tan, John", "A1"), new ViewGradeCommand("Alex Tan", "A1&")}) {
             CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
 
-            assertEquals(ViewGradeCommand.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+            assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
         }
     }
 
