@@ -6,9 +6,13 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
+import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Stream;
 
@@ -78,6 +82,63 @@ public class FileUtilTest {
 
         assertEquals("old content", Files.readString(target.resolve("inner.txt")));
         assertEquals(List.of("data.json"), listFileNames());
+    }
+
+    @Test
+    public void replaceFile_atomicMoveSupported_movesOnceAtomically() throws IOException {
+        Path source = testFolder.resolve("source.tmp");
+        Path target = testFolder.resolve("target.json");
+        Files.writeString(source, "new");
+        Files.writeString(target, "old");
+        List<List<CopyOption>> attempts = new ArrayList<>();
+
+        FileUtil.replaceFile(source, target, (from, to, options) -> {
+            attempts.add(List.of(options));
+            Files.move(from, to, options);
+        });
+
+        assertEquals(List.of(List.of(StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE)),
+                attempts);
+        assertEquals("new", Files.readString(target));
+        assertFalse(Files.exists(source));
+    }
+
+    @Test
+    public void replaceFile_atomicMoveNotSupported_movesAgainWithoutAtomicMove() throws IOException {
+        Path source = testFolder.resolve("source.tmp");
+        Path target = testFolder.resolve("target.json");
+        Files.writeString(source, "new");
+        Files.writeString(target, "old");
+        List<List<CopyOption>> attempts = new ArrayList<>();
+
+        FileUtil.replaceFile(source, target, (from, to, options) -> {
+            attempts.add(List.of(options));
+            if (List.of(options).contains(StandardCopyOption.ATOMIC_MOVE)) {
+                throw new AtomicMoveNotSupportedException(from.toString(), to.toString(), "not supported");
+            }
+            Files.move(from, to, options);
+        });
+
+        assertEquals(List.of(List.of(StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE),
+                List.of(StandardCopyOption.REPLACE_EXISTING)), attempts);
+        assertEquals("new", Files.readString(target));
+        assertFalse(Files.exists(source));
+    }
+
+    @Test
+    public void replaceFile_otherFailure_isNotRetried() {
+        Path source = testFolder.resolve("source.tmp");
+        Path target = testFolder.resolve("target.json");
+        List<List<CopyOption>> attempts = new ArrayList<>();
+
+        FileUtil.FileMover failingMover = (from, to, options) -> {
+            attempts.add(List.of(options));
+            throw new IOException("disk failure");
+        };
+
+        assertThrows(IOException.class, "disk failure", () -> FileUtil.replaceFile(source, target, failingMover));
+
+        assertEquals(1, attempts.size());
     }
 
     @Test

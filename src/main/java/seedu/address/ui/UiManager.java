@@ -1,5 +1,7 @@
 package seedu.address.ui;
 
+import static java.util.Objects.requireNonNull;
+
 import java.nio.file.Path;
 import java.util.logging.Logger;
 
@@ -41,6 +43,7 @@ public class UiManager implements Ui {
      * bar. The {@code startupMessage} is shown to the user when the window opens, unless it is empty.
      */
     public UiManager(Logic logic, Path dataFilePath, String startupMessage) {
+        requireNonNull(startupMessage);
         this.logic = logic;
         this.dataFilePath = dataFilePath;
         this.startupMessage = startupMessage;

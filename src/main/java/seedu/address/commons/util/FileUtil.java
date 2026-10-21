@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 
 import java.io.IOException;
 import java.nio.file.AtomicMoveNotSupportedException;
+import java.nio.file.CopyOption;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
@@ -88,11 +89,27 @@ public class FileUtil {
      * can do that.
      */
     private static void replaceFile(Path source, Path target) throws IOException {
+        replaceFile(source, target, Files::move);
+    }
+
+    /**
+     * Moves {@code source} to {@code target} with {@code fileMover}, replacing {@code target}. The move is
+     * made in one step if the file system supports that, and otherwise without that guarantee.
+     * A different {@code fileMover} than {@link Files#move(Path, Path, CopyOption...)} is only given in tests,
+     * as the file system of a test can not be made to refuse an atomic move.
+     */
+    static void replaceFile(Path source, Path target, FileMover fileMover) throws IOException {
         try {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+            fileMover.move(source, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
         } catch (AtomicMoveNotSupportedException e) {
-            Files.move(source, target, StandardCopyOption.REPLACE_EXISTING);
+            fileMover.move(source, target, StandardCopyOption.REPLACE_EXISTING);
         }
+    }
+
+    /** Moves a file, in the same way as {@link Files#move(Path, Path, CopyOption...)}. */
+    @FunctionalInterface
+    interface FileMover {
+        void move(Path source, Path target, CopyOption... options) throws IOException;
     }
 
 }

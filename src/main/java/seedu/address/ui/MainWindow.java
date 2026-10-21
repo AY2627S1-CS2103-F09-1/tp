@@ -122,9 +122,7 @@ public class MainWindow extends UiPart<Stage> {
 
         resultDisplay = new ResultDisplay();
         resultDisplayPlaceholder.getChildren().add(resultDisplay.getRoot());
-        if (!startupMessage.isEmpty()) {
-            resultDisplay.setFeedbackToUser(startupMessage);
-        }
+        resultDisplay.setFeedbackToUser(startupMessage);
 
         StatusBarFooter statusBarFooter = new StatusBarFooter(dataFilePath);
         statusbarPlaceholder.getChildren().add(statusBarFooter.getRoot());

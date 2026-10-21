@@ -56,9 +56,9 @@ public class MainApp extends Application {
         logger.info("=============================[ Initializing ClassMates ]===========================");
         super.init();
 
-        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(USER_PREFS_FILE_PATH);
+        JsonUserPrefsStorage userPrefsStorage = new JsonUserPrefsStorage(getUserPrefsFilePath());
         UserPrefs userPrefs = initPrefs(userPrefsStorage);
-        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(ADDRESS_BOOK_FILE_PATH);
+        JsonAddressBookStorage addressBookStorage = new JsonAddressBookStorage(getAddressBookFilePath());
         storage = new StorageManager(addressBookStorage, userPrefsStorage);
 
         model = initModelManager(storage, userPrefs);
@@ -69,11 +69,25 @@ public class MainApp extends Application {
     }
 
     /**
+     * Returns the path of the preferences file. A test overrides it to run the application on other files.
+     */
+    protected Path getUserPrefsFilePath() {
+        return USER_PREFS_FILE_PATH;
+    }
+
+    /**
+     * Returns the path of the data file. A test overrides it to run the application on other files.
+     */
+    protected Path getAddressBookFilePath() {
+        return ADDRESS_BOOK_FILE_PATH;
+    }
+
+    /**
      * Returns a {@code ModelManager} with the data from {@code storage}'s address book and {@code userPrefs}. <br>
      * The data from the sample address book will be used instead if {@code storage}'s address book is not found,
      * or an empty address book will be used instead if errors occur when reading {@code storage}'s address book.
      */
-    private Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
+    Model initModelManager(Storage storage, ReadOnlyUserPrefs userPrefs) {
         logger.info("Using data file : " + storage.getAddressBookFilePath());
 
         Optional<ReadOnlyAddressBook> addressBookOptional;
@@ -93,6 +107,14 @@ public class MainApp extends Application {
         }
 
         return new ModelManager(initialData, userPrefs);
+    }
+
+    /**
+     * Returns the message for the user that was made when the model was initialized, or an empty string if
+     * there is none.
+     */
+    String getStartupMessage() {
+        return startupMessage;
     }
 
     /**
