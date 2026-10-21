@@ -58,7 +58,9 @@ public class DeleteGradeByNameAndClassCommandTest {
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
-                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz_1"));
+                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz,1"));
+        assertThrows(AssertionError.class, () ->
+                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "   "));
     }
 
     @Test
@@ -77,7 +79,7 @@ public class DeleteGradeByNameAndClassCommandTest {
     @Test
     public void execute_caseAndExtraSpacesIgnored_successShowsStoredDetails() {
         DeleteGradeByNameAndClassCommand command =
-                new DeleteGradeByNameAndClassCommand("  aLiCe   Pauline ", "a1", "QUIZ 1");
+                new DeleteGradeByNameAndClassCommand("  aLiCe   Pauline ", "a1", "QUIZ    1");
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.setPerson(aliceWithGrades, ALICE.withGrade(OTHER_GRADE));

@@ -25,7 +25,8 @@ public class DeleteGradeByNameAndClassCommand extends DeleteGradeCommand {
      */
     public DeleteGradeByNameAndClassCommand(String name, String className, String assessmentName) {
         requireAllNonNull(name, className, assessmentName);
-        assert Grade.getAssessmentNameConstraintViolation(assessmentName).isEmpty()
+        assert !assessmentName.isBlank()
+                && Grade.getAssessmentNameConstraintViolation(assessmentName).isEmpty()
                 : "assessmentName must be valid";
         this.name = name;
         this.className = className;

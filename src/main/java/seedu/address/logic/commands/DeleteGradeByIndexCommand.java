@@ -26,7 +26,8 @@ public class DeleteGradeByIndexCommand extends DeleteGradeCommand {
      */
     public DeleteGradeByIndexCommand(Index targetIndex, String assessmentName) {
         requireAllNonNull(targetIndex, assessmentName);
-        assert Grade.getAssessmentNameConstraintViolation(assessmentName).isEmpty()
+        assert !assessmentName.isBlank()
+                && Grade.getAssessmentNameConstraintViolation(assessmentName).isEmpty()
                 : "assessmentName must be valid";
         this.targetIndex = targetIndex;
         this.assessmentName = assessmentName;

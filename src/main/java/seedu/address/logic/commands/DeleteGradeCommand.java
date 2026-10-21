@@ -40,7 +40,7 @@ public abstract class DeleteGradeCommand extends Command {
             throws CommandException {
         requireAllNonNull(model, person, assessmentName);
         Grade grade = person.getGradeRecords().stream()
-                .filter(record -> record.getAssessmentName().equalsIgnoreCase(assessmentName))
+                .filter(record -> record.hasAssessmentName(assessmentName))
                 .findFirst()
                 .orElseThrow(() -> new CommandException(MESSAGE_GRADE_NOT_FOUND));
 

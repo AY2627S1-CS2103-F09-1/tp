@@ -54,13 +54,15 @@ public class DeleteGradeByIndexCommandTest {
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
-                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz_1"));
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz,1"));
+        assertThrows(AssertionError.class, () ->
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "   "));
     }
 
     @Test
     public void execute_validIndexUnfilteredList_success() {
         DeleteGradeByIndexCommand command =
-                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "quiz 1");
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "quiz   1");
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
         expectedModel.setPerson(aliceWithGrades, ALICE.withGrade(OTHER_GRADE));
