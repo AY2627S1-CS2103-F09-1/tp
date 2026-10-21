@@ -68,10 +68,11 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 * Each parameter is introduced by a prefix that starts with `/`, such as `/name`.<br>
   The prefix must be separated from the value, and from the preceding parameter, by a space.<br>
-  For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.
+  For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.<br>
+  Prefixes are not case-sensitive. For example, `/NAME John Doe` and `/Name John Doe` are the same as `/name John Doe`.
 
-* Command words are case-sensitive and must be typed exactly as shown.<br>
-  For example, `list` works, but `LIST` and `List` show `Unknown command.`. Likewise, `viewA` needs a capital `A`, so `viewa` shows `Unknown command.`.
+* Command words are not case-sensitive.<br>
+  For example, `list`, `LIST` and `List` are the same command, and `viewA` can also be typed as `viewa` or `VIEWA`.
 
 * Items in square brackets are optional.<br>
   For example, `/name NAME [/email EMAIL]` can be used as `/name John Doe /email johnd@example.com` or as `/name John Doe`.
@@ -106,13 +107,17 @@ Adds a contact to ClassMates.
 
 Format: `add /name NAME /class CLASS [/email EMAIL]`
 
-* `NAME` must start with a letter and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, spaces, and the characters `'`, `-`, `.` and `/`. A `/` must be between two letters, as in `Tan s/o Kumar`. Accented and non-English letters are not accepted.
-* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.` and `_`, as in `Sec 3-2` or `CS2103_T11`.
+* `NAME` cannot be empty and can be at most 80 characters long. It can contain English letters, digits, spaces and the symbols on a standard keyboard, such as `'`, `-`, `.`, `/`, `(`, `)` and `#`, as in `Tan s/o Kumar` or `Peter (Pete) Lim`.
+  * Accented letters such as `é`, `ñ` and `ü` are allowed, as in `José Müller` or `Nguyễn Văn An`. Letters of other languages, such as Chinese or Cyrillic letters, are not accepted.
+  * Commas are not allowed, because they separate the values in a CSV file.
+  * A word that starts with `/` after a space is read as a parameter, so a `/` can be used inside a name, but not at the start of a word.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`.
+* A name or class cannot contain a parameter name that is stuck to the text before it, such as `John/class A1`, as this is most likely a missing space. The parameter names that are checked are `/name`, `/class`, `/email`, `/tag`, `/group`, `/members`, `/date`, `/status`, `/assessment` and `/score`, in any case.
 * `EMAIL` is optional. If given, it can be at most 254 characters long and must be in the format `local-part@domain`.
   * The local-part can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain is made up of one or more labels separated by periods, as in `example.com`. Each label can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last label must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. An accented letter typed as one character and the same letter typed as a letter followed by an accent are also treated as the same.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -125,7 +130,9 @@ A parameter is given more than once | `Each parameter can only be specified once
 There is text before the first parameter, such as `add John /class A1` | `Invalid command format!` followed by the usage of `add`
 `/name` is missing | `Command requires a name`
 `/class` is missing | `Command requires a class`
+The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
 The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
 The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
 The email is too long, not valid, or `/email` has nothing after it | `Email is too long` or a description of the valid email format
 The same name already exists in the same class | `NAME already exists in class CLASS`
@@ -161,7 +168,9 @@ Problem | Message
 A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` or `/tag` | `Unknown parameter. Use /name, /class or /email`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index is missing, is not a positive integer, or has other text with it, such as `edit John /name Jo` | `Invalid command format!` followed by the usage of `edit`
+The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
 The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
+The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
 The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
 The email is not valid | A description of the valid email format
 None of the parameters is given, such as `edit 1` | `At least one detail to edit must be provided`
@@ -337,7 +346,7 @@ The CSV file must follow this format:
 * The column names are not case-sensitive, and the columns can be in any order.
 * No other columns are accepted, and no column can appear more than once.
 * Every other row is one contact, with its values in the same order as the header. Each row must have as many values as the header.
-* Each value follows the same rules as the matching parameter of `add`, so a name or class that `add` would reject is also rejected in the file.
+* Each value follows the same rules as the matching parameter of `add`, so a name or class that `add` would reject is also rejected in the file. For example, a name with a comma, such as `"Tan, John"` in quotes, is rejected as invalid contact data.
 * The `email` value of a contact can be left blank if the contact has no email.
 * Blank rows are ignored.
 * The file must be saved in UTF-8 encoding.
@@ -375,22 +384,24 @@ Records a score for a contact in an assessment.
 Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain only English letters, digits, spaces and hyphens, such as `Assignment 1` or `Mid-term`. Spaces at the start and end are ignored.
+* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain the same characters as a `NAME` in [`add`](#adding-a-contact-add): English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, but no commas. Examples are `Assignment 1`, `Mid-term` and `Quiz #1 (Part A)`. Spaces at the start and end are ignored. Like a name, it cannot contain a parameter name stuck to the text before it, such as `Quiz/score`.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
-* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
-* `/assessment` and `/score` can each be given at most once.
-* Grades are saved with the contact data. ClassMates does not show recorded grades yet.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case and extra spaces, so `Quiz 1`, `quiz 1` and `quiz   1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
+* Only `/assessment` and `/score` are accepted, and each can be given at most once.
+* Grades are saved with the contact data. The 3 newest grades of a contact are shown on its card, and [`viewG`](#viewing-grades-viewg) shows all of them.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
+A parameter other than `/assessment` or `/score` is given, such as `/name` | `Unknown parameter. Use /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index is missing | `Missing index. Please provide the index of the person.`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
 The index is not a positive integer | `Index must be a positive integer.`
-The assessment name is not valid | `Assessment name must be 1 to 80 characters and contain only English letters, digits, spaces and hyphens.`
+The assessment name contains a parameter such as `/score` that is stuck to the text before it | `The assessment name contains '/score', which looks like a parameter that is missing a space before it`
+The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`
@@ -412,12 +423,13 @@ Format: `attendance INDEX /date DATE /status STATUS`
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
-* `/date` and `/status` can each be given at most once.
+* Only `/date` and `/status` are accepted, and each can be given at most once.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
+A parameter other than `/date` or `/status` is given, such as `/name` | `Unknown parameter. Use /date or /status`
 The index is missing | `Missing index. Please provide the index of the person.`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
@@ -476,6 +488,43 @@ Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
 * `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
+### Viewing grades: `viewG`
+
+Shows all recorded grades for a contact.
+
+Format: `viewG /name NAME /class CLASS`
+
+* `NAME` and `CLASS` identify the contact whose grades you want to view. Both must match a contact in ClassMates.
+* The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
+* The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
+* `/name` and `/class` can be given in either order, but each must be given exactly once.
+* All grades of the contact are shown, from the newest to the oldest, one on each line as the assessment name followed by the score, such as `Quiz 2: 85`.
+* If the contact has no grades, ClassMates shows `No grades recorded.` in place of the list.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/name` or `/class` is given, such as `/email` | `Unknown parameter. Use /name or /class`
+A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `viewG John /class A1` | `Invalid command format!` followed by the usage of `viewG`
+`/name` is missing or has nothing after it | `Command requires a name`
+`/class` is missing or has nothing after it | `Command requires a class`
+No contact matches the given name and class | `Contact not found`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Here are the grades for NAME from class CLASS`, followed by one line for each grade. For example:
+
+```
+Here are the grades for John Tan from class A1
+Quiz 2: 85
+Quiz 1: 80
+```
+
+Examples:
+* `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
+* `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+
 ### Clearing all entries: `clear`
 
 Clears all contacts from ClassMates.
@@ -490,6 +539,19 @@ Exits the program.
 
 Format: `exit`
 
+### Recalling earlier commands
+
+Brings back a command that you entered earlier, so that you can run it again or correct it without typing it out again.
+
+Keys: `↑` and `↓` in the command box
+
+* Press `↑` to show the command you entered last. Press it again to go further back, one command at a time. When you reach the oldest command, it stays shown.
+* Press `↓` to go forward again. After the newest command, `↓` brings back the text that you had typed before you pressed `↑`.
+* The cursor is placed at the end of the recalled command, so that you can edit it straight away.
+* Commands that failed are remembered too. When a command fails, its text stays in the command box, so press `↑` to show the command that you entered before it, if there is one.
+* If you enter the same command several times in a row, it is remembered once.
+* ClassMates remembers your last 100 commands. They are forgotten when you exit ClassMates.
+
 ### Saving the data
 
 ClassMates automatically saves data after every command. You do not need to save manually.
@@ -501,8 +563,9 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 <box type="warning" seamless>
 
 **Caution:**
-If your changes make the data file invalid, ClassMates starts with no contacts at the next run. The invalid file remains on disk until you run a command (ClassMates saves after every command). Still, we recommend backing up the file before editing it.<br>
-Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid.<br>
+If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and tells you so in the result box. Your file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the same folder, such as `classmates.json.bad-20261021-101500-123`, and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. If ClassMates cannot rename the file, it says so, and the next command that you run replaces the file. We still recommend backing up the file before editing it.<br>
+Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid, and are kept in the same way.<br>
+The file can be saved in UTF-8 with or without a byte order mark, so editors such as Notepad can be used.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
 
@@ -570,5 +633,6 @@ Action     | Format, Examples
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Import** | `import PATH`<br> e.g., `import data/students.csv`
 **viewA**  | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`
+**viewG**  | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`
 **Help**   | `help`
 **Exit**   | `exit`

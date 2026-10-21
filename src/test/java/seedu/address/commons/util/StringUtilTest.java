@@ -53,6 +53,28 @@ public class StringUtilTest {
      */
 
     @Test
+    public void toAsciiLowerCase_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.toAsciiLowerCase(null));
+    }
+
+    @Test
+    public void toAsciiLowerCase_variousInputs_onlyEnglishLettersChange() {
+        assertEquals("", StringUtil.toAsciiLowerCase(""));
+        assertEquals("viewa /name", StringUtil.toAsciiLowerCase("ViewA /NAME"));
+        assertEquals("s/o-1 (a)", StringUtil.toAsciiLowerCase("S/O-1 (A)")); // symbols and digits kept
+
+        // letters of other languages are kept as they are, whatever Unicode says about their case
+        assertEquals("ÉİK", StringUtil.toAsciiLowerCase("ÉİK"));
+        assertEquals("李明", StringUtil.toAsciiLowerCase("李明"));
+    }
+
+    @Test
+    public void toAsciiLowerCase_variousInputs_lengthIsKept() {
+        String text = "İSTANBUL Kelvin CafÉ";
+        assertEquals(text.length(), StringUtil.toAsciiLowerCase(text).length());
+    }
+
+    @Test
     public void toComparisonKey_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> StringUtil.toComparisonKey(null));
     }

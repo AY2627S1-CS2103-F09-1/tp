@@ -23,8 +23,8 @@ import seedu.address.model.person.Name;
 import seedu.address.model.tag.Tag;
 
 public class ParserUtilTest {
-    private static final String INVALID_NAME = "R@chel";
-    private static final String INVALID_CLASS_NAME = "Sec 3/2";
+    private static final String INVALID_NAME = "Rachel,";
+    private static final String INVALID_CLASS_NAME = "Sec 3&2";
     private static final String INVALID_EMAIL = "example.com";
     private static final String INVALID_TAG = "#friend";
 
@@ -84,11 +84,11 @@ public class ParserUtilTest {
         assertThrows(ParseException.class, "error", () ->
                 ParserUtil.requireNoUnrecognizedPrefixes(" /name John /phone 123", "error", slashName));
 
-        // matching is case-sensitive and needs the whole token to match
-        assertThrows(ParseException.class, "error", () ->
-                ParserUtil.requireNoUnrecognizedPrefixes(" /Name John", "error", slashName));
+        // matching needs the whole token to match
         assertThrows(ParseException.class, "error", () ->
                 ParserUtil.requireNoUnrecognizedPrefixes(" /names John", "error", slashName));
+        assertThrows(ParseException.class, "error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /NAMES John", "error", slashName));
 
         // no known prefixes means that every prefix-like token is unknown
         assertThrows(ParseException.class, "error", () ->
@@ -120,7 +120,20 @@ public class ParserUtilTest {
     @Test
     public void parseName_invalidCharacters_throwsParseExceptionWithConstraintsMessage() {
         assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseName(INVALID_NAME));
-        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseName("Rachel 2nd"));
+        assertThrows(ParseException.class, Name.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseName("李明"));
+    }
+
+    @Test
+    public void parseName_validValueWithDigitsSymbolsAndAccents_returnsName() throws Exception {
+        for (String name : List.of("Rachel 2nd", "R@chel (Rae)", "José Müller", "Nguyễn Văn An", "O’Brien")) {
+            assertEquals(new Name(name), ParserUtil.parseName(name));
+        }
+    }
+
+    @Test
+    public void parseName_prefixWithoutSpace_throwsParseExceptionWithMissingSpaceMessage() {
+        String expectedMessage = String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "name", "/class");
+        assertThrows(ParseException.class, expectedMessage, () -> ParserUtil.parseName("John/class B"));
     }
 
     @Test
@@ -164,6 +177,45 @@ public class ParserUtilTest {
     public void parseClassName_invalidCharacters_throwsParseExceptionWithConstraintsMessage() {
         assertThrows(ParseException.class, ClassName.MESSAGE_CONSTRAINTS, () ->
                 ParserUtil.parseClassName(INVALID_CLASS_NAME));
+    }
+
+    @Test
+    public void parseClassName_validValueWithSlashAndParentheses_returnsClassName() throws Exception {
+        assertEquals(new ClassName("T11/A"), ParserUtil.parseClassName("T11/A"));
+        assertEquals(new ClassName("Sec 3 (Morning)"), ParserUtil.parseClassName("Sec 3 (Morning)"));
+    }
+
+    @Test
+    public void parseClassName_prefixWithoutSpace_throwsParseExceptionWithMissingSpaceMessage() {
+        String expectedMessage = String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/name");
+        assertThrows(ParseException.class, expectedMessage, () -> ParserUtil.parseClassName("A1/name Bob"));
+    }
+
+    @Test
+    public void requireNoEmbeddedPrefix_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> ParserUtil.requireNoEmbeddedPrefix(null, "name"));
+        assertThrows(NullPointerException.class, () -> ParserUtil.requireNoEmbeddedPrefix("John", null));
+    }
+
+    @Test
+    public void requireNoEmbeddedPrefix_prefixEndingTheValueOrFollowedBySpace_throwsParseException() {
+        // every prefix is detected, whatever its case
+        for (Prefix prefix : CliSyntax.ALL_PREFIXES) {
+            String text = "John" + prefix.getPrefix();
+            assertThrows(ParseException.class, () -> ParserUtil.requireNoEmbeddedPrefix(text, "name"));
+            assertThrows(ParseException.class, () -> ParserUtil.requireNoEmbeddedPrefix(text.toUpperCase(), "name"));
+            assertThrows(ParseException.class, () -> ParserUtil.requireNoEmbeddedPrefix(text + " B", "name"));
+        }
+    }
+
+    @Test
+    public void requireNoEmbeddedPrefix_slashThatIsNotAPrefix_doesNotThrow() throws Exception {
+        ParserUtil.requireNoEmbeddedPrefix("Tan s/o Kumar", "name");
+        ParserUtil.requireNoEmbeddedPrefix("T11/A", "class");
+        ParserUtil.requireNoEmbeddedPrefix("A1/names", "class"); // the whole token is not a prefix
+        ParserUtil.requireNoEmbeddedPrefix("A1/classroom B", "class");
+        ParserUtil.requireNoEmbeddedPrefix("Quiz 1/2", "assessment name");
+        ParserUtil.requireNoEmbeddedPrefix("name class", "name"); // no slash
     }
 
     @Test
