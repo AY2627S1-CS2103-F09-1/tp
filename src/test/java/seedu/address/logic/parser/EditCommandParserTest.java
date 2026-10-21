@@ -105,6 +105,15 @@ public class EditCommandParserTest {
     }
 
     @Test
+    public void parse_prefixesInAnyCase_success() {
+        EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder().withName(VALID_NAME_AMY)
+                .withClassName(VALID_CLASS_AMY).withEmail(VALID_EMAIL_AMY).build();
+
+        assertParseSuccess(parser, "1 /NAME " + VALID_NAME_AMY + " /Class " + VALID_CLASS_AMY
+                + " /eMail " + VALID_EMAIL_AMY, new EditCommand(INDEX_FIRST_PERSON, descriptor));
+    }
+
+    @Test
     public void parse_prefixWithoutSpace_failure() {
         // the stuck parameter must not silently become part of the name or class
         assertParseFailure(parser, "1 /name John/class B",

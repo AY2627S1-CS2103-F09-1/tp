@@ -17,6 +17,8 @@ import java.util.stream.Collectors;
  *    in the above example.<br>
  * 4. A prefix is only recognized if it is preceded by a whitespace and followed by a whitespace or the end of
  *    the arguments string e.g. {@code /classroom} is not recognized as the prefix {@code /class}.<br>
+ * 5. A prefix is recognized whatever its case e.g. {@code /Class} is the prefix {@code /class}. Only the English
+ *    letters are matched ignoring case, so that no letter of another language matches a prefix by accident.<br>
  */
 public class ArgumentTokenizer {
 
@@ -39,7 +41,8 @@ public class ArgumentTokenizer {
     /**
      * Returns the tokens in the arguments string that look like prefixes, i.e. start with a slash and are
      * preceded by a whitespace, but are not one of the {@code knownPrefixes}. The tokens are returned in the
-     * order they appear, including repeated occurrences. Matching is case-sensitive.
+     * order they appear, including repeated occurrences. A token that only differs from a known prefix in the
+     * case of its English letters is a known prefix.
      *
      * E.g. if {@code argsString} = " /name John /phone 123 /names" and {@code knownPrefixes} = {"/name"},
      * this method returns ["/phone", "/names"].
@@ -50,14 +53,14 @@ public class ArgumentTokenizer {
      */
     public static List<String> findUnrecognizedPrefixes(String argsString, Prefix... knownPrefixes) {
         Set<String> knownPrefixStrings = Arrays.stream(knownPrefixes)
-                .map(Prefix::getPrefix)
+                .map(prefix -> toAsciiLowerCase(prefix.getPrefix()))
                 .collect(Collectors.toSet());
 
         List<String> unrecognizedPrefixes = new ArrayList<>();
         Matcher matcher = PREFIX_LIKE_TOKEN.matcher(argsString);
         while (matcher.find()) {
             String token = matcher.group();
-            if (!knownPrefixStrings.contains(token)) {
+            if (!knownPrefixStrings.contains(toAsciiLowerCase(token))) {
                 unrecognizedPrefixes.add(token);
             }
         }
@@ -95,8 +98,8 @@ public class ArgumentTokenizer {
 
     /**
      * Returns the index of the first occurrence of {@code prefix} in
-     * {@code argsString} starting from index {@code fromIndex}. An occurrence
-     * is valid if there is a whitespace before {@code prefix} and a whitespace
+     * {@code argsString} starting from index {@code fromIndex}, ignoring the case of English letters.
+     * An occurrence is valid if there is a whitespace before {@code prefix} and a whitespace
      * or the end of {@code argsString} after it. Returns -1 if no such
      * occurrence can be found.
      *
@@ -109,15 +112,38 @@ public class ArgumentTokenizer {
      * {@code prefix} = "p/" and {@code fromIndex} = 0, this method returns 5.
      */
     private static int findPrefixPosition(String argsString, String prefix, int fromIndex) {
-        int prefixIndex = argsString.indexOf(" " + prefix, fromIndex);
+        int prefixIndex = indexOfIgnoringCase(argsString, " " + prefix, fromIndex);
         while (prefixIndex != -1) {
             int prefixPosition = prefixIndex + 1; // +1 as offset for whitespace
             if (isEndOfToken(argsString, prefixPosition + prefix.length())) {
                 return prefixPosition;
             }
-            prefixIndex = argsString.indexOf(" " + prefix, prefixPosition);
+            prefixIndex = indexOfIgnoringCase(argsString, " " + prefix, prefixPosition);
         }
         return -1;
+    }
+
+    /**
+     * Returns the index of the first occurrence of {@code target} in {@code text} at or after
+     * {@code fromIndex}, where the English letters of the two strings are compared ignoring case.
+     * Returns -1 if there is no such occurrence.
+     */
+    private static int indexOfIgnoringCase(String text, String target, int fromIndex) {
+        return toAsciiLowerCase(text).indexOf(toAsciiLowerCase(target), fromIndex);
+    }
+
+    /**
+     * Returns {@code text} with the English letters {@code A-Z} converted to lower case and everything else
+     * unchanged. Unlike {@link String#toLowerCase()}, it never changes the length of the text and never
+     * makes a letter of another language equal to an English letter.
+     */
+    private static String toAsciiLowerCase(String text) {
+        StringBuilder lowerCaseText = new StringBuilder(text.length());
+        for (char character : text.toCharArray()) {
+            boolean isUpperCaseEnglishLetter = character >= 'A' && character <= 'Z';
+            lowerCaseText.append(isUpperCaseEnglishLetter ? (char) (character - 'A' + 'a') : character);
+        }
+        return lowerCaseText.toString();
     }
 
     /**

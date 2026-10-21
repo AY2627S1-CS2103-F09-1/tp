@@ -63,6 +63,19 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_prefixesInAnyCase_success() {
+        Person expectedPerson = new PersonBuilder(BOB).withTags().build();
+
+        assertParseSuccess(parser, " /NAME " + VALID_NAME_BOB + " /Class " + VALID_CLASS_BOB
+                + " /eMAIL " + VALID_EMAIL_BOB, new AddCommand(expectedPerson));
+    }
+
+    @Test
+    public void parse_sameParameterInDifferentCases_failure() {
+        assertParseFailure(parser, NAME_DESC_BOB + " /NAME Amy Bee" + CLASS_DESC_BOB, MESSAGE_DUPLICATE_PARAMETERS);
+    }
+
+    @Test
     public void parse_optionalFieldMissing_success() {
         Person expectedPerson = new PersonBuilder(AMY).withTags().withoutEmail().build();
         assertParseSuccess(parser, NAME_DESC_AMY + CLASS_DESC_AMY, new AddCommand(expectedPerson));
@@ -139,9 +152,9 @@ public class AddCommandParserTest {
         // unknown parameter before the known ones
         assertParseFailure(parser, PHONE_DESC + NAME_DESC_BOB + CLASS_DESC_BOB, MESSAGE_UNKNOWN_PARAMETER);
 
-        // matching is case-sensitive and requires the whole token to match
-        assertParseFailure(parser, " /Name Bob Choo" + CLASS_DESC_BOB, MESSAGE_UNKNOWN_PARAMETER);
+        // matching requires the whole token to match
         assertParseFailure(parser, NAME_DESC_BOB + " /classes A1", MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, NAME_DESC_BOB + " /CLASSES A1", MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, " /nameBob" + CLASS_DESC_BOB, MESSAGE_UNKNOWN_PARAMETER);
 
         // the old short prefixes are not parameters, so they are taken as part of the previous value

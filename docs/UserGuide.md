@@ -68,7 +68,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 * Each parameter is introduced by a prefix that starts with `/`, such as `/name`.<br>
   The prefix must be separated from the value, and from the preceding parameter, by a space.<br>
-  For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.
+  For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.<br>
+  Prefixes are not case-sensitive. For example, `/NAME John Doe` and `/Name John Doe` are the same as `/name John Doe`.
 
 * Command words are case-sensitive and must be typed exactly as shown.<br>
   For example, `list` works, but `LIST` and `List` show `Unknown command.`. Likewise, `viewA` needs a capital `A`, so `viewa` shows `Unknown command.`.

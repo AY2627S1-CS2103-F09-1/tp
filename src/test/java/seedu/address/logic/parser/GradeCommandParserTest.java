@@ -25,6 +25,14 @@ public class GradeCommandParserTest {
     }
 
     @Test
+    public void parse_prefixesInAnyCase_success() {
+        GradeCommand expected = new GradeCommand(
+                Index.fromOneBased(5), new Grade("Assignment 1", new BigDecimal("97")));
+
+        assertParseSuccess(parser, "5 /ASSESSMENT Assignment 1 /Score 97", expected);
+    }
+
+    @Test
     public void parse_decimalScore_success() {
         GradeCommand expected = new GradeCommand(
                 Index.fromOneBased(2), new Grade("Quiz-1", new BigDecimal("97.5")));

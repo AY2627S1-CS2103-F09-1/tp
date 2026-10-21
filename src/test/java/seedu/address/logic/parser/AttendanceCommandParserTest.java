@@ -17,6 +17,16 @@ public class AttendanceCommandParserTest {
     private final AttendanceCommandParser parser = new AttendanceCommandParser();
 
     @Test
+    public void parse_prefixesInAnyCase_success() {
+        AttendanceCommand expectedCommand = new AttendanceCommand(
+                Index.fromOneBased(1),
+                LocalDate.of(2026, 9, 16),
+                Attendance.Status.ABSENT);
+
+        assertParseSuccess(parser, "1 /DATE 16-09-2026 /Status absent", expectedCommand);
+    }
+
+    @Test
     public void parse_validArguments_success() {
         String userInput = "1 /date 16-09-2026 /status absent";
         AttendanceCommand expectedCommand = new AttendanceCommand(

@@ -84,11 +84,11 @@ public class ParserUtilTest {
         assertThrows(ParseException.class, "error", () ->
                 ParserUtil.requireNoUnrecognizedPrefixes(" /name John /phone 123", "error", slashName));
 
-        // matching is case-sensitive and needs the whole token to match
-        assertThrows(ParseException.class, "error", () ->
-                ParserUtil.requireNoUnrecognizedPrefixes(" /Name John", "error", slashName));
+        // matching needs the whole token to match
         assertThrows(ParseException.class, "error", () ->
                 ParserUtil.requireNoUnrecognizedPrefixes(" /names John", "error", slashName));
+        assertThrows(ParseException.class, "error", () ->
+                ParserUtil.requireNoUnrecognizedPrefixes(" /NAMES John", "error", slashName));
 
         // no known prefixes means that every prefix-like token is unknown
         assertThrows(ParseException.class, "error", () ->

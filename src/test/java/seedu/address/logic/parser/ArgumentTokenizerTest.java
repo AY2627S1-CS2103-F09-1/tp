@@ -225,10 +225,49 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
-    public void findUnrecognizedPrefixes_caseDiffers_returnsToken() {
+    public void findUnrecognizedPrefixes_caseDiffers_returnsEmptyList() {
         Prefix slashName = new Prefix("/name");
 
-        assertEquals(List.of("/Name"), ArgumentTokenizer.findUnrecognizedPrefixes(" /Name John", slashName));
+        assertEquals(List.of(), ArgumentTokenizer.findUnrecognizedPrefixes(" /Name John /NAME Tan", slashName));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_caseDiffersInTokenWithOtherText_returnsWholeToken() {
+        Prefix slashName = new Prefix("/name");
+
+        assertEquals(List.of("/NAMES"), ArgumentTokenizer.findUnrecognizedPrefixes(" /NAMES John", slashName));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_letterOfAnotherLanguage_returnsToken() {
+        // the Kelvin sign and the dotless i fold to English letters in some Unicode rules, but are not matched
+        assertEquals(List.of("/mar\u212A"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(" /mar\u212A", new Prefix("/mark")));
+        assertEquals(List.of("/t\u0131p"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(" /t\u0131p", new Prefix("/tip")));
+    }
+
+    @Test
+    public void tokenize_prefixInAnyCase_valueIsStoredUnderGivenPrefix() {
+        Prefix slashName = new Prefix("/name");
+        Prefix slashClass = new Prefix("/class");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize("pre /NAME John /Class A1 /nAmE Tan",
+                slashName, slashClass);
+
+        assertPreamblePresent(argMultimap, "pre");
+        assertArgumentPresent(argMultimap, slashName, "John", "Tan");
+        assertArgumentPresent(argMultimap, slashClass, "A1");
+    }
+
+    @Test
+    public void tokenize_prefixInDifferentCaseButJoinedToText_isNotAPrefix() {
+        Prefix slashName = new Prefix("/name");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /NAMEJohn /Names Tan", slashName);
+
+        assertArgumentAbsent(argMultimap, slashName);
+        assertPreamblePresent(argMultimap, "/NAMEJohn /Names Tan");
     }
 
     @Test
