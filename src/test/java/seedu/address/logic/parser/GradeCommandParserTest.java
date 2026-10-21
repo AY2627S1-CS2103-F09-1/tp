@@ -25,11 +25,48 @@ public class GradeCommandParserTest {
     }
 
     @Test
+    public void parse_unknownParameter_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /foo bar",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /name John",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /foo bar", GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_unknownParameterAndRepeatedParameter_reportsUnknownParameter() {
+        assertParseFailure(parser, "1 /assessment A /assessment B /score 90 /foo bar",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_prefixesInAnyCase_success() {
+        GradeCommand expected = new GradeCommand(
+                Index.fromOneBased(5), new Grade("Assignment 1", new BigDecimal("97")));
+
+        assertParseSuccess(parser, "5 /ASSESSMENT Assignment 1 /Score 97", expected);
+    }
+
+    @Test
     public void parse_decimalScore_success() {
         GradeCommand expected = new GradeCommand(
                 Index.fromOneBased(2), new Grade("Quiz-1", new BigDecimal("97.5")));
 
         assertParseSuccess(parser, "2 /score 97.5 /assessment Quiz-1", expected);
+    }
+
+    @Test
+    public void parse_assessmentNameWithSymbolsAndAccents_success() {
+        assertParseSuccess(parser, "1 /assessment Quiz #1 (Part A) /score 90",
+                new GradeCommand(Index.fromOneBased(1), new Grade("Quiz #1 (Part A)", new BigDecimal("90"))));
+        assertParseSuccess(parser, "1 /assessment Examen Finalé /score 90",
+                new GradeCommand(Index.fromOneBased(1), new Grade("Examen Finalé", new BigDecimal("90"))));
+    }
+
+    @Test
+    public void parse_prefixWithoutSpaceInAssessmentName_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz/score 90 /score 80",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "assessment name", "/score"));
     }
 
     @Test
@@ -57,7 +94,7 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_invalidAssessmentName_failure() {
-        assertParseFailure(parser, "1 /assessment Exam_1 /score 90",
+        assertParseFailure(parser, "1 /assessment Exam,1 /score 90",
                 Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
     }
 

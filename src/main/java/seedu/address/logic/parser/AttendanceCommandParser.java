@@ -19,6 +19,9 @@ import seedu.address.model.person.Attendance;
  */
 public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
+    public static final String MESSAGE_UNKNOWN_PARAMETER =
+            "Unknown parameter. Use " + PREFIX_DATE + " or " + PREFIX_STATUS;
+
     private static final String MESSAGE_MISSING_INDEX = "Missing index. Please provide the index of the person.";
     private static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
     private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
@@ -31,6 +34,8 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
     @Override
     public AttendanceCommand parse(String args) throws ParseException {
+        ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER, PREFIX_DATE, PREFIX_STATUS);
+
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_DATE, PREFIX_STATUS);
         String indexArgument = argMultimap.getPreamble();
         String dateArgument = argMultimap.getValue(PREFIX_DATE).orElse("").trim();

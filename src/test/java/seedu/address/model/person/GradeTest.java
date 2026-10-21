@@ -22,8 +22,22 @@ public class GradeTest {
     @Test
     public void constructor_invalidAssessmentName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new Grade("", BigDecimal.ONE));
-        assertThrows(IllegalArgumentException.class, () -> new Grade("Exam_1", BigDecimal.ONE));
+        assertThrows(IllegalArgumentException.class, () -> new Grade("Exam,1", BigDecimal.ONE));
         assertThrows(IllegalArgumentException.class, () -> new Grade("a".repeat(81), BigDecimal.ONE));
+    }
+
+    @Test
+    public void constructor_assessmentNameWithSymbolsAndAccents_success() {
+        assertEquals("Quiz #1 (Part A)", new Grade("Quiz #1 (Part A)", BigDecimal.ONE).getAssessmentName());
+        assertEquals("Lab 1/2 - Mid-term", new Grade("Lab 1/2 - Mid-term", BigDecimal.ONE).getAssessmentName());
+        assertEquals("Exam_1", new Grade("Exam_1", BigDecimal.ONE).getAssessmentName());
+        assertEquals("Examen Finé", new Grade("Examen Fine\u0301", BigDecimal.ONE).getAssessmentName());
+    }
+
+    @Test
+    public void constructor_assessmentNameWithOtherScripts_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new Grade("期中考试", BigDecimal.ONE));
+        assertThrows(IllegalArgumentException.class, () -> new Grade("Quiz\n1", BigDecimal.ONE));
     }
 
     @Test
@@ -44,6 +58,29 @@ public class GradeTest {
         assertTrue(first.equals(first));
         assertFalse(first.equals(null));
         assertFalse(first.equals("not a Grade"));
+    }
+
+    @Test
+    public void isSameAssessment_extraSpaces_isSameAssessment() {
+        Grade grade = new Grade("Quiz 1", new BigDecimal("97"));
+
+        assertTrue(grade.isSameAssessment(new Grade("quiz   1", new BigDecimal("80"))));
+        assertTrue(grade.isSameAssessment(new Grade("  QUIZ 1 ", new BigDecimal("80"))));
+        assertFalse(grade.isSameAssessment(new Grade("Quiz1", new BigDecimal("80"))));
+    }
+
+    @Test
+    public void equalsAndHashCode_extraSpacesInAssessmentName_equal() {
+        Grade first = new Grade("Quiz 1", new BigDecimal("97"));
+        Grade second = new Grade("quiz    1", new BigDecimal("97.0"));
+
+        assertEquals(first, second);
+        assertEquals(first.hashCode(), second.hashCode());
+    }
+
+    @Test
+    public void toString_assessmentNameWithExtraSpaces_keepsNameAsGiven() {
+        assertEquals("quiz   1: 97", new Grade("quiz   1", new BigDecimal("97")).toString());
     }
 
     @Test
