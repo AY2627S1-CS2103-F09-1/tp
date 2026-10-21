@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
@@ -20,6 +21,9 @@ import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteByIndexCommand;
 import seedu.address.logic.commands.DeleteByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteGradeByIndexCommand;
+import seedu.address.logic.commands.DeleteGradeByNameAndClassCommand;
+import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
@@ -30,6 +34,7 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
+import seedu.address.logic.commands.ViewGradeCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Attendance;
 import seedu.address.model.person.Grade;
@@ -147,10 +152,52 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_commandWordWithDifferentCase_throwsParseException() {
-        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("LIST"));
-        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () ->
+    public void parseCommand_commandWordInAnyCase_success() throws Exception {
+        assertEquals(new ListCommand(), parser.parseCommand("LIST"));
+        assertEquals(parser.parseCommand("list John"), parser.parseCommand("List John"));
+        assertEquals(parser.parseCommand("add /name John Tan /class A1"),
+                parser.parseCommand("ADD /name John Tan /class A1"));
+        assertEquals(parser.parseCommand("viewA /name John Tan /class A1"),
                 parser.parseCommand("viewa /name John Tan /class A1"));
+        assertEquals(parser.parseCommand("viewG /name John Tan /class A1"),
+                parser.parseCommand("VIEWg /name John Tan /class A1"));
+        assertTrue(parser.parseCommand("CLEAR") instanceof ClearCommand);
+        assertTrue(parser.parseCommand("Exit") instanceof ExitCommand);
+        assertTrue(parser.parseCommand("hELP") instanceof HelpCommand);
+    }
+
+    @Test
+    public void parseCommand_everyCommandWordInUpperAndLowerCase_isNotUnknown() {
+        List<String> commandWords = List.of(AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD,
+                DeleteCommand.COMMAND_WORD, ClearCommand.COMMAND_WORD, ListCommand.COMMAND_WORD,
+                TagCommand.COMMAND_WORD, UntagCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD,
+                HelpCommand.COMMAND_WORD, AttendanceCommand.COMMAND_WORD, ViewAttendanceCommand.COMMAND_WORD,
+                ImportCommand.COMMAND_WORD, GradeCommand.COMMAND_WORD, ViewGradeCommand.COMMAND_WORD,
+                DeleteGradeCommand.COMMAND_WORD);
+
+        for (String commandWord : commandWords) {
+            for (String variant : List.of(commandWord.toUpperCase(), commandWord.toLowerCase())) {
+                try {
+                    parser.parseCommand(variant);
+                } catch (ParseException pe) {
+                    // a command that needs arguments reports them as missing, but never as unknown
+                    assertNotEquals(MESSAGE_UNKNOWN_COMMAND, pe.getMessage(), variant);
+                }
+            }
+        }
+    }
+
+    @Test
+    public void parseCommand_commandWordWithDifferentCase_stillReportsProblemsOfItsArguments() {
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand("DELETE x"));
+    }
+
+    @Test
+    public void parseCommand_commandWordWithExtraLetters_throwsParseException() {
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("LISTS"));
+        assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () ->
+                parser.parseCommand("view /name John Tan /class A1"));
     }
 
     @Test
@@ -180,4 +227,18 @@ public class AddressBookParserTest {
         assertEquals(expected, parser.parseCommand("grade 1 /assessment Assignment 1 /score 97.5"));
     }
 
+    @Test
+    public void parseCommand_deleteGrade() throws Exception {
+        DeleteGradeCommand expected = new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Assignment 1");
+
+        assertEquals(expected, parser.parseCommand("deleteG 1 /assessment Assignment 1"));
+    }
+
+    @Test
+    public void parseCommand_deleteGradeByNameAndClass() throws Exception {
+        DeleteGradeCommand command = (DeleteGradeCommand) parser.parseCommand(
+                DeleteGradeCommand.COMMAND_WORD + " /name John Tan /class A1 /assessment WA2");
+        assertEquals(new DeleteGradeByNameAndClassCommand("John Tan", "A1", "WA2"),
+                command);
+    }
 }

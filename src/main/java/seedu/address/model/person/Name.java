@@ -10,7 +10,9 @@ import seedu.address.commons.util.StringUtil;
 /**
  * Represents a Person's name in the address book.
  * Guarantees: immutable; is valid as declared in {@link #isValidName(String)}
- * Names are compared ignoring case and extra whitespace, but {@link #fullName} keeps the text as given.
+ * Names are compared ignoring case and extra whitespace, but {@link #fullName} keeps the text as given,
+ * except that accented letters are stored in their normalized form (see
+ * {@link StringUtil#toNormalizedForm(String)}).
  */
 public class Name {
 
@@ -21,15 +23,19 @@ public class Name {
     public static final String MESSAGE_EMPTY = "Name cannot be empty";
     /** Message for a name that has more than {@link #MAX_LENGTH} characters. */
     public static final String MESSAGE_TOO_LONG = "Name is too long";
-    /** Message for a name that contains a character, or starts with a character, that is not allowed. */
-    public static final String MESSAGE_CONSTRAINTS = "Name must start with a letter and can only contain letters, "
-            + "spaces, and the characters ' - . / (a / must be between two letters)";
+    /** Message for a name that contains a character that is not allowed. */
+    public static final String MESSAGE_CONSTRAINTS = "Name can only contain English letters (accented letters "
+            + "are allowed), digits, spaces and the symbols on a standard keyboard, except commas";
 
     /*
-     * The first character of the name must be a letter, otherwise " " (a blank string) becomes a valid input.
-     * A slash is only valid between two letters, as in "s/o".
+     * A character is allowed if it is a Latin letter, optionally followed by accents, a printable ASCII
+     * character other than a comma, or a typographic apostrophe, which is what pasted text often contains.
+     * This excludes control characters and letters of other scripts.
+     * The alternatives do not overlap and the quantifiers are possessive, so a long invalid name is
+     * rejected without backtracking.
      */
-    public static final String VALIDATION_REGEX = "[A-Za-z](?:[A-Za-z '.\\-]|(?<=[A-Za-z])/(?=[A-Za-z]))*";
+    public static final String VALIDATION_REGEX =
+            "(?:\\p{IsLatin}\\p{M}*+|[\\x20-\\x7E&&[^,\\p{IsLatin}]]|[\\u2018\\u2019])++";
 
     public final String fullName;
 
@@ -42,9 +48,10 @@ public class Name {
      */
     public Name(String name) {
         requireNonNull(name);
-        checkArgument(isValidName(name), MESSAGE_CONSTRAINTS);
-        fullName = name;
-        comparisonKey = StringUtil.toComparisonKey(name);
+        String normalizedName = StringUtil.toNormalizedForm(name);
+        checkArgument(isValidName(normalizedName), MESSAGE_CONSTRAINTS);
+        fullName = normalizedName;
+        comparisonKey = StringUtil.toComparisonKey(normalizedName);
     }
 
     /**
@@ -60,13 +67,14 @@ public class Name {
      */
     public static Optional<String> getConstraintViolation(String test) {
         requireNonNull(test);
-        if (test.isBlank()) {
+        String normalizedTest = StringUtil.toNormalizedForm(test);
+        if (normalizedTest.isBlank()) {
             return Optional.of(MESSAGE_EMPTY);
         }
-        if (test.length() > MAX_LENGTH) {
+        if (normalizedTest.length() > MAX_LENGTH) {
             return Optional.of(MESSAGE_TOO_LONG);
         }
-        if (!test.matches(VALIDATION_REGEX)) {
+        if (!normalizedTest.matches(VALIDATION_REGEX)) {
             return Optional.of(MESSAGE_CONSTRAINTS);
         }
         return Optional.empty();

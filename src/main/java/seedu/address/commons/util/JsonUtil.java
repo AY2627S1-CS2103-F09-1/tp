@@ -25,6 +25,8 @@ public class JsonUtil {
 
     private static final Logger logger = LogsCenter.getLogger(JsonUtil.class);
 
+    private static final String BYTE_ORDER_MARK = "\uFEFF";
+
     private static ObjectMapper objectMapper = new ObjectMapper().findAndRegisterModules()
             .configure(SerializationFeature.WRITE_DATES_AS_TIMESTAMPS, false)
             .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
@@ -37,7 +39,15 @@ public class JsonUtil {
 
     static <T> T deserializeObjectFromJsonFile(Path jsonFile, Class<T> classOfObjectToDeserialize)
             throws IOException {
-        return fromJsonString(FileUtil.readFromFile(jsonFile), classOfObjectToDeserialize);
+        return fromJsonString(removeByteOrderMark(FileUtil.readFromFile(jsonFile)), classOfObjectToDeserialize);
+    }
+
+    /**
+     * Returns {@code json} without the byte order mark that some editors, such as older versions of Notepad,
+     * put at the start of a UTF-8 file. The JSON parser does not accept it.
+     */
+    private static String removeByteOrderMark(String json) {
+        return json.startsWith(BYTE_ORDER_MARK) ? json.substring(BYTE_ORDER_MARK.length()) : json;
     }
 
     /**

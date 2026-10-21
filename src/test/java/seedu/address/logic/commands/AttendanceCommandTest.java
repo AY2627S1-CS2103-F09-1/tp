@@ -8,6 +8,7 @@ import static seedu.address.logic.commands.CommandTestUtil.assertCommandSuccess;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import org.junit.jupiter.api.Test;
 
@@ -16,6 +17,8 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Attendance;
+import seedu.address.model.person.ClassName;
+import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 
 public class AttendanceCommandTest {
@@ -42,6 +45,27 @@ public class AttendanceCommandTest {
     }
 
     @Test
+    public void execute_validNameAndClass_recordsAttendance() {
+        Person person = model.getFilteredPersonList().get(0);
+        Name name = person.getName();
+        ClassName className = person.getClassName();
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Attendance.Status status = Attendance.Status.ABSENT;
+
+        Person updatedPerson = person.withAttendance(new Attendance(date, status));
+
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.setPerson(person, updatedPerson);
+
+        AttendanceCommand command = new AttendanceCommand(name, className, date, status);
+
+        String expectedMessage = String.format(
+            AttendanceCommand.MESSAGE_SUCCESS, person.getName(), date, "absent");
+
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
     public void execute_invalidIndex_throwsCommandException() {
         Index invalidIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
         AttendanceCommand command = new AttendanceCommand(
@@ -51,9 +75,25 @@ public class AttendanceCommandTest {
     }
 
     @Test
+    public void execute_unknownNameAndClass_throwsCommandException() {
+        AttendanceCommand command = new AttendanceCommand(new Name("Unknown Student"), new ClassName("A1"),
+                LocalDate.now().minusDays(1), Attendance.Status.PRESENT);
+
+        assertCommandFailure(command, model, seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND);
+    }
+
+    @Test
     public void execute_futureDate_throwsCommandException() {
         AttendanceCommand command = new AttendanceCommand(
                 Index.fromOneBased(1), LocalDate.now().plusDays(1), Attendance.Status.PRESENT);
+
+        assertCommandFailure(command, model, AttendanceCommand.MESSAGE_FUTURE_DATE);
+    }
+
+    @Test
+    public void execute_futureDateWithNameAndClass_throwsCommandException() {
+        AttendanceCommand command = new AttendanceCommand(new Name("Amy"), new ClassName("A1"),
+                LocalDate.now().plusDays(1), Attendance.Status.PRESENT);
 
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_FUTURE_DATE);
     }
@@ -67,6 +107,20 @@ public class AttendanceCommandTest {
         model.setPerson(person, person.withAttendance(new Attendance(date, Attendance.Status.PRESENT)));
 
         AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.ABSENT);
+
+        assertCommandFailure(command, model, AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE);
+    }
+
+    @Test
+    public void execute_duplicateDateWithNameAndClass_throwsCommandException() {
+        Person person = model.getFilteredPersonList().get(0);
+        Name name = person.getName();
+        ClassName className = person.getClassName();
+        LocalDate date = LocalDate.now().minusDays(1);
+
+        model.setPerson(person, person.withAttendance(new Attendance(date, Attendance.Status.PRESENT)));
+
+        AttendanceCommand command = new AttendanceCommand(name, className, date, Attendance.Status.ABSENT);
 
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE);
     }
@@ -91,13 +145,51 @@ public class AttendanceCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void equals_nameAndClassCommands() {
+        Name name = new Name("Amy");
+        ClassName className = new ClassName("A1");
+        LocalDate date = LocalDate.of(2026, 9, 16);
+
+        AttendanceCommand command = new AttendanceCommand(name, className, date, Attendance.Status.PRESENT);
+
+        assertTrue(command.equals(new AttendanceCommand(new Name("Amy"), new ClassName("A1"),
+                date, Attendance.Status.PRESENT)));
+
+        assertFalse(command.equals(new AttendanceCommand(new Name("Benson"), new ClassName("A1"),
+                date, Attendance.Status.PRESENT)));
+
+        assertFalse(command.equals(new AttendanceCommand(name, new ClassName("A2"),
+                date, Attendance.Status.PRESENT)));
+    }
+
+    @Test
+    public void toStringMethod_indexCommand() {
         Index index = Index.fromOneBased(1);
         LocalDate date = LocalDate.of(2026, 9, 16);
         AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.PRESENT);
 
         String expected = AttendanceCommand.class.getCanonicalName()
-            + "{index=" + index + ", date=" + date + ", status=PRESENT}";
+                + "{index=" + Optional.of(index)
+                + ", date=" + date
+                + ", status=PRESENT}";
+
+        assertEquals(expected, command.toString());
+    }
+
+    @Test
+    public void toStringMethod_nameAndClassCommand() {
+        Name name = new Name("Alex Yeoh");
+        ClassName className = new ClassName("A1");
+        LocalDate date = LocalDate.of(2026, 9, 16);
+
+        AttendanceCommand command = new AttendanceCommand(name, className, date, Attendance.Status.PRESENT);
+
+        String expected = AttendanceCommand.class.getCanonicalName()
+                + "{name=" + Optional.of(name)
+                + ", className=" + Optional.of(className)
+                + ", date=" + date
+                + ", status=PRESENT}";
+
         assertEquals(expected, command.toString());
     }
 

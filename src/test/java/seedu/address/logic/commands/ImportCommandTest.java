@@ -89,8 +89,34 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_namesWithAccentsDigitsAndSymbols_importsContacts()
+            throws IOException, CommandException, ParseException {
+        Path csv = writeCsv("name,class\nJosé Müller,T11/A\nTan s/o Kumar (Raj) #2,Sec 3 (Morning)\n");
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        List<String> names = model.getFilteredPersonList().stream()
+                .map(person -> person.getName().toString())
+                .toList();
+        assertEquals(List.of("José Müller", "Tan s/o Kumar (Raj) #2"), names);
+    }
+
+    @Test
+    public void execute_nameInOtherScript_doesNotImportContacts() throws IOException, ParseException {
+        Path csv = writeCsv("name,class\nAlice,A1\n\u674E\u660E,A2\n");
+        ModelManager model = new ModelManager();
+        ImportCommand command = new ImportCommandParser().parse(csv.toString());
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals("Invalid contact data on row 3", exception.getMessage());
+        assertEquals(0, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
     public void execute_invalidRow_doesNotImportEarlierRows() throws IOException, ParseException {
-        Path csv = writeCsv("name,class\nAlice,A1\nBad!,A2\n");
+        Path csv = writeCsv("name,class\nAlice,A1\n\"Bad, Name\",A2\n");
         ModelManager model = new ModelManager();
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
 

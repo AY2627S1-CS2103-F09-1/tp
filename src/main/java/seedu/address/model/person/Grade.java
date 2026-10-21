@@ -3,41 +3,50 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
+
+import seedu.address.commons.util.StringUtil;
 
 /** Represents a score attained by a person for an assessment. */
 public class Grade {
 
     public static final int MAX_ASSESSMENT_NAME_LENGTH = 80;
-    public static final String MESSAGE_INVALID_ASSESSMENT_NAME =
-            "Assessment name must be 1 to 80 characters and contain only English letters, digits, spaces and hyphens.";
+    public static final String MESSAGE_INVALID_ASSESSMENT_NAME = "Assessment name must be 1 to 80 characters "
+            + "and can only contain English letters (accented letters are allowed), digits, spaces and the "
+            + "symbols on a standard keyboard, except commas.";
     public static final String MESSAGE_INVALID_SCORE = "Score must be a numerical value (0-100).";
 
     private final String assessmentName;
+    private final String assessmentKey;
     private final BigDecimal score;
 
     /** Creates a grade after validating its assessment name and score. */
     public Grade(String assessmentName, BigDecimal score) {
         requireNonNull(assessmentName);
         requireNonNull(score);
-        String trimmedAssessmentName = assessmentName.trim();
-        if (getAssessmentNameConstraintViolation(trimmedAssessmentName).isPresent()) {
+        String normalizedAssessmentName = StringUtil.toNormalizedForm(assessmentName).trim();
+        if (getAssessmentNameConstraintViolation(normalizedAssessmentName).isPresent()) {
             throw new IllegalArgumentException(MESSAGE_INVALID_ASSESSMENT_NAME);
         }
         if (score.compareTo(BigDecimal.ZERO) < 0 || score.compareTo(BigDecimal.valueOf(100)) > 0) {
             throw new IllegalArgumentException(MESSAGE_INVALID_SCORE);
         }
-        this.assessmentName = trimmedAssessmentName;
+        this.assessmentName = normalizedAssessmentName;
+        this.assessmentKey = StringUtil.toComparisonKey(normalizedAssessmentName);
         this.score = score;
     }
 
-    /** Returns a constraint violation for the assessment name, if any. */
+    /**
+     * Returns a constraint violation for the assessment name, if any.
+     * An assessment name can contain the same characters as a {@link Name}.
+     */
     public static Optional<String> getAssessmentNameConstraintViolation(String assessmentName) {
         requireNonNull(assessmentName);
-        if (assessmentName.isEmpty() || assessmentName.length() > MAX_ASSESSMENT_NAME_LENGTH
-                || !assessmentName.matches("[A-Za-z0-9 -]+")) {
+        String normalizedAssessmentName = StringUtil.toNormalizedForm(assessmentName);
+        boolean isTooLong = normalizedAssessmentName.length() > MAX_ASSESSMENT_NAME_LENGTH;
+        if (normalizedAssessmentName.isEmpty() || isTooLong
+                || !normalizedAssessmentName.matches(Name.VALIDATION_REGEX)) {
             return Optional.of(MESSAGE_INVALID_ASSESSMENT_NAME);
         }
         return Optional.empty();
@@ -51,9 +60,20 @@ public class Grade {
         return score;
     }
 
-    /** Returns whether this record and {@code other} refer to the same assessment, ignoring case. */
+    /**
+     * Returns whether this record refers to {@code assessmentName}, ignoring case and extra spaces.
+     */
+    public boolean hasAssessmentName(String assessmentName) {
+        return assessmentName != null
+                && assessmentKey.equals(StringUtil.toComparisonKey(assessmentName));
+    }
+
+    /**
+     * Returns whether this record and {@code other} refer to the same assessment, ignoring case and
+     * extra spaces.
+     */
     public boolean isSameAssessment(Grade other) {
-        return other != null && assessmentName.equalsIgnoreCase(other.assessmentName);
+        return other != null && assessmentKey.equals(other.assessmentKey);
     }
 
     @Override
@@ -64,13 +84,13 @@ public class Grade {
         if (!(other instanceof Grade otherGrade)) {
             return false;
         }
-        return assessmentName.equalsIgnoreCase(otherGrade.assessmentName)
+        return assessmentKey.equals(otherGrade.assessmentKey)
                 && score.compareTo(otherGrade.score) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(assessmentName.toLowerCase(Locale.ROOT), score.stripTrailingZeros());
+        return Objects.hash(assessmentKey, score.stripTrailingZeros());
     }
 
     @Override

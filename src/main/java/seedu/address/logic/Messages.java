@@ -15,6 +15,7 @@ public class Messages {
     public static final String MESSAGE_DUPLICATE_PARAMETERS = "Each parameter can only be specified once";
     public static final String MESSAGE_MISSING_NAME = "Command requires a name";
     public static final String MESSAGE_MISSING_CLASS = "Command requires a class";
+    public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
 
     /**
      * Formats the {@code person} for display to the user.

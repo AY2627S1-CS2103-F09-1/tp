@@ -39,7 +39,7 @@ public class CommandTestUtil {
     public static final String EMAIL_DESC_AMY = " " + PREFIX_EMAIL + " " + VALID_EMAIL_AMY;
     public static final String EMAIL_DESC_BOB = " " + PREFIX_EMAIL + " " + VALID_EMAIL_BOB;
 
-    public static final String INVALID_NAME_DESC = " " + PREFIX_NAME + " James&"; // '&' not allowed in names
+    public static final String INVALID_NAME_DESC = " " + PREFIX_NAME + " James,"; // ',' not allowed in names
     public static final String INVALID_CLASS_DESC = " " + PREFIX_CLASS + " A1&"; // '&' not allowed in class names
     public static final String INVALID_EMAIL_DESC = " " + PREFIX_EMAIL + " bob!yahoo"; // missing '@' symbol
 

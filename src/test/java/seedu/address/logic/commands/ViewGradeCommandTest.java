@@ -14,9 +14,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Grade;
-import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -32,7 +30,7 @@ public class ViewGradeCommandTest {
                 .withGrade(new Grade("Quiz 3", new BigDecimal("90")));
         model.setPerson(person, updated);
 
-        ViewGradeCommand command = new ViewGradeCommand(person.getName(), person.getClassName());
+        ViewGradeCommand command = viewGradeOf(person);
         CommandResult result = command.execute(model);
 
         assertEquals("Here are the grades for " + person.getName() + " from class " + person.getClassName()
@@ -42,7 +40,7 @@ public class ViewGradeCommandTest {
     @Test
     public void execute_studentWithoutGrades_showsEmptyMessage() throws Exception {
         Person person = model.getAddressBook().getPersonList().get(0);
-        ViewGradeCommand command = new ViewGradeCommand(person.getName(), person.getClassName());
+        ViewGradeCommand command = viewGradeOf(person);
 
         CommandResult result = command.execute(model);
 
@@ -52,11 +50,11 @@ public class ViewGradeCommandTest {
 
     @Test
     public void execute_unknownStudent_throwsCommandException() {
-        ViewGradeCommand command = new ViewGradeCommand(new Name("Unknown Student"), new ClassName("A1"));
+        ViewGradeCommand command = new ViewGradeCommand("Unknown Student", "A1");
 
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
 
-        assertEquals(ViewGradeCommand.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
     }
 
     @Test
@@ -70,34 +68,59 @@ public class ViewGradeCommandTest {
         testModel.addPerson(otherClassPerson);
         testModel.addPerson(targetPerson);
 
-        ViewGradeCommand command = new ViewGradeCommand(targetPerson.getName(), targetPerson.getClassName());
+        ViewGradeCommand command = viewGradeOf(targetPerson);
         String output = command.execute(testModel).getFeedbackToUser();
         assertTrue(output.contains("Assignment 1: 97"));
         assertFalse(output.contains("Quiz 1"));
     }
 
     @Test
+    public void execute_nameAndClassInOtherCaseAndSpacing_findsStudent() throws Exception {
+        Person person = new PersonBuilder().withName("Alex Tan").withClassName("A1").build()
+                .withGrade(new Grade("Quiz 1", new BigDecimal("80")));
+        Model testModel = new ModelManager();
+        testModel.addPerson(person);
+
+        String output = new ViewGradeCommand("  aLEX    tan ", "a1").execute(testModel).getFeedbackToUser();
+
+        assertTrue(output.contains("Quiz 1: 80"));
+    }
+
+    @Test
+    public void execute_nameOrClassThatNoContactCanHave_throwsContactNotFound() {
+        // such a value is not checked as a name or class, and simply matches no contact
+        for (ViewGradeCommand command : new ViewGradeCommand[] {
+            new ViewGradeCommand("Tan, John", "A1"), new ViewGradeCommand("Alex Tan", "A1&")}) {
+            CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+            assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+        }
+    }
+
+    @Test
     public void equals() {
-        ViewGradeCommand command = new ViewGradeCommand(new Name("Alex Tan"), new ClassName("A1"));
+        ViewGradeCommand command = new ViewGradeCommand("Alex Tan", "A1");
 
         assertTrue(command.equals(command));
-        assertTrue(command.equals(new ViewGradeCommand(new Name("Alex Tan"), new ClassName("A1"))));
+        assertTrue(command.equals(new ViewGradeCommand("Alex Tan", "A1")));
         assertFalse(command.equals(null));
         assertFalse(command.equals("not a ViewGradeCommand"));
-        assertFalse(command.equals(new ViewGradeCommand(new Name("Jamie Tan"), new ClassName("A1"))));
-        assertFalse(command.equals(new ViewGradeCommand(new Name("Alex Tan"), new ClassName("A2"))));
+        assertFalse(command.equals(new ViewGradeCommand("Jamie Tan", "A1")));
+        assertFalse(command.equals(new ViewGradeCommand("Alex Tan", "A2")));
     }
 
     @Test
     public void toStringMethod() {
-        Name name = new Name("Alex Tan");
-        ClassName className = new ClassName("A1");
-        ViewGradeCommand command = new ViewGradeCommand(name, className);
+        ViewGradeCommand command = new ViewGradeCommand("Alex Tan", "A1");
 
         String expected = ViewGradeCommand.class.getCanonicalName()
-            + "{name=" + name + ", className=" + className + "}";
+            + "{name=Alex Tan, className=A1}";
 
         assertEquals(expected, command.toString());
+    }
+
+    private static ViewGradeCommand viewGradeOf(Person person) {
+        return new ViewGradeCommand(person.getName().toString(), person.getClassName().toString());
     }
 
 }

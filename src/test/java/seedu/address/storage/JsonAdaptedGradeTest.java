@@ -41,7 +41,7 @@ public class JsonAdaptedGradeTest {
 
     @Test
     public void toModelType_invalidGrade_throwsIllegalValueException() {
-        JsonAdaptedGrade adaptedGrade = new JsonAdaptedGrade("Exam_1", BigDecimal.TEN);
+        JsonAdaptedGrade adaptedGrade = new JsonAdaptedGrade("Exam,1", BigDecimal.TEN);
 
         IllegalValueException exception = assertThrows(
                 IllegalValueException.class, adaptedGrade::toModelType);

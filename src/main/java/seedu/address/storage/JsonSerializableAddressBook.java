@@ -21,6 +21,7 @@ import seedu.address.model.person.exceptions.DuplicatePersonException;
 class JsonSerializableAddressBook {
 
     public static final String MESSAGE_DUPLICATE_PERSON = "Persons list contains duplicate person(s).";
+    public static final String MESSAGE_EMPTY_PERSON = "Persons list contains an empty entry.";
 
     private final List<JsonAdaptedPerson> persons = new ArrayList<>();
 
@@ -49,6 +50,9 @@ class JsonSerializableAddressBook {
     public AddressBook toModelType() throws IllegalValueException {
         List<Person> modelPersons = new ArrayList<>();
         for (JsonAdaptedPerson jsonAdaptedPerson : persons) {
+            if (jsonAdaptedPerson == null) {
+                throw new IllegalValueException(MESSAGE_EMPTY_PERSON);
+            }
             modelPersons.add(jsonAdaptedPerson.toModelType());
         }
 

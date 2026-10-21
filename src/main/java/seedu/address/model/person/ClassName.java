@@ -23,13 +23,13 @@ public class ClassName {
     public static final String MESSAGE_TOO_LONG = "Class name is too long";
     /** Message for a class name that contains a character, or starts with a character, that is not allowed. */
     public static final String MESSAGE_CONSTRAINTS = "Class name must start with a letter or digit and can only "
-            + "contain letters, digits, spaces, and the characters - . _";
+            + "contain letters, digits, spaces, and the characters - . _ / ( )";
 
     /*
      * The first character of the class name must be a letter or digit, otherwise " " (a blank string)
      * becomes a valid input.
      */
-    public static final String VALIDATION_REGEX = "[A-Za-z0-9][A-Za-z0-9 ._\\-]*";
+    public static final String VALIDATION_REGEX = "[A-Za-z0-9][A-Za-z0-9 ._/()\\-]*";
 
     public final String value;
 

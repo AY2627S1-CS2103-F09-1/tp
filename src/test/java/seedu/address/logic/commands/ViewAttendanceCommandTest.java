@@ -67,7 +67,7 @@ public class ViewAttendanceCommandTest {
 
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
 
-        assertEquals(ViewAttendanceCommand.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
     }
 
     @Test
@@ -76,7 +76,7 @@ public class ViewAttendanceCommandTest {
 
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
 
-        assertEquals(ViewAttendanceCommand.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
     }
 
     @Test
