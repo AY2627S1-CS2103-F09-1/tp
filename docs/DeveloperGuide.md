@@ -910,7 +910,7 @@ A use case that needs another use case includes it. An inclusion is written as <
 **MSS**
 1. User requests to import contacts from a CSV file, giving the path of the file.
 2. CM checks the file, adds all the contacts in it and displays the number of contacts imported.
-3. For each class added, user requests to <u>list or search student contacts</u> (UC08) using the class as the keyword.
+3. For each class added, user requests to <u>list or search student contacts</u> (UC09) using the class as the keyword.
 4. CM displays the contacts of that class.
 
    Use case ends.
@@ -1248,7 +1248,7 @@ Extensions
 * The other details, the attendance records and the grades of the contacts are kept.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the students to remove from the group.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the students to remove from the group.
 2. CM displays the matching contacts.
 3. User requests to remove the contacts at the given indices of the displayed list from a group, giving the name of the group.
 4. CM removes the contacts from the group and displays a success message.
@@ -1274,7 +1274,7 @@ Extensions
 
     Use case resumes at step 3.
 
-**Use case: UC15 - View known student's grades**
+**Use case: UC16 - View known student's grades**
 
 **MSS**
 1. User requests to view the grades of the student, giving the name and class of the student.

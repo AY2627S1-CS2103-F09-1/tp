@@ -407,7 +407,7 @@ Problem | Message
 A parameter other than `/assessment` or `/score` is given, such as `/name` | `Unknown parameter. Use /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
-The index, or name and class, is missing | `Missing index. Please provide the index of the person.`
+The index, or name and class, is missing | `Use either an index, or both /name and /class.`
 `/name` is missing when using the name/class format | `Command requires a name`
 `/class` is missing when using the name/class format | `Command requires a class`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
@@ -451,7 +451,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-The index, or name and class, is missing | `Missing index. Please provide the index of the person.`
+The index, or name and class, is missing | `Use either an index, or both /name and /class.`
 `/name` is missing when using the name/class format | `Command requires a name`
 `/class` is missing when using the name/class format | `Command requires a class`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
