@@ -895,24 +895,30 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC08).
 
-UC01 and UC09 describe planned features that are not implemented yet. The other use cases describe what the application does now.
+The use cases describe what the application does now.
 
 **Use case: UC01 - View known student's grades**
 
-*(Planned feature, not implemented yet.)*
-
 **MSS**
-1. User requests to view grades of the student.
-2. CM displays grades of the student.
+1. User requests to view the grades of the student, giving the name and class of the student.
+2. CM displays the grades of the student, from the newest to the oldest.
 
    Use case ends.
 
 **Extensions**
 
-* 1a. The command format is invalid or the student does not exist.
+* 1a. The command format is invalid, e.g. the name or class is missing or given more than once, or the command has a parameter that it does not accept.
   * 1a1. CM displays an error message.
 
     Use case resumes at step 1.
+* 1b. No student has the name and class. Case and extra spaces are ignored.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 2a. The student has no grades.
+  * 2a1. CM displays a message that no grades are recorded.
+
+    Use case ends.
 
 
 **Use case: UC02 - Record a student's attendance**
@@ -1133,17 +1139,25 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 **Use case: UC09 - View known student's attendance**
 
 **MSS**
-1. User requests to view the attendance of the student.
-2. CM displays the attendance records of the student in chronological order.
+1. User requests to view the attendance of the student, giving the name and class of the student.
+2. CM displays the attendance records of the student, from the newest to the oldest.
 
    Use case ends.
 
 **Extensions**
 
-* 1a. The command format is invalid or the student does not exist.
+* 1a. The command format is invalid, e.g. the name or class is missing or given more than once, or the command has a parameter that it does not accept.
   * 1a1. CM displays an error message.
 
     Use case resumes at step 1.
+* 1b. No student has the name and class. Case and extra spaces are ignored.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 2a. The student has no attendance records.
+  * 2a1. CM displays a message that no attendance is recorded.
+
+    Use case ends.
 
 
 **Use case: UC10 - Clear all contacts**
@@ -1254,29 +1268,6 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
   * 3c1. CM displays an error message.
 
     Use case resumes at step 3.
-
-**Use case: UC15 - View known student's grades**
-
-**MSS**
-1. User requests to view the grades of the student, giving the name and class of the student.
-2. CM displays the grades of the student, from the newest to the oldest.
-
-   Use case ends.
-
-**Extensions**
-
-* 1a. The command format is invalid, e.g. the name or class is missing or given more than once, or the command has a parameter that it does not accept.
-  * 1a1. CM displays an error message.
-
-    Use case resumes at step 1.
-* 1b. No student has the name and class. Case and extra spaces are ignored.
-  * 1b1. CM displays an error message.
-
-    Use case resumes at step 1.
-* 2a. The student has no grades.
-  * 2a1. CM displays a message that no grades are recorded.
-
-    Use case ends.
 
 
 ### Non-Functional Requirements
