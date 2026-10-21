@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.util.List;
 import java.util.Optional;
@@ -27,7 +28,6 @@ public class GradeCommand extends Command {
     public static final String MESSAGE_SUCCESS =
             "Grade of %s recorded for %s for student %s in class %s.";
     public static final String MESSAGE_DUPLICATE_GRADE = "Grade for this assessment already exists";
-    public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
 
     private final Optional<Index> index;
     private final Optional<Name> name;

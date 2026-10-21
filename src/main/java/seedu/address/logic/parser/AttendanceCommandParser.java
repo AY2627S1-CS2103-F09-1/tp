@@ -25,7 +25,8 @@ import seedu.address.model.person.Name;
  */
 public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
-    private static final String MESSAGE_MISSING_INDEX = "Missing index. Please provide the index of the person.";
+    private static final String MESSAGE_MISSING_IDENTIFIERS =
+        "Use either an index, or both /name and /class.";
     private static final String MESSAGE_BOTH_IDENTIFIERS =
         "Use either an index or name and class, not both.";
     private static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
@@ -55,7 +56,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
             throw new ParseException(MESSAGE_BOTH_IDENTIFIERS);
         }
         if (!hasIndex && !hasNameOrClass) {
-            throw new ParseException(MESSAGE_MISSING_INDEX);
+            throw new ParseException(MESSAGE_MISSING_IDENTIFIERS);
         }
         if (hasNameOrClass && nameArgument.isBlank()) {
             throw new ParseException(MESSAGE_MISSING_NAME);

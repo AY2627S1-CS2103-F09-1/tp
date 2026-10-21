@@ -21,7 +21,8 @@ import seedu.address.model.person.Name;
 /** Parses arguments and creates a {@link GradeCommand}. */
 public class GradeCommandParser implements Parser<GradeCommand> {
 
-    private static final String MESSAGE_MISSING_INDEX = "Missing index. Please provide the index of the person.";
+    private static final String MESSAGE_MISSING_IDENTIFIERS =
+        "Use either an index, or both /name and /class.";
     private static final String MESSAGE_MISSING_ASSESSMENT = "Assessment name missing";
     private static final String MESSAGE_MISSING_SCORE = "Score missing";
     private static final String MESSAGE_BOTH_IDENTIFIERS =
@@ -46,7 +47,7 @@ public class GradeCommandParser implements Parser<GradeCommand> {
             throw new ParseException(MESSAGE_BOTH_IDENTIFIERS);
         }
         if (!hasIndex && !hasNameOrClass) {
-            throw new ParseException(MESSAGE_MISSING_INDEX);
+            throw new ParseException(MESSAGE_MISSING_IDENTIFIERS);
         }
         if (hasNameOrClass && nameArgument.isBlank()) {
             throw new ParseException(MESSAGE_MISSING_NAME);

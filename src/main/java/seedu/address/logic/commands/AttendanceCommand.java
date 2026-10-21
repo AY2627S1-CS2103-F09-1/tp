@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -33,7 +34,6 @@ public class AttendanceCommand extends Command {
             "Attendance for %1$s on %2$td-%2$tm-%2$tY recorded as %3$s.";
     public static final String MESSAGE_FUTURE_DATE = "Attendance date cannot be in the future.";
     public static final String MESSAGE_DUPLICATE_ATTENDANCE = "Attendance record already exists";
-    public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
 
     private final Optional<Index> index;
     private final Optional<Name> name;

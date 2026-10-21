@@ -75,7 +75,7 @@ public class GradeCommandTest {
         GradeCommand command = new GradeCommand(new Name("Unknown Student"), new ClassName("A1"),
                 new Grade("Assignment 1", BigDecimal.TEN));
 
-        assertCommandFailure(command, model, GradeCommand.MESSAGE_CONTACT_NOT_FOUND);
+        assertCommandFailure(command, model, seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test

@@ -79,7 +79,7 @@ public class AttendanceCommandTest {
         AttendanceCommand command = new AttendanceCommand(new Name("Unknown Student"), new ClassName("A1"),
                 LocalDate.now().minusDays(1), Attendance.Status.PRESENT);
 
-        assertCommandFailure(command, model, AttendanceCommand.MESSAGE_CONTACT_NOT_FOUND);
+        assertCommandFailure(command, model, seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test

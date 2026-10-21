@@ -64,7 +64,7 @@ public class GradeCommandParserTest {
     @Test
     public void parse_missingIndex_failure() {
         assertParseFailure(parser, " /assessment Assignment 1 /score 97",
-                "Missing index. Please provide the index of the person.");
+                "Use either an index, or both /name and /class.");
     }
 
     @Test

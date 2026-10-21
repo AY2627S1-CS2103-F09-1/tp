@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.util.Comparator;
 import java.util.stream.Collectors;
@@ -20,7 +21,6 @@ public class ViewAttendanceCommand extends Command {
             + ": Displays all attendance records for a student.\n"
             + "Parameters: /name NAME /class CLASS\n"
             + "Example: " + COMMAND_WORD + " /name John Tan /class A1";
-    public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
     public static final String MESSAGE_NO_ATTENDANCE = "No attendance records.";
     public static final String MESSAGE_SUCCESS = "Here is the attendance for %s from class %s\n%s";
 

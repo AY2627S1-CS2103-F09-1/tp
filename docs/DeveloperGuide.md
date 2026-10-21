@@ -746,13 +746,9 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 (For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
-A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC08).
-
-UC01 and UC09 describe planned features that are not implemented yet. The other use cases describe what the application does now.
+A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC09).
 
 **Use case: UC01 - View known student's grades**
-
-*(Planned feature, not implemented yet.)*
 
 **MSS**
 1. User requests to view grades of the student.
@@ -774,7 +770,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 * An attendance record is only added if its date and status are valid and the student has no record for that date.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the student.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the student.
 2. CM displays the matching contacts.
 3. User requests to record the attendance of a contact in the displayed list, giving the index of the contact, the date and the status (present, absent or late).
 4. CM records the attendance and displays a success message.
@@ -847,7 +843,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 * The contacts are only linked to the group if all of them can be linked. If any problem is found, none of them is linked.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the students to group.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the students to group.
 2. CM displays the matching contacts.
 3. User requests to link the contacts at the given indices of the displayed list to a group, giving the name of the group.
 4. CM links the contacts to the group and displays a success message.
@@ -877,7 +873,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 **Use case: UC05 - Delete a student**
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08).
+1. User requests to <u>list or search student contacts</u> (UC09).
 2. CM displays the matching contacts.
 3. User requests to delete a contact in the displayed list, giving the index of the contact.
 4. CM deletes the contact and displays a success message.
@@ -1109,7 +1105,7 @@ Extensions
 * The attendance records and the grades of the contact are kept.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the contact.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the contact.
 2. CM displays the matching contacts.
 3. User requests to edit a contact in the displayed list, giving the index of the contact and the details to change. These are any of the name, the class and the email.
 4. CM changes the details of the contact, shows all contacts and displays a success message.

@@ -61,7 +61,7 @@ public class AttendanceCommandParserTest {
     @Test
     public void parse_missingIndex_failure() {
         assertParseFailure(parser, " /date 16-09-2026 /status absent",
-            "Missing index. Please provide the index of the person.");
+            "Use either an index, or both /name and /class.");
     }
 
     @Test
