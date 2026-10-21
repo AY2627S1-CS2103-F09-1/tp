@@ -88,6 +88,12 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void findPerson_matchingNameDifferentClass_returnsEmpty() {
+        modelManager.addPerson(ALICE);
+        assertTrue(modelManager.findPerson(ALICE.getName(), new ClassName("B999")).isEmpty());
+    }
+
+    @Test
     public void equals() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
         AddressBook differentAddressBook = new AddressBook();
