@@ -3,7 +3,6 @@ package seedu.address.model.person;
 import static java.util.Objects.requireNonNull;
 
 import java.math.BigDecimal;
-import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 
@@ -19,6 +18,7 @@ public class Grade {
     public static final String MESSAGE_INVALID_SCORE = "Score must be a numerical value (0-100).";
 
     private final String assessmentName;
+    private final String assessmentKey;
     private final BigDecimal score;
 
     /** Creates a grade after validating its assessment name and score. */
@@ -33,6 +33,7 @@ public class Grade {
             throw new IllegalArgumentException(MESSAGE_INVALID_SCORE);
         }
         this.assessmentName = normalizedAssessmentName;
+        this.assessmentKey = StringUtil.toComparisonKey(normalizedAssessmentName);
         this.score = score;
     }
 
@@ -43,7 +44,8 @@ public class Grade {
     public static Optional<String> getAssessmentNameConstraintViolation(String assessmentName) {
         requireNonNull(assessmentName);
         String normalizedAssessmentName = StringUtil.toNormalizedForm(assessmentName);
-        if (normalizedAssessmentName.isEmpty() || normalizedAssessmentName.length() > MAX_ASSESSMENT_NAME_LENGTH
+        boolean isTooLong = normalizedAssessmentName.length() > MAX_ASSESSMENT_NAME_LENGTH;
+        if (normalizedAssessmentName.isEmpty() || isTooLong
                 || !normalizedAssessmentName.matches(Name.VALIDATION_REGEX)) {
             return Optional.of(MESSAGE_INVALID_ASSESSMENT_NAME);
         }
@@ -58,9 +60,12 @@ public class Grade {
         return score;
     }
 
-    /** Returns whether this record and {@code other} refer to the same assessment, ignoring case. */
+    /**
+     * Returns whether this record and {@code other} refer to the same assessment, ignoring case and
+     * extra spaces.
+     */
     public boolean isSameAssessment(Grade other) {
-        return other != null && assessmentName.equalsIgnoreCase(other.assessmentName);
+        return other != null && assessmentKey.equals(other.assessmentKey);
     }
 
     @Override
@@ -71,13 +76,13 @@ public class Grade {
         if (!(other instanceof Grade otherGrade)) {
             return false;
         }
-        return assessmentName.equalsIgnoreCase(otherGrade.assessmentName)
+        return assessmentKey.equals(otherGrade.assessmentKey)
                 && score.compareTo(otherGrade.score) == 0;
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(assessmentName.toLowerCase(Locale.ROOT), score.stripTrailingZeros());
+        return Objects.hash(assessmentKey, score.stripTrailingZeros());
     }
 
     @Override

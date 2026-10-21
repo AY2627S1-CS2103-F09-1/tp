@@ -17,6 +17,21 @@ public class AttendanceCommandParserTest {
     private final AttendanceCommandParser parser = new AttendanceCommandParser();
 
     @Test
+    public void parse_unknownParameter_failure() {
+        assertParseFailure(parser, "1 /date 16-09-2026 /status absent /foo bar",
+                AttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /date 16-09-2026 /status absent /name John",
+                AttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /foo bar", AttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_unknownParameterAndRepeatedParameter_reportsUnknownParameter() {
+        assertParseFailure(parser, "1 /date 16-09-2026 /date 17-09-2026 /status absent /foo bar",
+                AttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
     public void parse_prefixesInAnyCase_success() {
         AttendanceCommand expectedCommand = new AttendanceCommand(
                 Index.fromOneBased(1),

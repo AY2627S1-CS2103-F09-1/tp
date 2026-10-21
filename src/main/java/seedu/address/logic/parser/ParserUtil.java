@@ -98,6 +98,21 @@ public class ParserUtil {
     }
 
     /**
+     * Returns the value of {@code prefix} in {@code argMultimap}.
+     *
+     * @throws ParseException with {@code missingMessage} if the prefix is absent or its value is blank.
+     */
+    public static String getNonBlankValue(ArgumentMultimap argMultimap, Prefix prefix, String missingMessage)
+            throws ParseException {
+        requireNonNull(argMultimap);
+        requireNonNull(prefix);
+        requireNonNull(missingMessage);
+        return argMultimap.getValue(prefix)
+                .filter(value -> !value.isBlank())
+                .orElseThrow(() -> new ParseException(missingMessage));
+    }
+
+    /**
      * Parses a {@code String name} into a {@code Name}.
      * Leading and trailing whitespaces will be trimmed.
      *

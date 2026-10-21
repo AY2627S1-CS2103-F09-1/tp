@@ -14,12 +14,17 @@ import seedu.address.model.person.Grade;
 /** Parses arguments and creates a {@link GradeCommand}. */
 public class GradeCommandParser implements Parser<GradeCommand> {
 
+    public static final String MESSAGE_UNKNOWN_PARAMETER =
+            "Unknown parameter. Use " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE;
+
     private static final String MESSAGE_MISSING_INDEX = "Missing index. Please provide the index of the person.";
     private static final String MESSAGE_MISSING_ASSESSMENT = "Assessment name missing";
     private static final String MESSAGE_MISSING_SCORE = "Score missing";
 
     @Override
     public GradeCommand parse(String args) throws ParseException {
+        ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER, PREFIX_ASSESSMENT, PREFIX_SCORE);
+
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_ASSESSMENT, PREFIX_SCORE);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_ASSESSMENT, PREFIX_SCORE);
 

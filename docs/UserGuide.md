@@ -386,14 +386,15 @@ Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
 * `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain the same characters as a `NAME` in [`add`](#adding-a-contact-add): English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, but no commas. Examples are `Assignment 1`, `Mid-term` and `Quiz #1 (Part A)`. Spaces at the start and end are ignored. Like a name, it cannot contain a parameter name stuck to the text before it, such as `Quiz/score`.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
-* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
-* `/assessment` and `/score` can each be given at most once.
-* Grades are saved with the contact data. ClassMates does not show recorded grades yet.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case and extra spaces, so `Quiz 1`, `quiz 1` and `quiz   1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
+* Only `/assessment` and `/score` are accepted, and each can be given at most once.
+* Grades are saved with the contact data. The 3 newest grades of a contact are shown on its card, and [`viewG`](#viewing-grades-viewg) shows all of them.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
+A parameter other than `/assessment` or `/score` is given, such as `/name` | `Unknown parameter. Use /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index is missing | `Missing index. Please provide the index of the person.`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
@@ -422,12 +423,13 @@ Format: `attendance INDEX /date DATE /status STATUS`
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
-* `/date` and `/status` can each be given at most once.
+* Only `/date` and `/status` are accepted, and each can be given at most once.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
+A parameter other than `/date` or `/status` is given, such as `/name` | `Unknown parameter. Use /date or /status`
 The index is missing | `Missing index. Please provide the index of the person.`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
@@ -485,6 +487,43 @@ If the contact has no records, the lines after the first are replaced by `No att
 Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
 * `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+
+### Viewing grades: `viewG`
+
+Shows all recorded grades for a contact.
+
+Format: `viewG /name NAME /class CLASS`
+
+* `NAME` and `CLASS` identify the contact whose grades you want to view. Both must match a contact in ClassMates.
+* The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
+* The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
+* `/name` and `/class` can be given in either order, but each must be given exactly once.
+* All grades of the contact are shown, from the newest to the oldest, one on each line as the assessment name followed by the score, such as `Quiz 2: 85`.
+* If the contact has no grades, ClassMates shows `No grades recorded.` in place of the list.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+A parameter other than `/name` or `/class` is given, such as `/email` | `Unknown parameter. Use /name or /class`
+A parameter is given more than once | `Each parameter can only be specified once`
+There is text before the first parameter, such as `viewG John /class A1` | `Invalid command format!` followed by the usage of `viewG`
+`/name` is missing or has nothing after it | `Command requires a name`
+`/class` is missing or has nothing after it | `Command requires a class`
+No contact matches the given name and class | `Contact not found`
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Here are the grades for NAME from class CLASS`, followed by one line for each grade. For example:
+
+```
+Here are the grades for John Tan from class A1
+Quiz 2: 85
+Quiz 1: 80
+```
+
+Examples:
+* `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
+* `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
 ### Clearing all entries: `clear`
 
@@ -594,5 +633,6 @@ Action     | Format, Examples
 **List**   | `list [KEYWORD]`<br> e.g., `list John`
 **Import** | `import PATH`<br> e.g., `import data/students.csv`
 **viewA**  | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`
+**viewG**  | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`
 **Help**   | `help`
 **Exit**   | `exit`

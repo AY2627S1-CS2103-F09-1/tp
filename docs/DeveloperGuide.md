@@ -124,7 +124,7 @@ How the parsing works:
 * `TagCommandParser` and `UntagCommandParser` take the same arguments, `/group GROUP_NAME /members INDEX[,INDEX]...`, so both extend the abstract `GroupMembershipCommandParser`, which does the parsing. A subclass only passes the usage message of its command, and creates its command in `GroupMembershipCommandParser#createCommand(Tag, List<Index>)`. See [Linking contacts to a group](#linking-contacts-to-a-group-feature).
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages. `DeleteCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or an index combined with `/name` or `/class`, a missing name, then a missing class. A parameter given without a value counts as missing.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
-* `AttendanceCommandParser` parses the contact index, date and status for the `attendance` command and creates an `AttendanceCommand`. `ViewAttendanceCommandParser` parses the name and class for the `viewA` command and creates a `ViewAttendanceCommand`. Both parsers use `ArgumentTokenizer` to extract their prefixed arguments.
+* `AttendanceCommandParser` parses the contact index, date and status for the `attendance` command and creates an `AttendanceCommand`. `ViewAttendanceCommandParser` and `ViewGradeCommandParser` parse the name and class for the `viewA` and `viewG` commands and create a `ViewAttendanceCommand` and a `ViewGradeCommand`. They share the parsing in `NameAndClassCommandParser`, as `TagCommandParser` and `UntagCommandParser` share the parsing in `GroupMembershipCommandParser`. All of these parsers use `ArgumentTokenizer` to extract their prefixed arguments, and `AttendanceCommandParser`, `GradeCommandParser` and the two parsers for `viewA` and `viewG` reject a parameter that the command does not accept, so that it is not taken as part of the value before it.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -546,7 +546,7 @@ The CSV import uses `FileUtil` rather than the `Storage` component. The CSV file
 
 The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, `AttendanceCommand`, and the `Attendance` model class.
 
-* `AttendanceCommandParser#parse(String)` tokenizes the arguments using the `/date` and `/status` prefixes. It reads the contact index from the preamble, checks for missing or repeated parameters, parses the index, validates the date strictly in `DD-MM-YYYY` format, and converts the status to an `Attendance.Status`.
+* `AttendanceCommandParser#parse(String)` first rejects any prefix other than `/date` and `/status` with `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`. It then tokenizes the arguments using the `/date` and `/status` prefixes. It reads the contact index from the preamble, checks for missing or repeated parameters, parses the index, validates the date strictly in `DD-MM-YYYY` format, and converts the status to an `Attendance.Status`.
 * `AttendanceCommand#execute(Model)` first rejects a date in the future. It then gets the contact at the specified index from `Model#getFilteredPersonList()`. If the index is invalid, it throws a `CommandException`.
 * To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old person in the model with `Model#setPerson(Person, Person)`.
 * If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
@@ -570,7 +570,7 @@ The `attendance` command records one attendance entry for a contact on a specifi
 
 The `viewA` command displays all attendance records for a contact. It is implemented by `ViewAttendanceCommandParser` and `ViewAttendanceCommand`.
 
-* `ViewAttendanceCommandParser#parse(String)` uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It reports unrecognized prefixes first, then repeated prefixes, then text before the first prefix, and finally a missing or blank name or class. It then creates a `ViewAttendanceCommand` with the name and class as plain strings. They are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS`.
+* `NameAndClassCommandParser#parse(String)`, which `ViewAttendanceCommandParser` inherits, uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It reports unrecognized prefixes first, then repeated prefixes, then text before the first prefix, and finally a missing or blank name or class. It then calls `NameAndClassCommandParser#createCommand(String, String)`, which `ViewAttendanceCommandParser` implements to create a `ViewAttendanceCommand` with the name and class as plain strings. They are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS`.
 * `ViewAttendanceCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
 * If a contact is found, the command formats all of that contact’s attendance records in chronological order and returns them in the command result. If there are no records, it returns the no-attendance-records message instead.
 
@@ -585,6 +585,28 @@ The `viewA` command displays all attendance records for a contact. It is impleme
 * **Alternative 2:** Identify the contact by its index in the displayed list.
   * Pros: Shorter to enter after displaying or searching for contacts.
   * Cons: The index depends on the current list, so the user may view attendance for a different contact if the list changes.
+
+### Viewing grades feature
+
+#### Implementation
+
+The `viewG` command displays all grades of a contact. It is implemented by `ViewGradeCommandParser` and `ViewGradeCommand`, and it works in the same way as the `viewA` command.
+
+* `ViewGradeCommandParser` extends `NameAndClassCommandParser`, which does the parsing that it shares with `ViewAttendanceCommandParser`. The name and class are plain strings and are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS` and `viewA`. A value that no contact can have is therefore reported as `Contact not found`, as for the other two commands.
+* `ViewGradeCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
+* If a contact is found, the command lists the grades of the contact from the newest to the oldest, as `Grade#toString()`. If there are no grades, it returns the no-grades message instead.
+* `Grade#isSameAssessment(Grade)` and `Grade#equals(Object)` compare the assessment names with `StringUtil#toComparisonKey(String)`, so `Quiz 1` and ` quiz   1` are the same assessment, in the same way as names and classes. `Person#withGrade(Grade)` uses it to reject a second grade for the same assessment.
+
+#### Design considerations
+
+**Aspect: Whether the name and class are validated**
+
+* **Alternative 1 (current choice):** Compare them as plain strings.
+  * Pros: Behaves in the same way as `delete` and `viewA`, and the user is told that no contact was found, which is the real reason that nothing is shown.
+  * Cons: A mistake in the format of a name, such as a comma, is not reported as a format error.
+* **Alternative 2:** Validate them as a `Name` and `ClassName`, as the command did before.
+  * Pros: A name that can never exist is reported as a format error.
+  * Cons: The three commands that identify a contact by name and class gave different messages for the same mistake.
 
 ### Command history feature
 
@@ -991,7 +1013,7 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
   * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1d. The student already has a grade for the assessment. Assessment names are compared ignoring case.
+* 1d. The student already has a grade for the assessment. Assessment names are compared ignoring case and extra spaces.
   * 1d1. CM keeps the existing grade and displays an error message.
 
     Use case resumes at step 1.
@@ -1021,8 +1043,6 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
 
 
 **Use case: UC09 - View known student's attendance**
-
-*(Planned feature, not implemented yet.)*
 
 **MSS**
 1. User requests to view the attendance of the student.
@@ -1146,6 +1166,30 @@ UC01 and UC09 describe planned features that are not implemented yet. The other 
   * 3c1. CM displays an error message.
 
     Use case resumes at step 3.
+
+**Use case: UC15 - View known student's grades**
+
+**MSS**
+1. User requests to view the grades of the student, giving the name and class of the student.
+2. CM displays the grades of the student, from the newest to the oldest.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid, e.g. the name or class is missing or given more than once, or the command has a parameter that it does not accept.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1b. No student has the name and class. Case and extra spaces are ignored.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 2a. The student has no grades.
+  * 2a1. CM displays a message that no grades are recorded.
+
+    Use case ends.
+
 
 ### Non-Functional Requirements
 
@@ -1443,6 +1487,29 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect viewA commands to try: `viewA /class A1`, `viewA /name Alex Yeoh /class A1 /foo bar`<br>
       Expected: Similar to previous. An error message is shown.
+
+### Recording and viewing grades
+
+1. Recording and viewing the grades of a contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`, so that Alex Yeoh is the 1st contact displayed.
+
+   1. Test case: `grade 1 /assessment Quiz #1 /score 80`<br>
+      Expected: The status message shows `Grade of 80 recorded for Quiz #1 for student Alex Yeoh in class A1.`, and the card of Alex Yeoh shows `Quiz #1: 80`.
+
+   1. Test case: `VIEWG /name alex  yeoh /class a1`<br>
+      Expected: The status message shows `Here are the grades for Alex Yeoh from class A1`, followed by `Quiz #1: 80`. The case of the command word, and the case and extra spaces of the name and class, do not matter.
+
+1. Recording and viewing grades unsuccessfully
+
+   1. Test case: `grade 1 /assessment  QUIZ   #1 /score 90`<br>
+      Expected: No grade is recorded. The status message shows `Grade for this assessment already exists`, as the case and extra spaces of the assessment name are ignored.
+
+   1. Test case: `viewG /name Unknown Student /class A1`<br>
+      Expected: The status message shows `Contact not found`.
+
+   1. Other incorrect commands to try: `grade 1 /assessment Quiz 2 /score 101`, `grade 1 /assessment Quiz 2 /score 90 /foo bar` (a parameter that is not accepted), `viewG /class A1`<br>
+      Expected: Similar to previous. No grade is recorded, and the status message describes the problem.
 
 ### Clearing all contacts
 

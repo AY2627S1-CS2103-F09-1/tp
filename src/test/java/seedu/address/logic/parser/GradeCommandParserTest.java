@@ -25,6 +25,21 @@ public class GradeCommandParserTest {
     }
 
     @Test
+    public void parse_unknownParameter_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /foo bar",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /name John",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, "1 /foo bar", GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_unknownParameterAndRepeatedParameter_reportsUnknownParameter() {
+        assertParseFailure(parser, "1 /assessment A /assessment B /score 90 /foo bar",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
     public void parse_prefixesInAnyCase_success() {
         GradeCommand expected = new GradeCommand(
                 Index.fromOneBased(5), new Grade("Assignment 1", new BigDecimal("97")));
