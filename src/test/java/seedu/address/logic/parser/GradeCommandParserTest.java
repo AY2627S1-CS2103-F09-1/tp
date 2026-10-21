@@ -1,6 +1,8 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -10,14 +12,16 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.GradeCommand;
+import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Grade;
+import seedu.address.model.person.Name;
 
 public class GradeCommandParserTest {
 
     private final GradeCommandParser parser = new GradeCommandParser();
 
     @Test
-    public void parse_validArguments_success() {
+    public void parse_validIndexArguments_success() {
         GradeCommand expected = new GradeCommand(
                 Index.fromOneBased(5), new Grade("Assignment 1", new BigDecimal("97")));
 
@@ -25,10 +29,33 @@ public class GradeCommandParserTest {
     }
 
     @Test
+    public void parse_validNameAndClassArguments_success() {
+        String userInput = " /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97";
+
+        GradeCommand expectedCommand = new GradeCommand(
+                new Name("Alex Yeoh"),
+                new ClassName("A1"),
+                new Grade("Assignment 1", new BigDecimal("97")));
+
+        assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_nameAndClassFormatting_success() {
+        String userInput =
+                " /name   alex   yeoh  /class  a1 /assessment Assignment 1 /score 97";
+
+        GradeCommand expectedCommand = new GradeCommand(
+                new Name("alex   yeoh"),
+                new ClassName("a1"),
+                new Grade("Assignment 1", new BigDecimal("97")));
+
+        assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
     public void parse_unknownParameter_failure() {
         assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /foo bar",
-                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
-        assertParseFailure(parser, "1 /assessment Quiz 1 /score 90 /name John",
                 GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
         assertParseFailure(parser, "1 /foo bar", GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
     }
@@ -72,7 +99,7 @@ public class GradeCommandParserTest {
     @Test
     public void parse_missingIndex_failure() {
         assertParseFailure(parser, " /assessment Assignment 1 /score 97",
-                "Missing index. Please provide the index of the person.");
+                "Use either an index, or both /name and /class.");
     }
 
     @Test
@@ -83,6 +110,23 @@ public class GradeCommandParserTest {
     @Test
     public void parse_missingScore_failure() {
         assertParseFailure(parser, "1 /assessment Assignment 1", "Score missing");
+    }
+
+    @Test
+    public void parse_missingClass_failure() {
+        assertParseFailure(parser, " /name Alex Yeoh /assessment Assignment 1 /score 97", MESSAGE_MISSING_CLASS);
+    }
+
+    @Test
+    public void parse_missingName_failure() {
+        assertParseFailure(parser, " /class A1 /assessment Assignment 1 /score 97", MESSAGE_MISSING_NAME);
+    }
+
+    @Test
+    public void parse_bothIndexAndNameAndClass_failure() {
+        assertParseFailure(parser,
+                "1 /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97",
+                "Use either an index or name and class, not both.");
     }
 
     @Test
@@ -109,6 +153,12 @@ public class GradeCommandParserTest {
                 MESSAGE_DUPLICATE_PARAMETERS);
         assertParseFailure(parser, "1 /assessment Quiz /score 90 /score 91",
                 MESSAGE_DUPLICATE_PARAMETERS);
+    }
+
+    @Test
+    public void parse_duplicateAssessmentAndScorePrefixes_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz /assessment Exam " + "/score 90 /score 95",
+            MESSAGE_DUPLICATE_PARAMETERS);
     }
 
 }

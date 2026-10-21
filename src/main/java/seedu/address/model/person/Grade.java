@@ -61,6 +61,14 @@ public class Grade {
     }
 
     /**
+     * Returns whether this record refers to {@code assessmentName}, ignoring case and extra spaces.
+     */
+    public boolean hasAssessmentName(String assessmentName) {
+        return assessmentName != null
+                && assessmentKey.equals(StringUtil.toComparisonKey(assessmentName));
+    }
+
+    /**
      * Returns whether this record and {@code other} refer to the same assessment, ignoring case and
      * extra spaces.
      */

@@ -592,23 +592,63 @@ The CSV import uses `FileUtil` rather than the `Storage` component. The CSV file
 
 The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, `AttendanceCommand`, and the `Attendance` model class.
 
-* `AttendanceCommandParser#parse(String)` first rejects any prefix other than `/date` and `/status` with `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`. It then tokenizes the arguments using the `/date` and `/status` prefixes. It reads the contact index from the preamble, checks for missing or repeated parameters, parses the index, validates the date strictly in `DD-MM-YYYY` format, and converts the status to an `Attendance.Status`.
-* `AttendanceCommand#execute(Model)` first rejects a date in the future. It then gets the contact at the specified index from `Model#getFilteredPersonList()`. If the index is invalid, it throws a `CommandException`.
-* To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old person in the model with `Model#setPerson(Person, Person)`.
-* If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
-* On success, the command returns a message naming the contact, date and status.
+`AttendanceCommandParser#parse(String)` supports two ways of identifying a contact:
+
+* `attendance INDEX /date DD-MM-YYYY /status STATUS`
+* `attendance /name NAME /class CLASS /date DD-MM-YYYY /status STATUS`
+
+The parser tokenizes the arguments using the `/name`, `/class`, `/date`, and `/status` prefixes. It verifies that no prefix is repeated and ensures that the user provides either an index or both a name and class, but not both.
+
+The parser then:
+
+* validates the index when the index format is used;
+* validates the name and class when the name/class format is used;
+* validates the date strictly in `DD-MM-YYYY` format;
+* converts the status to an `Attendance.Status`.
+
+`AttendanceCommand#execute(Model)` first rejects a date in the future. It then identifies the contact in one of two ways:
+
+* For the index format, it retrieves the contact from `Model#getFilteredPersonList()` using the displayed index.
+* For the name/class format, it searches the full address book for a contact whose name and class match the supplied values. Name and class comparisons ignore capitalization and extra whitespace.
+
+If no contact matches the supplied name and class, the command throws a `CommandException`.
+
+To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old person in the model using `Model#setPerson(Person, Person)`.
+
+If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
+
+On success, the command returns a message naming the contact, date, and attendance status.
 
 #### Design considerations
 
 **Aspect: How attendance updates a contact**
 
-* **Alternative 1 (current choice):** Select the contact by its index in the displayed list.
-  * Pros: Consistent with commands such as `delete INDEX` and `tag`; users can first use `list` to narrow down the contacts.
-  * Cons: The index depends on the currently displayed list, so users need to check the list before recording attendance.
+* **Alternative 1:** Select the contact by its index in the displayed list.
+  Pros:
+
+* Consistent with commands such as `delete INDEX` and `tag`.
+* Convenient when recording attendance for several contacts from a displayed list.
+* Allows users to first use `list` or `find` to narrow down the contacts.
+
+  Cons:
+
+* The index depends on the currently displayed list.
+* Users need to check the displayed list before recording attendance.
+* The command may refer to a different contact if the displayed list changes.
 
 * **Alternative 2:** Select the contact using `/name NAME /class CLASS`.
-  * Pros: Identifies the contact directly and does not depend on the current list or its indices.
-  * Cons: Requires entering both the name and class, and is less convenient when recording attendance for several contacts from a displayed list.
+  Pros:
+
+* Identifies the contact directly.
+* Does not depend on the currently displayed list or its indices.
+* Works even when the contact is not currently visible in a filtered list.
+* Avoids ambiguity when different contacts have the same name but belong to different classes.
+
+  Cons:
+
+* Requires users to enter both the name and class.
+* Is less convenient when recording attendance for several contacts from a displayed list.
+* Requires the user to know the exact contact name and class.
 
 ### Viewing attendance feature
 
@@ -653,6 +693,48 @@ The `viewG` command displays all grades of a contact. It is implemented by `View
 * **Alternative 2:** Validate them as a `Name` and `ClassName`, as the command did before.
   * Pros: A name that can never exist is reported as a format error.
   * Cons: The three commands that identify a contact by name and class gave different messages for the same mistake.
+
+### Deleting grades feature
+
+#### Implementation
+
+The `deleteG` command removes one grade, identified by its assessment name, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteGradeCommandParser` returns a `DeleteGradeByIndexCommand` or a `DeleteGradeByNameAndClassCommand` which both extend the abstract `DeleteGradeCommand`.
+
+* `DeleteGradeCommandParser#parse(String)` first rejects unrecognized and repeated parameters. If neither `/name` nor `/class` is present, it reads the contact index from the preamble and creates a `DeleteGradeByIndexCommand`. If either is present, it rejects a non-empty preamble, requires both parameters and creates a `DeleteGradeByNameAndClassCommand`.
+* The parser validates the assessment name using `Grade#getAssessmentNameConstraintViolation(String)` without constructing a `Grade` since deleting a grade does not require a score. It also uses `ParserUtil#requireNoEmbeddedPrefix(String, String)` to detect a parameter that may be missing a space before it.
+* `DeleteGradeByIndexCommand#execute(Model)` selects a contact from `Model#getFilteredPersonList()`, so the index refers to the currently displayed list. `DeleteGradeByNameAndClassCommand#execute(Model)` searches the whole address book using `Person#hasNameAndClass(String, String)`. As with `delete`, `viewA` and `viewG`, the supplied name and class are plain strings and are compared ignoring case and extra whitespace.
+* `DeleteGradeCommand#deleteGrade(Model, Person, String)` contains the deletion shared by both subclasses. It finds the stored grade using `Grade#hasAssessmentName(String)`, which ignores case and extra whitespace, and if there is no match, reports that the grade was not found.
+* The shared operation passes the stored `Grade` to `Person#withoutGrade(Grade)`. This returns a new `Person` with only that grade removed. The command replaces the original person using `Model#setPerson(Person, Person)`. The success message uses the score and assessment name from the stored grade.
+* The constructors reject null arguments and assert that the assessment name has already been validated. After deletion, an assertion checks that the grade is absent from the new person. These checks document assumptions between the parser, command and model layers.
+
+#### Design considerations
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `DeleteGradeCommand` with one subclass for each way of identifying the contact and a shared grade-deletion method.
+  * Pros: Each subclass has one contact-selection responsibility, invalid combinations of identifier fields cannot be represented and deletion logic and messages are kept in one place.
+  * Cons: One command word maps to two command classes so the parser must decide which class to create.
+* **Alternative 2:** A single command with optional fields for the index, name and class.
+  * Pros: Only one command class is needed.
+  * Cons: The command must branch during execution and invalid combinations of optional fields can be represented.
+
+**Aspect: How the grade to remove is represented**
+
+* **Alternative 1 (current choice):** Find the stored `Grade` by assessment name, then pass that object to `Person#withoutGrade(Grade)`.
+  * Pros: No placeholder score is needed and the stored assessment name and score are available for the success message. It also reuses the comparison rules of `Grade`.
+  * Cons: Finding the grade and removing it are separate operations over the grade list.
+* **Alternative 2:** Add a `Person#withoutGrade(String)` method that finds and removes a grade by assessment name.
+  * Pros: Encapsulates the lookup and removal in the model class.
+  * Cons: The command would need another way to obtain the removed grade for its success message and `Person` would need an additional operation that accepts an unvalidated string.
+
+**Aspect: Which contacts a deletion by name and class searches**
+
+* **Alternative 1 (current choice):** The whole address book.
+  * Pros: The command works regardless of the current filter and is consistent with `delete /name NAME /class CLASS`, `viewA` and `viewG`.
+  * Cons: It can modify a contact that is not currently displayed.
+* **Alternative 2:** Only the displayed contacts.
+  * Pros: The affected contact is visible before the command is run.
+  * Cons: A filter can hide the intended contact even though the name and class identify it directly.
 
 ### Command history feature
 
@@ -893,7 +975,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 
 (For all use cases below, the **System** is `ClassMates` and the **Actor** is the `user`, unless specified otherwise)
 
-A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC08).
+A use case that needs another use case includes it. An inclusion is written as <u>underlined text</u> followed by the number of the included use case, such as <u>list or search student contacts</u> (UC09).
 
 The use cases describe what the application does now.
 
@@ -927,7 +1009,7 @@ The use cases describe what the application does now.
 * An attendance record is only added if its date and status are valid and the student has no record for that date.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the student.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the student.
 2. CM displays the matching contacts.
 3. User requests to record the attendance of a contact in the displayed list, giving the index of the contact, the date and the status (present, absent or late).
 4. CM records the attendance and displays a success message.
@@ -966,7 +1048,7 @@ The use cases describe what the application does now.
 **MSS**
 1. User requests to import contacts from a CSV file, giving the path of the file.
 2. CM checks the file, adds all the contacts in it and displays the number of contacts imported.
-3. For each class added, user requests to <u>list or search student contacts</u> (UC08) using the class as the keyword.
+3. For each class added, user requests to <u>list or search student contacts</u> (UC09) using the class as the keyword.
 4. CM displays the contacts of that class.
 
    Use case ends.
@@ -1000,7 +1082,7 @@ The use cases describe what the application does now.
 * The contacts are only linked to the group if all of them can be linked. If any problem is found, none of them is linked.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the students to group.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the students to group.
 2. CM displays the matching contacts.
 3. User requests to link the contacts at the given indices of the displayed list to a group, giving the name of the group.
 4. CM links the contacts to the group and displays a success message.
@@ -1030,7 +1112,7 @@ The use cases describe what the application does now.
 **Use case: UC05 - Delete a student**
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08).
+1. User requests to <u>list or search student contacts</u> (UC09).
 2. CM displays the matching contacts.
 3. User requests to delete a contact in the displayed list, giving the index of the contact.
 4. CM deletes the contact and displays a success message.
@@ -1084,12 +1166,70 @@ The use cases describe what the application does now.
 
     Use case resumes at step 1.
 
-
-**Use case: UC07 - Record grades for a known student**
+**Use case: UC07 - Record attendance for a known student**
 
 **MSS**
-1. User requests to record a grade, giving the index of a student in the displayed list, an assessment name and a score.
-2. CM records the grade for the student and displays a success message.
+
+1. User requests to record attendance, providing either the index of a student in the displayed list, or the student’s name and class. The user also provides an attendance date and attendance status.
+2. CM identifies the student using the provided index or name and class.
+3. CM records the attendance entry for the student and displays a success message.
+
+   Use case ends.
+
+Extensions
+
+* 1a. The command format is invalid, e.g. the student identifier, attendance date or attendance status is missing, or the date or status is given more than once.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1b. The user provides an index, but the index is not a positive integer or no student is displayed at that index.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1c. The user provides a name and class, but either the name or class is missing.
+  * 1c1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1d. The provided name and class do not match any student in CM.
+  * 1d1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1e. Both an index and a name/class pair are provided.
+  * 1e1. CM displays an error message instructing the user to provide either an index or a name/class pair, but not both.
+
+    Use case resumes at step 1.
+
+* 1f. The attendance date is invalid, e.g. it does not follow the DD-MM-YYYY format, does not represent a valid date, or is in the future.
+  * 1f1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1g. The attendance status is invalid, e.g. it is not present, absent, or late.
+  * 1g1. CM displays an error message.
+
+    Use case resumes at step 1.
+
+* 1h. The student already has an attendance entry for the specified date.
+  * 1h1. CM keeps the existing attendance entry and displays an error message.
+
+    Use case resumes at step 1.
+
+**Use case: UC08 - Record grades for a known student**
+
+**MSS**
+1. User requests to record a grade, providing either:
+   a. the index of a student in the displayed list; or
+   b. the student's name and class.
+
+   The user also provides an assessment name and score.
+
+2. CM identifies the student using the provided index or name and class.
+
+3. CM records the grade for the student and displays a success message.
 
    Use case ends.
 
@@ -1111,9 +1251,20 @@ The use cases describe what the application does now.
   * 1d1. CM keeps the existing grade and displays an error message.
 
     Use case resumes at step 1.
+* 1e. The user provides a name and class, but either the name or class is missing.
+  * 1e1. CM displays an error message.
 
+    Use case resumes at step 1.
+* 1f. The provided name and class do not match any student in CM.
+  * 1f1. CM displays an error message.
 
-**Use case: UC08 - List or search student contacts**
+    Use case resumes at step 1.
+* 1g. Both an index and a name/class pair are provided.
+  * 1g1. CM displays an error message instructing the user to provide either an index or a name/class pair, but not both.
+
+    Use case resumes at step 1.
+
+**Use case: UC09 - List or search student contacts**
 
 **Guarantees**
 * The search always covers all contacts, whether or not an earlier search is displayed.
@@ -1136,7 +1287,7 @@ The use cases describe what the application does now.
     Use case ends.
 
 
-**Use case: UC09 - View known student's attendance**
+**Use case: UC10 - View known student's attendance**
 
 **MSS**
 1. User requests to view the attendance of the student, giving the name and class of the student.
@@ -1160,7 +1311,7 @@ The use cases describe what the application does now.
     Use case ends.
 
 
-**Use case: UC10 - Clear all contacts**
+**Use case: UC11 - Clear all contacts**
 
 **MSS**
 1. User requests to clear all contacts.
@@ -1169,7 +1320,7 @@ The use cases describe what the application does now.
    Use case ends.
 
 
-**Use case: UC11 - View help**
+**Use case: UC12 - View help**
 
 **MSS**
 1. User requests to view help.
@@ -1185,7 +1336,7 @@ The use cases describe what the application does now.
     Use case ends.
 
 
-**Use case: UC12 - Exit the application**
+**Use case: UC13 - Exit the application**
 
 **MSS**
 1. User requests to exit the application.
@@ -1194,14 +1345,14 @@ The use cases describe what the application does now.
    Use case ends.
 
 
-**Use case: UC13 - Edit a contact**
+**Use case: UC14 - Edit a contact**
 
 **Guarantees**
 * The contact is only changed if the whole command can be carried out. If any problem is found, nothing about the contact is changed.
 * The attendance records and the grades of the contact are kept.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the contact.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the contact.
 2. CM displays the matching contacts.
 3. User requests to edit a contact in the displayed list, giving the index of the contact and the details to change. These are any of the name, the class and the email.
 4. CM changes the details of the contact, shows all contacts and displays a success message.
@@ -1236,14 +1387,14 @@ The use cases describe what the application does now.
     Use case resumes at step 4.
 
 
-**Use case: UC14 - Remove students from groups (by untagging)**
+**Use case: UC15 - Remove students from groups (by untagging)**
 
 **Guarantees**
 * The contacts are only removed from the group if all of them can be removed. If any problem is found, none of them is removed.
 * The other details, the attendance records and the grades of the contacts are kept.
 
 **MSS**
-1. User requests to <u>list or search student contacts</u> (UC08) to find the students to remove from the group.
+1. User requests to <u>list or search student contacts</u> (UC09) to find the students to remove from the group.
 2. CM displays the matching contacts.
 3. User requests to remove the contacts at the given indices of the displayed list from a group, giving the name of the group.
 4. CM removes the contacts from the group and displays a success message.
@@ -1531,18 +1682,33 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `attendance 1 /date 01-01-2024 /status present`<br>
       Expected: The status message shows `Attendance for Alex Yeoh on 01-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/classmates.json`.
 
+   1. Test case: `attendance /name Alex Yeoh /class A1 /date 02-01-2024 /status present`<br>
+      Expected: The status message shows `Attendance for Alex Yeoh on 02-01-2024 recorded as present.`. The attendance record is saved in the `attendanceRecords` of Alex Yeoh in `data/classmates.json`.
+
 1. Recording attendance unsuccessfully
 
    1. Prerequisites: Complete the previous test case. List all contacts using the `list` command.
 
    1. Test case: `attendance 1 /date 01-01-2024 /status absent`<br>
       Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
+  
+   1. Test case: `attendance /name Alex Yeoh /class A1 /date 02-01-2024 /status absent`<br>
+      Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
+  
+   1. Test case: `attendance /name Unknown Student /class A1 /date 03-01-2024 /status present`<br>
+      Expected: No record is added. The status message shows `Contact not found`.
+
+   1. Test case: `attendance /name Alex Yeoh /date 03-01-2024 /status present`<br>
+      Expected: No record is added. The status message indicates that the class is missing.
 
    1. Test case: `attendance 1 /date 01-01-2999 /status present`<br>
       Expected: No record is added. The status message shows `Attendance date cannot be in the future.`.
 
    1. Test case: `attendance 99 /date 03-01-2024 /status present`<br>
       Expected: No record is added. The status message shows `The contact index provided is invalid.`.
+  
+   1. Test case: `attendance 1 /name Alex Yeoh /class A1 /date 03-01-2024 /status present`<br>
+      Expected: No record is added. The status message indicates that either an index or a name/class pair should be provided, but not both.
 
    1. Other incorrect attendance commands to try: `attendance 1 /date 2024-01-01 /status present`, `attendance 1 /date 03-01-2024 /status sick`, `attendance 1 /status present`<br>
       Expected: Similar to previous. No record is added, and an error message is shown.
@@ -1589,6 +1755,35 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect commands to try: `grade 1 /assessment Quiz 2 /score 101`, `grade 1 /assessment Quiz 2 /score 90 /foo bar` (a parameter that is not accepted), `viewG /class A1`<br>
       Expected: Similar to previous. No grade is recorded, and the status message describes the problem.
+
+### Deleting grades
+
+1. Deleting a grade by the index of a displayed contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`, then record two grades using `grade 1 /assessment Quiz #1 /score 80` and `grade 1 /assessment Final Exam /score 95`.
+
+   1. Test case: `deleteG 1 /assessment quiz   #1`<br>
+      Expected: The grade for Quiz #1 is removed from Alex Yeoh. The grade for Final Exam and all other contact details remain unchanged. The status message shows `Grade of 80 for Quiz #1 for student Alex Yeoh in class A1 has been deleted`. The case and extra spaces of the assessment name do not matter.
+
+1. Deleting a grade by name and class
+
+   1. Prerequisites: The app contains the sample data. Run `list bernice`, followed by `grade 1 /assessment Assignment 1 /score 90`, then run `list david` so that Bernice Yu is not displayed.
+
+   1. Test case: `deleteG /name bernice  yu /class a1 /assessment assignment 1`<br>
+      Expected: The grade for Assignment 1 is removed from Bernice Yu, even though she is not displayed. The status message shows `Grade of 90 for Assignment 1 for student Bernice Yu in class A1 has been deleted`. The whole address book is searched, and case and extra spaces do not matter.
+
+1. Deleting a grade unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`.
+
+   1. Test case: `deleteG 1 /assessment Unknown Assessment`<br>
+      Expected: No grade is deleted. The status message shows `Grade for this assessment not found`.
+
+   1. Test case: `deleteG /name Alex Yeoh /class B1 /assessment Quiz #1`<br>
+      Expected: No grade is deleted. The status message shows `No contact found`, because both the name and class must match an existing contact.
+
+   1. Other incorrect commands to try: `deleteG`, `deleteG 0 /assessment Quiz #1`, `deleteG 99 /assessment Quiz #1`, `deleteG 1 /assessment Quiz,1`, `deleteG 1 /score 80`<br>
+      Expected: Similar to previous. No grade is deleted and the status message describes the problem.
 
 ### Clearing all contacts
 

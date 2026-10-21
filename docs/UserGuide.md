@@ -47,6 +47,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `attendance 1 /date 14-10-2026 /status present` : Adds attendance record to contact in the 1st index as `present` on `14-10-2026`
 
+   * `attendance /name John Doe /class A1 /date 14-10-2026 /status present` : Adds attendance record to contact named `John Doe` in class `A1` as `present` on `14-10-2026`
+
    * `viewA /name John Doe /class A1` : Lists the attendance records of `John Doe` in class `A1`
 
    * `clear` : Deletes all contacts.
@@ -381,14 +383,22 @@ If more than one problem applies, only the first one in the table above is repor
 
 Records a score for a contact in an assessment.
 
-Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
+Format: 
+
+`grade INDEX /assessment ASSESSMENT_NAME /score SCORE`
+
+or
+
+`grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain the same characters as a `NAME` in [`add`](#adding-a-contact-add): English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, but no commas. Examples are `Assignment 1`, `Mid-term` and `Quiz #1 (Part A)`. Spaces at the start and end are ignored. Like a name, it cannot contain a parameter name stuck to the text before it, such as `Quiz/score`.
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
+* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain only English letters, digits, spaces and hyphens, such as `Assignment 1` or `Mid-term`. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
-* A contact can have only one grade for each assessment. Assessment names are compared ignoring case and extra spaces, so `Quiz 1`, `quiz 1` and `quiz   1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
-* Only `/assessment` and `/score` are accepted, and each can be given at most once.
-* Grades are saved with the contact data. The 3 newest grades of a contact are shown on its card, and [`viewG`](#viewing-grades-viewg) shows all of them.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
+* Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
+* `/assessment` and `/score` can each be given at most once.
+* Grades are saved with the contact data. ClassMates does not show recorded grades yet.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -396,7 +406,10 @@ Problem | Message
 --------|--------
 A parameter other than `/assessment` or `/score` is given, such as `/name` | `Unknown parameter. Use /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
-The index is missing | `Missing index. Please provide the index of the person.`
+The index and name/class pair are both provided | `Use either an index or name and class, not both.`
+The index, or name and class, is missing | `Use either an index, or both /name and /class.`
+`/name` is missing when using the name/class format | `Command requires a name`
+`/class` is missing when using the name/class format | `Command requires a class`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
 The index is not a positive integer | `Index must be a positive integer.`
@@ -404,6 +417,7 @@ The assessment name contains a parameter such as `/score` that is stuck to the t
 The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The name and class do not match any contact | `Contact not found`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -412,25 +426,112 @@ On success, ClassMates shows `Grade of SCORE recorded for ASSESSMENT_NAME for st
 Examples:
 * `grade 5 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for the 5th contact in the displayed list.
 * `list Betsy` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list Betsy` command.
+* `grade /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for Alex Yeoh from class A1.
+
+### Viewing grades: `viewG`
+
+Shows all recorded grades for a contact.
+
+Format: `viewG /name NAME /class CLASS`
+
+* `NAME` and `CLASS` identify the contact whose grades you want to view. Both must match a contact in ClassMates.
+* The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
+* The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
+* `/name` and `/class` can be given in either order, but each must be given exactly once.
+* All grades of the contact are shown, from the newest to the oldest, one on each line as the assessment name followed by the score, such as `Quiz 2: 85`.
+* If the contact has no grades, ClassMates shows `No grades recorded.` in place of the list.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+| Problem                                                                  | Message                                                    |
+|--------------------------------------------------------------------------|------------------------------------------------------------|
+| A parameter other than `/name` or `/class` is given, such as `/email`    | `Unknown parameter. Use /name or /class`                   |
+| A parameter is given more than once                                      | `Each parameter can only be specified once`                |
+| There is text before the first parameter, such as `viewG John /class A1` | `Invalid command format!` followed by the usage of `viewG` |
+| `/name` is missing or has nothing after it                               | `Command requires a name`                                  |
+| `/class` is missing or has nothing after it                              | `Command requires a class`                                 |
+| No contact matches the given name and class                              | `Contact not found`                                        |
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Here are the grades for NAME from class CLASS`, followed by one line for each grade. For example:
+
+```
+Here are the grades for John Tan from class A1
+Quiz 2: 85
+Quiz 1: 80
+```
+
+Examples:
+* `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
+* `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+
+### Deleting grades: `deleteG`
+
+Deletes a recorded grade from a contact.
+
+Format: `deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`
+
+* `deleteG INDEX /assessment ASSESSMENT_NAME` deletes the grade for `ASSESSMENT_NAME` for the contact at the specified `INDEX`.
+    * `INDEX` refers to the index number shown in the displayed contact list for the results of a command such as `list Betsy`.
+    * The index **must be a positive integer** 1, 2, 3, ...
+    * `INDEX` must be placed before `/assessment` and cannot be used together with `/name` or `/class`.
+* `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME` deletes the grade for `ASSESSMENT_NAME` for that contact with that name in that class in the entire address book.
+    * Both `NAME` and `CLASS` are required and are compared ignoring case and extra spaces.
+    * `ASSESSMENT_NAME` follows the same rules as in the [`grade`](#recording-grades-grade) command. Assessment names are compared ignoring case and extra spaces.
+    * `/name`, `/class` and `/assessment` can be given in any order, but each can be given at most once.
+
+If the command is successful, only the matching grade is deleted. The contact's other grades and details are not changed.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+| Problem                                                                                                                                                 | Message                                                                                                                                                                                 |
+|---------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| A parameter other than `/name`, `/class` or `/assessment` is given, such as `/score`                                                                    | `Unknown parameter. Use /name, /class or /assessment`                                                                                                                                   |
+| A parameter is given more than once                                                                                                                     | `Each parameter can only be specified once`                                                                                                                                             |
+| The command does not match either format, the index is not a positive integer, or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteG`                                                                                                                            |
+| `/name` is missing or has nothing after it in the name-and-class format                                                                                 | `Command requires a name`                                                                                                                                                               |
+| `/class` is missing or has nothing after it in the name-and-class format                                                                                | `Command requires a class`                                                                                                                                                              |
+| `/assessment` is missing or has nothing after it                                                                                                        | `Assessment name missing`                                                                                                                                                               |
+| The assessment name contains a parameter such as `/name` that is stuck to the text before it                                                            | `The assessment name contains '/name', which looks like a parameter that is missing a space before it`                                                                                  |
+| The assessment name is not valid                                                                                                                        | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.` |
+| The index is larger than the number of contacts displayed                                                                                               | `The contact index provided is invalid.`                                                                                                                                                |
+| No contact matches the given name and class                                                                                                             | `No contact found`                                                                                                                                                                      |
+| The contact has no grade for the given assessment                                                                                                       | `Grade for this assessment not found`                                                                                                                                                   |
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Grade of SCORE for ASSESSMENT_NAME for student NAME in class CLASS has been deleted`.
+
+Examples:
+* `deleteG 2 /assessment Quiz 1` deletes the grade for Quiz 1 from the 2nd contact in the displayed list.
+* `deleteG /name John Tan /class A1 /assessment Final Exam` deletes John Tan's grade for Final Exam, even if John Tan is not in the displayed contact list.
 
 ### Recording attendance: `attendance`
 
 Records whether a contact was present, absent or late on a date.
 
-Format: `attendance INDEX /date DATE /status STATUS`
+Format: 
+
+`attendance INDEX /date DATE /status STATUS`
+
+or
+
+`attendance /name NAME /class CLASS /date DATE /status STATUS`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
-* Only `/date` and `/status` are accepted, and each can be given at most once.
+* `/name`, `/class`, `/date` and `/status` can each be given at most once.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/date` or `/status` is given, such as `/name` | `Unknown parameter. Use /date or /status`
-The index is missing | `Missing index. Please provide the index of the person.`
+The index, or name and class, is missing | `Use either an index, or both /name and /class.`
+`/name` is missing when using the name/class format | `Command requires a name`
+`/class` is missing when using the name/class format | `Command requires a class`
+The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
 A parameter is given more than once | `Each parameter can only be specified once`
@@ -439,6 +540,7 @@ The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. P
 The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
 The date is in the future | `Attendance date cannot be in the future.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
+The name and class do not match any contact | `Contact not found`
 The contact already has a record for the date | `Attendance record already exists`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -447,6 +549,7 @@ On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, 
 Examples:
 * `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
 * `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
+* `attendance /name Alex Yeoh /class A1 /date 16-09-2026 /status absent` records Alex Yeoh from class A1 as absent on 16 September 2026.
 
 ### Viewing attendance: `viewA`
 
@@ -487,43 +590,6 @@ If the contact has no records, the lines after the first are replaced by `No att
 Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
 * `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
-
-### Viewing grades: `viewG`
-
-Shows all recorded grades for a contact.
-
-Format: `viewG /name NAME /class CLASS`
-
-* `NAME` and `CLASS` identify the contact whose grades you want to view. Both must match a contact in ClassMates.
-* The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
-* The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
-* `/name` and `/class` can be given in either order, but each must be given exactly once.
-* All grades of the contact are shown, from the newest to the oldest, one on each line as the assessment name followed by the score, such as `Quiz 2: 85`.
-* If the contact has no grades, ClassMates shows `No grades recorded.` in place of the list.
-
-If the command cannot be carried out, ClassMates shows one of these messages:
-
-Problem | Message
---------|--------
-A parameter other than `/name` or `/class` is given, such as `/email` | `Unknown parameter. Use /name or /class`
-A parameter is given more than once | `Each parameter can only be specified once`
-There is text before the first parameter, such as `viewG John /class A1` | `Invalid command format!` followed by the usage of `viewG`
-`/name` is missing or has nothing after it | `Command requires a name`
-`/class` is missing or has nothing after it | `Command requires a class`
-No contact matches the given name and class | `Contact not found`
-
-If more than one problem applies, only the first one in the table above is reported.<br>
-On success, ClassMates shows `Here are the grades for NAME from class CLASS`, followed by one line for each grade. For example:
-
-```
-Here are the grades for John Tan from class A1
-Quiz 2: 85
-Quiz 1: 80
-```
-
-Examples:
-* `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
-* `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
 ### Clearing all entries: `clear`
 
@@ -620,19 +686,20 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 
 ## Command summary
 
-Action     | Format, Examples
------------|----------------------------------------------------------------------------------------------------------------------------------------------------------------------
-**Add**    | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`
-**Attendance** | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`
-**Clear**  | `clear`
-**Delete** | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`
-**Edit**   | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /email`
-**Grade**  | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`
-**Tag**    | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`
-**Untag**  | `untag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `untag /group Group A /members 1,3,5`
-**List**   | `list [KEYWORD]`<br> e.g., `list John`
-**Import** | `import PATH`<br> e.g., `import data/students.csv`
-**viewA**  | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`
-**viewG**  | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`
-**Help**   | `help`
-**Exit**   | `exit`
+| Action           | Format, Examples                                                                                                                                                                                             |
+|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Add**          | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`                                                                                            |
+| **Attendance**   | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`                                                                                                        |
+| **Clear**        | `clear`                                                                                                                                                                                                      |
+| **Delete**       | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`                                                                                                   |
+| **Edit**         | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /email`                                                                                      |
+| **Grade**        | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`                                                                                                |
+| **View grade**   | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`                                                                                                                                  |
+| **Delete grade** | `deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`<br> e.g., `deleteG 2 /assessment Quiz 1`, `deleteG /name John Tan /class A1 /assessment Quiz 1` |
+| **Tag**          | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`                                                                                                              |
+| **Untag**        | `untag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `untag /group Group A /members 1,3,5`                                                                                                          |
+| **List**         | `list [KEYWORD]`<br> e.g., `list John`                                                                                                                                                                       |
+| **Import**       | `import PATH`<br> e.g., `import data/students.csv`                                                                                                                                                           |
+| **viewA**        | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`                                                                                                                                  |
+| **Help**         | `help`                                                                                                                                                                                                       |
+| **Exit**         | `exit`                                                                                                                                                                                                       |
