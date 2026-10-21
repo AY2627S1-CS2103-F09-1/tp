@@ -68,20 +68,9 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
      */
     private static DeleteByNameAndClassCommand parseNameAndClass(ArgumentMultimap argMultimap)
             throws ParseException {
-        String name = getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
-        String className = getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
+        String name = ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
+        String className = ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
         return new DeleteByNameAndClassCommand(name, className);
-    }
-
-    /**
-     * Returns the value of {@code prefix} in {@code argMultimap}.
-     * @throws ParseException with {@code missingMessage} if the prefix is absent or has a blank value
-     */
-    private static String getNonBlankValue(ArgumentMultimap argMultimap, Prefix prefix, String missingMessage)
-            throws ParseException {
-        return argMultimap.getValue(prefix)
-                .filter(value -> !value.isBlank())
-                .orElseThrow(() -> new ParseException(missingMessage));
     }
 
 }

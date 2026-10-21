@@ -86,6 +86,8 @@ The `UI` component,
 
 Each `PersonCard` shows the tags of its contact in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
 
+The `ResultDisplay` is a read-only `TextArea` that wraps its text (`wrapText="true"` in [`ResultDisplay.fxml`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/resources/view/ResultDisplay.fxml)), so a long message, such as the description of a valid name or an email, is broken into lines that fit the current width of the window, and it is wrapped again when the window is resized. The box has a fixed height of 100 pixels in `MainWindow.fxml`, so a message that needs more lines than that is scrolled vertically.
+
 ### Logic component
 
 **API** : [`Logic.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/logic/Logic.java)
@@ -117,14 +119,14 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-* When called upon to parse a user command, the `AddressBookParser` class creates an `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`). The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
+* When called upon to parse a user command, the `AddressBookParser` class finds the `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) of the command word. The parsers are kept in a map whose keys are the command words in lower case, and the command word that the user typed is converted to lower case in the same way before it is looked up, so that `LIST` and `viewa` are the commands `list` and `viewA`. Only the English letters `A-Z` are converted, by `StringUtil#toAsciiLowerCase(String)`, and two command words must therefore not differ only in case. The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
-* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser`, `EditCommandParser`, `TagCommandParser` and `UntagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
+* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input, whatever the case of its letters. Only the English letters `A-Z` are matched ignoring case, by `StringUtil#toAsciiLowerCase(String)`, which never changes the length of the text. `String#toLowerCase()` is not used, as it would also make letters such as the Kelvin sign match `k`. The values are stored under the `Prefix` that was given to the tokenizer, so `/NAME` and `/name` in the same command count as the same parameter and are reported as repeated. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser`, `EditCommandParser`, `TagCommandParser` and `UntagCommandParser` do this, and `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
 * `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
 * `TagCommandParser` and `UntagCommandParser` take the same arguments, `/group GROUP_NAME /members INDEX[,INDEX]...`, so both extend the abstract `GroupMembershipCommandParser`, which does the parsing. A subclass only passes the usage message of its command, and creates its command in `GroupMembershipCommandParser#createCommand(Tag, List<Index>)`. See [Linking contacts to a group](#linking-contacts-to-a-group-feature).
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages. `DeleteCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or an index combined with `/name` or `/class`, a missing name, then a missing class. A parameter given without a value counts as missing.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
-* `AttendanceCommandParser` parses the contact index, date and status for the `attendance` command and creates an `AttendanceCommand`. `ViewAttendanceCommandParser` parses the name and class for the `viewA` command and creates a `ViewAttendanceCommand`. Both parsers use `ArgumentTokenizer` to extract their prefixed arguments.
+* `AttendanceCommandParser` parses the contact index, date and status for the `attendance` command and creates an `AttendanceCommand`. `ViewAttendanceCommandParser` and `ViewGradeCommandParser` parse the name and class for the `viewA` and `viewG` commands and create a `ViewAttendanceCommand` and a `ViewGradeCommand`. They share the parsing in `NameAndClassCommandParser`, as `TagCommandParser` and `UntagCommandParser` share the parsing in `GroupMembershipCommandParser`. All of these parsers use `ArgumentTokenizer` to extract their prefixed arguments, and `AttendanceCommandParser`, `GradeCommandParser` and the two parsers for `viewA` and `viewG` reject a parameter that the command does not accept, so that it is not taken as part of the value before it.
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -166,6 +168,8 @@ The `Storage` component,
 * saves each tag of a contact as a JSON string holding the tag name (see `JsonAdaptedTag`). The name is checked against the rules of `Tag` when it is loaded, and a name with extra spaces is read as the same name without them. A tag name that breaks the rules makes the data file invalid.
 * saves each contact's attendance records in the address book JSON file and restores them when the file is loaded (see `JsonAdaptedPerson` and `JsonAdaptedAttendance`).
 * saves the contacts in the order they are displayed, and keeps that order when it reads them back (see `JsonSerializableAddressBook#toModelType()`).
+* ignores the byte order mark that some editors put at the start of a UTF-8 file (see `JsonUtil#deserializeObjectFromJsonFile(Path, Class)`), and treats an empty (`null`) entry in a list of the data file as invalid data, and not as a program error (see `JsonSerializableAddressBook#toModelType()` and `JsonAdaptedPerson#toModelType()`).
+* writes a file by writing a temporary file first, which then replaces the file in one step (see `FileUtil#writeToFile(Path, String)`), so that a failure while writing keeps the old content of the file.
 * depends on some classes in the `Model` component (because the `Storage` component's job is to save/retrieve objects that belong to the `Model`)
 
 ### Common classes
@@ -185,7 +189,7 @@ This section describes some noteworthy details on how certain features are imple
 The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
 
 * `ListCommandParser#parse(String)` trims the argument. If it is empty, it returns `new ListCommand()`. Otherwise, it returns `new ListCommand(new PersonMatchesKeyword(keyword))`, where `keyword` is the whole trimmed argument, so a full name or class with spaces is one keyword.
-* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. Email is not checked. Matching is a plain substring test and not a regular expression, so symbols such as `.` and `/` are matched as typed. A tag name can contain spaces, as in the group `Group A`, so a keyword with several words can match a tag. A blank keyword matches every contact, but `ListCommandParser` never creates one, because a blank argument lists all contacts.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. Its constructor normalizes the keyword with `StringUtil#toComparisonKey(String)`, which normalizes accented letters, trims it, collapses repeated whitespace and converts it to lower case. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the normalized name, class name, or any tag name of the contact. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. Email is not checked. Matching is a plain substring test and not a regular expression, so symbols such as `.` and `/` are matched as typed. A tag name can contain spaces, as in the group `Group A`, so a keyword with several words can match a tag. A blank keyword matches every contact, but `ListCommandParser` never creates one, because a blank argument lists all contacts.
 * `ListCommand` holds a `Predicate<Person>`, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with it. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search.
 * Without a keyword, `ListCommand` returns a fixed success message. With a keyword, it returns the number of contacts in the filtered list, using `Messages#MESSAGE_PERSONS_LISTED_OVERVIEW`. An empty result is not an error.
 * `ListCommand` only changes which contacts are displayed and never modifies the address book.
@@ -286,6 +290,81 @@ The contacts are displayed from the most recently added to the oldest. The order
 * **Alternative 3:** Give each `Person` a timestamp and sort the displayed list by it.
   * Pros: The order survives any change to the stored order.
   * Cons: Adds a field to `Person` and to the data file, and data files from before the change have no timestamps.
+
+### Validation of names, classes and assessment names feature
+
+#### Implementation
+
+A name, a class name and an assessment name are validated when they are created, so that a value from a command, a CSV file or the data file is held to the same rule. The rules reject only what causes a problem, so that names that real students have are not rejected.
+
+* `Name#getConstraintViolation(String)` returns the first problem of a name: it is blank, longer than `Name#MAX_LENGTH` characters, or has a character that is not allowed. `Name#VALIDATION_REGEX` allows a Latin letter followed by any accents, a printable ASCII character other than a comma, and the typographic apostrophes `‘` and `’`. This allows digits and symbols such as `(`, `#` and `/`, and rejects control characters, invisible characters, and letters of other scripts such as Chinese or Cyrillic. The alternatives of the regex do not overlap and its quantifiers are possessive, so a long invalid name is rejected without backtracking.
+* `StringUtil#toNormalizedForm(String)` converts text to Unicode normalization form C. `Name` normalizes the text before it validates and stores it, and `StringUtil#toComparisonKey(String)` normalizes it before it compares. An accented letter is therefore the same whether it was typed as one character or as a letter followed by an accent, so `Name#equals(Object)`, duplicate detection, `delete`, `viewA` and `list` do not treat the two forms as different.
+* `ClassName#VALIDATION_REGEX` allows letters, digits, spaces and `- . _ / ( )`, and the first character must be a letter or a digit. A class name is ASCII only, as class codes are.
+* `Grade#getAssessmentNameConstraintViolation(String)` applies `Name#VALIDATION_REGEX` to an assessment name after normalizing it, so that the two fields accept the same characters.
+* `ParserUtil#requireNoEmbeddedPrefix(String, String)` rejects a value that contains a prefix, such as `/class`, that is followed by a space or the end of the value. `ArgumentTokenizer` only reads a prefix that has a space before it, so for `edit 1 /name John/class B` the `/class` is not a parameter, and it would become part of the name without any error. The method is called by `ParserUtil#parseName(String)` and `ParserUtil#parseClassName(String)`, and by `GradeCommandParser` for the assessment name. The prefixes to look for are taken from `CliSyntax#ALL_PREFIXES`, and are matched ignoring case.
+* The check is in `ParserUtil` and not in `Name` or `ClassName`, as the model must not depend on the command syntax. The values that are read from the data file are therefore only checked by the model rules. `ImportCommand` reads the values of a CSV file with `ParserUtil`, so they are also checked for a missing space.
+* A comma is not allowed in a name, as a comma separates the values of a CSV file. `CsvParser` can read a quoted value that contains a comma, but the name is then rejected, with `Invalid contact data on row N`.
+
+#### Design considerations
+
+**Aspect: Which characters a name can contain**
+
+* **Alternative 1 (current choice):** Latin letters with accents, and printable ASCII other than a comma.
+  * Pros: Covers the names in languages that use Latin letters, such as Spanish or Vietnamese, and names with digits or symbols that are used in practice, such as `Tan (Jun Wei)`. The text can be shown with the fonts of the application.
+  * Cons: A name in another script, such as `李明`, must be written with Latin letters.
+* **Alternative 2:** Any letter of Unicode.
+  * Pros: A name can be written as it is.
+  * Cons: The fonts of the target computers are not known, matching the letters of some scripts is not simple, and the same text can have several forms that look alike.
+* **Alternative 3:** English letters only, as before.
+  * Pros: Simplest.
+  * Cons: Rejects `José`, `O’Brien` and `Tan (Jun Wei)`, so a CSV file of a class with such a name cannot be imported at all.
+
+**Aspect: How a missing space before a parameter is found**
+
+* **Alternative 1 (current choice):** Reject a value that contains a prefix, in `ParserUtil`.
+  * Pros: Small, and the parsing of the other values does not change. The message names the parameter.
+  * Cons: A value that really contains such text, such as the class `A1/name`, is rejected.
+* **Alternative 2:** Do not allow `/` in a class or an assessment name, as before.
+  * Pros: Needs no check.
+  * Cons: Rejects classes such as `T11/A`.
+* **Alternative 3:** Make `ArgumentTokenizer` recognize a prefix that has no space before it.
+  * Pros: One place for all the commands.
+  * Cons: It would split `s/o` and other text that has a `/` in it.
+
+### Protecting the data file feature
+
+#### Implementation
+
+The data file holds everything that a user has entered, and users are allowed to edit it by hand. The following makes sure that a file that cannot be read, or a failure while saving, does not lose their contacts.
+
+* `JsonUtil#deserializeObjectFromJsonFile(Path, Class)` removes the byte order mark at the start of the text before it is parsed, as the JSON parser rejects it. This applies to the data file and to `preferences.json`. `CsvParser` does the same for the files that `import` reads.
+* `JsonSerializableAddressBook#toModelType()` and `JsonAdaptedPerson#toModelType()` throw an `IllegalValueException` for a `null` entry in the list of contacts, tags, attendance records or grades. Without this, the `NullPointerException` was not caught by `MainApp` and the application stopped before it showed a window.
+* `MainApp#initModelManager(Storage, ReadOnlyUserPrefs)` catches the `DataLoadingException` of a file that cannot be read, and calls `MainApp#keepUnreadableDataFile(Storage)`. This method renames the file with `FileUtil#moveToBackup(Path)`, to the name of the file followed by `.bad-` and the time (`yyyyMMdd-HHmmss-SSS`), and then saves an empty address book to the original path. The empty file is needed because the sample data is only used when there is no data file, so that the next run would otherwise show the sample data again.
+* `MainApp#keepUnreadableDataFile(Storage)` returns a message for the user. `MainApp` gives it to `UiManager`, which gives it to `MainWindow`, and `MainWindow#fillInnerParts()` shows it in the `ResultDisplay`. `MainApp#getUserPrefsFilePath()` and `MainApp#getAddressBookFilePath()` give the paths of the files, and a test overrides them to run `MainApp#init()` on a temporary folder. If the file cannot be renamed, for example because another program has locked it, the file is left as it is, nothing is saved, and the message says that the next command replaces the file.
+* `FileUtil#writeToFile(Path, String)` writes the text to a file with the same name followed by `.tmp` in the same folder, and then moves it over the target with `Files.move`, using `ATOMIC_MOVE` and `REPLACE_EXISTING`. If the file system cannot move atomically, it moves without `ATOMIC_MOVE`. The temporary file is deleted in a `finally` block. The temporary file is in the same folder so that it is on the same file system, which is needed for a move in one step. The move is done by a `FileUtil.FileMover`, which is `Files#move` except in tests: `FileUtil#replaceFile(Path, Path, FileMover)` lets a test make the atomic move fail, as the file system of a test cannot be made to refuse it, and so test the move without `ATOMIC_MOVE`.
+
+#### Design considerations
+
+**Aspect: What to do with a data file that cannot be read**
+
+* **Alternative 1 (current choice):** Rename the file, start with an empty list, save the empty list, and tell the user.
+  * Pros: The content is never lost, the next run is clean, and the user knows what happened and where the file is.
+  * Cons: The user has to rename the file back by hand, and each failure leaves another file in the folder.
+* **Alternative 2:** Start with an empty list and leave the file, as before.
+  * Pros: Nothing to implement.
+  * Cons: The next command saves the empty list over the file, and the content is lost.
+* **Alternative 3:** Show an error and do not start.
+  * Pros: The file is never touched.
+  * Cons: The user cannot use the application until the file is fixed, which is hard for someone who does not know JSON.
+
+**Aspect: How a file is written**
+
+* **Alternative 1 (current choice):** Write a temporary file, then replace the target with it.
+  * Pros: The target is either the old content or the new content, whatever happens while writing.
+  * Cons: A temporary file is left behind if the process is killed between the two steps, and the folder must allow new files.
+* **Alternative 2:** Write the target directly, as before.
+  * Pros: Simplest.
+  * Cons: The target is cut to zero length before the new content is written, so a crash or a full disk leaves it empty or half written.
 
 ### Linking contacts to a group feature
 
@@ -533,7 +612,7 @@ On success, the command returns a message naming the contact, date, and attendan
 
 The `viewA` command displays all attendance records for a contact. It is implemented by `ViewAttendanceCommandParser` and `ViewAttendanceCommand`.
 
-* `ViewAttendanceCommandParser#parse(String)` uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It reports unrecognized prefixes first, then repeated prefixes, then text before the first prefix, and finally a missing or blank name or class. It then creates a `ViewAttendanceCommand` with the name and class as plain strings. They are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS`.
+* `NameAndClassCommandParser#parse(String)`, which `ViewAttendanceCommandParser` inherits, uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It reports unrecognized prefixes first, then repeated prefixes, then text before the first prefix, and finally a missing or blank name or class. It then calls `NameAndClassCommandParser#createCommand(String, String)`, which `ViewAttendanceCommandParser` implements to create a `ViewAttendanceCommand` with the name and class as plain strings. They are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS`.
 * `ViewAttendanceCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
 * If a contact is found, the command formats all of that contact’s attendance records in chronological order and returns them in the command result. If there are no records, it returns the no-attendance-records message instead.
 
@@ -548,6 +627,28 @@ The `viewA` command displays all attendance records for a contact. It is impleme
 * **Alternative 2:** Identify the contact by its index in the displayed list.
   * Pros: Shorter to enter after displaying or searching for contacts.
   * Cons: The index depends on the current list, so the user may view attendance for a different contact if the list changes.
+
+### Viewing grades feature
+
+#### Implementation
+
+The `viewG` command displays all grades of a contact. It is implemented by `ViewGradeCommandParser` and `ViewGradeCommand`, and it works in the same way as the `viewA` command.
+
+* `ViewGradeCommandParser` extends `NameAndClassCommandParser`, which does the parsing that it shares with `ViewAttendanceCommandParser`. The name and class are plain strings and are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS` and `viewA`. A value that no contact can have is therefore reported as `Contact not found`, as for the other two commands.
+* `ViewGradeCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
+* If a contact is found, the command lists the grades of the contact from the newest to the oldest, as `Grade#toString()`. If there are no grades, it returns the no-grades message instead.
+* `Grade#isSameAssessment(Grade)` and `Grade#equals(Object)` compare the assessment names with `StringUtil#toComparisonKey(String)`, so `Quiz 1` and ` quiz   1` are the same assessment, in the same way as names and classes. `Person#withGrade(Grade)` uses it to reject a second grade for the same assessment.
+
+#### Design considerations
+
+**Aspect: Whether the name and class are validated**
+
+* **Alternative 1 (current choice):** Compare them as plain strings.
+  * Pros: Behaves in the same way as `delete` and `viewA`, and the user is told that no contact was found, which is the real reason that nothing is shown.
+  * Cons: A mistake in the format of a name, such as a comma, is not reported as a format error.
+* **Alternative 2:** Validate them as a `Name` and `ClassName`, as the command did before.
+  * Pros: A name that can never exist is reported as a format error.
+  * Cons: The three commands that identify a contact by name and class gave different messages for the same mistake.
 
 ### Command history feature
 
@@ -1004,11 +1105,11 @@ Extensions
   * 1b1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters or has characters other than English letters, digits, spaces and hyphens, or the score is not a number from 0 to 100.
+* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters, has a comma or a letter of another language, or contains a parameter such as `/score` stuck to the text before it, or the score is not a number from 0 to 100.
   * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1d. The student already has a grade for the assessment. Assessment names are compared ignoring case.
+* 1d. The student already has a grade for the assessment. Assessment names are compared ignoring case and extra spaces.
   * 1d1. CM keeps the existing grade and displays an error message.
 
     Use case resumes at step 1.
@@ -1173,6 +1274,30 @@ Extensions
 
     Use case resumes at step 3.
 
+**Use case: UC15 - View known student's grades**
+
+**MSS**
+1. User requests to view the grades of the student, giving the name and class of the student.
+2. CM displays the grades of the student, from the newest to the oldest.
+
+   Use case ends.
+
+**Extensions**
+
+* 1a. The command format is invalid, e.g. the name or class is missing or given more than once, or the command has a parameter that it does not accept.
+  * 1a1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 1b. No student has the name and class. Case and extra spaces are ignored.
+  * 1b1. CM displays an error message.
+
+    Use case resumes at step 1.
+* 2a. The student has no grades.
+  * 2a1. CM displays a message that no grades are recorded.
+
+    Use case ends.
+
+
 ### Non-Functional Requirements
 
 1. Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
@@ -1239,7 +1364,13 @@ testers are expected to do more *exploratory* testing.
    1. Relaunch the app by double-clicking the JAR file.<br>
        Expected: The most recent window size and location are retained.
 
-1. _{ more test cases … }_
+1. Dealing with a data file that cannot be read
+
+   1. Close the app. Open `data/classmates.json` in a text editor, delete its last `}`, and save the file. Launch the app.<br>
+      Expected: The GUI opens with no contacts. The result box says that ClassMates could not read the data file and shows the name of the kept file. The `data` folder has a file named `classmates.json.bad-` followed by the time, which still holds the broken content, and `classmates.json` holds an empty list.
+
+   1. Close the app and launch it again.<br>
+      Expected: The GUI opens with no contacts and no message, as the empty `classmates.json` is read.
 
 ### Adding a contact
 
@@ -1250,8 +1381,8 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `list yeoh`, followed by `add /name John Doe /class A1 /email johnd@example.com`<br>
       Expected: After the `add` command, all contacts are shown again, even though only Alex Yeoh was shown before, with John Doe at the top of the list. The status message shows `John Doe added to contacts`.
 
-   1. Test case: `add /name Alex Yeoh /class B2`<br>
-      Expected: Alex Yeoh is added to class B2 at the top of the list. The same name can be added to a different class.
+   1. Test case: `add /NAME José Müller (Joe) #2 /Class T11/A`<br>
+      Expected: The contact is added with the name and the class as typed. The case of the prefixes does not matter, and accents, digits, symbols and a `/` in a class are allowed.
 
 1. Adding a contact unsuccessfully
 
@@ -1260,10 +1391,10 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `add /name alex  yeoh /class a1`<br>
       Expected: No contact is added. The status message says that the name already exists in the class. Case and extra spaces are ignored.
 
-   1. Test case: `add /name John Doe`<br>
-      Expected: No contact is added. The status message shows `Command requires a class`.
+   1. Test case: `add /name Tan, John /class A1`<br>
+      Expected: No contact is added. The status message says that a name can only contain English letters, digits, spaces and keyboard symbols, except commas.
 
-   1. Other incorrect add commands to try: `add /class A1`, `add John Doe /class A1`, `add /name J0hn /class A1`, `add /name John Doe /class A1 /email john`<br>
+   1. Other incorrect add commands to try: `add /name John Doe`, `add /name 李明 /class A1`, `add /name John Doe/class A1 /class A2` (a parameter stuck to the name), `add /name John Doe /class A1&`, `add /name John Doe /class A1 /email john`<br>
       Expected: Similar to previous. No contact is added, and the status message describes the problem.
 
 ### Listing and searching contacts
@@ -1413,7 +1544,7 @@ testers are expected to do more *exploratory* testing.
    1. Test case: `import missing.csv`, where `missing.csv` does not exist<br>
       Expected: The status message shows `File not found at missing.csv`.
 
-   1. Test case: `import bad-name.csv`, where the file has the header `name,class` followed by the row `J0hn,A1`<br>
+   1. Test case: `import bad-name.csv`, where the file has the header `name,class` followed by the row `"Tan, John",A1`<br>
       Expected: No contact is added. The status message shows `Invalid contact data on row 2`. If any row of a file is invalid, none of its contacts is added.
 
    1. Other incorrect import commands to try: `import`, `import students.txt` (where `students.txt` exists), `import empty.csv` (where `empty.csv` is an empty file)<br>
@@ -1465,8 +1596,8 @@ testers are expected to do more *exploratory* testing.
 
    1. Prerequisites: The app contains the sample data. Record attendance for Alex Yeoh using the `attendance` command above.
 
-   1. Test case: `viewA /name Alex Yeoh /class A1`<br>
-      Expected: The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by Alex Yeoh's attendance records in chronological order.
+   1. Test case: `VIEWa /name Alex Yeoh /class A1`<br>
+      Expected: The case of the command word does not matter. The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by Alex Yeoh's attendance records in chronological order.
 
    1. Test case: `viewA /name Bernice Yu /class A1`<br>
       Expected: The status message shows `Here is the attendance for Bernice Yu from class A1`, followed by `No attendance records.`, as Bernice Yu has no attendance records.
@@ -1478,6 +1609,29 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect viewA commands to try: `viewA /class A1`, `viewA /name Alex Yeoh /class A1 /foo bar`<br>
       Expected: Similar to previous. An error message is shown.
+
+### Recording and viewing grades
+
+1. Recording and viewing the grades of a contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`, so that Alex Yeoh is the 1st contact displayed.
+
+   1. Test case: `grade 1 /assessment Quiz #1 /score 80`<br>
+      Expected: The status message shows `Grade of 80 recorded for Quiz #1 for student Alex Yeoh in class A1.`, and the card of Alex Yeoh shows `Quiz #1: 80`.
+
+   1. Test case: `VIEWG /name alex  yeoh /class a1`<br>
+      Expected: The status message shows `Here are the grades for Alex Yeoh from class A1`, followed by `Quiz #1: 80`. The case of the command word, and the case and extra spaces of the name and class, do not matter.
+
+1. Recording and viewing grades unsuccessfully
+
+   1. Test case: `grade 1 /assessment  QUIZ   #1 /score 90`<br>
+      Expected: No grade is recorded. The status message shows `Grade for this assessment already exists`, as the case and extra spaces of the assessment name are ignored.
+
+   1. Test case: `viewG /name Unknown Student /class A1`<br>
+      Expected: The status message shows `Contact not found`.
+
+   1. Other incorrect commands to try: `grade 1 /assessment Quiz 2 /score 101`, `grade 1 /assessment Quiz 2 /score 90 /foo bar` (a parameter that is not accepted), `viewG /class A1`<br>
+      Expected: Similar to previous. No grade is recorded, and the status message describes the problem.
 
 ### Clearing all contacts
 

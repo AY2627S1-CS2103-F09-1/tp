@@ -23,6 +23,8 @@ public class GradeCommandParser implements Parser<GradeCommand> {
 
     private static final String MESSAGE_MISSING_IDENTIFIERS =
         "Use either an index, or both /name and /class.";
+    public static final String MESSAGE_UNKNOWN_PARAMETER =
+            "Unknown parameter. Use " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE;
     private static final String MESSAGE_MISSING_ASSESSMENT = "Assessment name missing";
     private static final String MESSAGE_MISSING_SCORE = "Score missing";
     private static final String MESSAGE_BOTH_IDENTIFIERS =
@@ -30,6 +32,8 @@ public class GradeCommandParser implements Parser<GradeCommand> {
 
     @Override
     public GradeCommand parse(String args) throws ParseException {
+        ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
+            PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT, PREFIX_SCORE);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args,
             PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT, PREFIX_SCORE);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT, PREFIX_SCORE);
@@ -66,6 +70,8 @@ public class GradeCommandParser implements Parser<GradeCommand> {
             throw new ParseException(MESSAGE_DUPLICATE_PARAMETERS);
         }
 
+        Index index = ParserUtil.parseIndex(indexArgument);
+        ParserUtil.requireNoEmbeddedPrefix(assessmentArgument, "assessment name");
         Optional<String> assessmentViolation = Grade.getAssessmentNameConstraintViolation(assessmentArgument);
         if (assessmentViolation.isPresent()) {
             throw new ParseException(assessmentViolation.get());

@@ -29,6 +29,8 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         "Use either an index, or both /name and /class.";
     private static final String MESSAGE_BOTH_IDENTIFIERS =
         "Use either an index or name and class, not both.";
+    public static final String MESSAGE_UNKNOWN_PARAMETER =
+            "Unknown parameter. Use " + PREFIX_DATE + " or " + PREFIX_STATUS;
     private static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
     private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
     private static final String MESSAGE_INVALID_DATE =
@@ -40,9 +42,13 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
     @Override
     public AttendanceCommand parse(String args) throws ParseException {
+        ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
+            PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE,
                 PREFIX_STATUS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_DATE, PREFIX_STATUS);
         String indexArgument = argMultimap.getPreamble();
         String nameArgument = argMultimap.getValue(PREFIX_NAME).orElse("").trim();
         String classArgument = argMultimap.getValue(PREFIX_CLASS).orElse("").trim();

@@ -1,16 +1,16 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.logic.parser.ViewGradeCommandParser.MESSAGE_UNKNOWN_PARAMETER;
 
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.ViewGradeCommand;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 
 public class ViewGradeCommandParserTest {
 
@@ -18,14 +18,14 @@ public class ViewGradeCommandParserTest {
 
     @Test
     public void parse_validArguments_success() {
-        ViewGradeCommand expected = new ViewGradeCommand(new Name("John Tan"), new ClassName("A1"));
+        ViewGradeCommand expected = new ViewGradeCommand("John Tan", "A1");
 
         assertParseSuccess(parser, " /name John Tan /class A1", expected);
     }
 
     @Test
     public void parse_reversedArgumentOrder_success() {
-        ViewGradeCommand expected = new ViewGradeCommand(new Name("John Tan"), new ClassName("A1"));
+        ViewGradeCommand expected = new ViewGradeCommand("John Tan", "A1");
 
         assertParseSuccess(parser, " /class A1 /name John Tan", expected);
     }
@@ -56,13 +56,31 @@ public class ViewGradeCommandParserTest {
     }
 
     @Test
-    public void parse_invalidName_failure() {
-        assertParseFailure(parser, " /name John@Tan /class A1", Name.MESSAGE_CONSTRAINTS);
+    public void parse_nameAndClassAreNotValidated_success() {
+        // values that could never be a name or class are accepted, and simply will not be found
+        assertParseSuccess(parser, " /name John, Tan /class A1!", new ViewGradeCommand("John, Tan", "A1!"));
     }
 
     @Test
-    public void parse_invalidClass_failure() {
-        assertParseFailure(parser, " /name John Tan /class A1!", ClassName.MESSAGE_CONSTRAINTS);
+    public void parse_prefixesInAnyCase_success() {
+        assertParseSuccess(parser, " /NAME John Tan /Class A1", new ViewGradeCommand("John Tan", "A1"));
+    }
+
+    @Test
+    public void parse_unknownParameter_failure() {
+        assertParseFailure(parser, " /name John Tan /class A1 /foo bar", MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, " /name John Tan /class A1 /email john@example.com", MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_unknownParameterAndRepeatedParameter_reportsUnknownParameter() {
+        assertParseFailure(parser, " /name John /name Jane /class A1 /foo bar", MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_textBeforeFirstParameter_failure() {
+        assertParseFailure(parser, " John /name John Tan /class A1",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewGradeCommand.MESSAGE_USAGE));
     }
 
 }

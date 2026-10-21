@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
@@ -54,6 +55,14 @@ public class JsonUserPrefsStorageTest {
         UserPrefs expected = getTypicalUserPrefs();
         UserPrefs actual = readUserPrefs("TypicalUserPref.json").get();
         assertEquals(expected, actual);
+    }
+
+    @Test
+    public void readUserPrefs_fileWithByteOrderMark_successfullyRead() throws Exception {
+        Path prefsFilePath = testFolder.resolve("WithByteOrderMark.json");
+        Files.writeString(prefsFilePath, "\uFEFF{ }");
+
+        assertEquals(new UserPrefs(), new JsonUserPrefsStorage(prefsFilePath).readUserPrefs().get());
     }
 
     @Test
