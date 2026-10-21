@@ -1694,6 +1694,35 @@ testers are expected to do more *exploratory* testing.
    1. Other incorrect viewA commands to try: `viewA /class A1`, `viewA /name Alex Yeoh /class A1 /foo bar`<br>
       Expected: Similar to previous. An error message is shown.
 
+### Deleting attendance
+
+1. Deleting attendance by the index of a displayed contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh` then record two attendance entries using `attendance 1 /date 04-01-2024 /status present` and `attendance 1 /date 05-01-2024 /status late`.
+
+   1. Test case: `deleteA 1 /date 04-01-2024`<br>
+      Expected: The attendance entry for 4 January 2024 is removed from Alex Yeoh. The entry for 5 January 2024 and all other contact details remain unchanged. The status message shows `Attendance of present for Alex Yeoh on 04-01-2024 has been deleted`.
+
+1. Deleting attendance by name and class
+
+   1. Prerequisites: The app contains the sample data. Run `list bernice`, followed by `attendance 1 /date 03-01-2024 /status absent`, then run `list david` so that Bernice Yu is not displayed.
+
+   1. Test case: `deleteA /name bernice  yu /class a1 /date 03-01-2024`<br>
+      Expected: The attendance entry for 3 January 2024 is removed from Bernice Yu, even though she is not displayed. The status message shows `Attendance of absent for Bernice Yu on 03-01-2024 has been deleted`. The whole address book is searched, and case and extra spaces do not matter.
+
+1. Deleting attendance unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`.
+
+   1. Test case: `deleteA 1 /date 06-01-2024`<br>
+      Expected: No attendance entry is deleted. The status message shows `Attendance for this date not found`.
+
+   1. Test case: `deleteA /name Alex Yeoh /class B1 /date 01-01-2024`<br>
+      Expected: No attendance entry is deleted. The status message shows `No contact found` because both the name and class must match an existing contact.
+
+   1. Other incorrect commands to try: `deleteA`, `deleteA 0 /date 01-01-2024`, `deleteA 99 /date 01-01-2024`, `deleteA 1 /date 31-02-2024`, `deleteA 1 /status present`<br>
+      Expected: Similar to previous. No attendance entry is deleted and the status message describes the problem.
+
 ### Recording and viewing grades
 
 1. Recording and viewing the grades of a contact
