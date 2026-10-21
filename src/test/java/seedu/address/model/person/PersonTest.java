@@ -349,6 +349,32 @@ public class PersonTest {
     }
 
     @Test
+    public void withoutAttendance_existingAttendance_removesOnlySpecifiedAttendance() {
+        Attendance first = new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT);
+        Attendance second = new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.ABSENT);
+        Person original = new PersonBuilder().build().withAttendance(first).withAttendance(second);
+
+        Person updated = original.withoutAttendance(first);
+
+        assertEquals(List.of(first, second), original.getAttendanceRecords());
+        assertEquals(List.of(second), updated.getAttendanceRecords());
+    }
+
+    @Test
+    public void withoutAttendance_nullAttendance_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().withoutAttendance(null));
+    }
+
+    @Test
+    public void withoutAttendance_missingAttendance_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build().withAttendance(
+                new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT));
+
+        assertThrows(IllegalArgumentException.class, () -> person.withoutAttendance(
+                new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.PRESENT)));
+    }
+
+    @Test
     public void attendanceRecords_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build()
             .withAttendance(new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT));
