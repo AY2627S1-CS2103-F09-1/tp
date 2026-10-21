@@ -15,6 +15,7 @@ import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.GradeCommand;
@@ -56,7 +57,9 @@ public class AddressBookParser {
             entry(ViewAttendanceCommand.COMMAND_WORD, new ViewAttendanceCommandParser()),
             entry(ImportCommand.COMMAND_WORD, new ImportCommandParser()),
             entry(GradeCommand.COMMAND_WORD, new GradeCommandParser()),
-            entry(ViewGradeCommand.COMMAND_WORD, new ViewGradeCommandParser()));
+            entry(ViewGradeCommand.COMMAND_WORD, new ViewGradeCommandParser()),
+            entry(DeleteGradeCommand.COMMAND_WORD, new DeleteGradeCommandParser())
+    );
 
     private static Map.Entry<String, Parser<? extends Command>> entry(String commandWord,
             Parser<? extends Command> parser) {

@@ -405,4 +405,30 @@ public class PersonTest {
             person.withGrade(new Grade("quiz 1", new BigDecimal("80"))));
     }
 
+    @Test
+    public void withoutGrade_existingGrade_removesOnlySpecifiedGrade() {
+        Grade quiz = new Grade("Quiz 1", new BigDecimal("90"));
+        Grade exam = new Grade("Exam", new BigDecimal("80"));
+        Person original = new PersonBuilder().build().withGrade(quiz).withGrade(exam);
+
+        Person updated = original.withoutGrade(quiz);
+
+        assertEquals(List.of(quiz, exam), original.getGradeRecords());
+        assertEquals(List.of(exam), updated.getGradeRecords());
+    }
+
+    @Test
+    public void withoutGrade_nullGrade_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().withoutGrade(null));
+    }
+
+    @Test
+    public void withoutGrade_missingGrade_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build()
+                .withGrade(new Grade("Quiz 1", new BigDecimal("90")));
+
+        assertThrows(IllegalArgumentException.class, () ->
+                person.withoutGrade(new Grade("Exam", new BigDecimal("80"))));
+    }
+
 }

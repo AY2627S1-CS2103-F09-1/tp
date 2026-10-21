@@ -70,6 +70,15 @@ public class GradeTest {
     }
 
     @Test
+    public void hasAssessmentName_caseAndExtraSpaces_ignoresDifferences() {
+        Grade grade = new Grade("Quiz 1", new BigDecimal("97"));
+
+        assertTrue(grade.hasAssessmentName("  quiz   1 "));
+        assertFalse(grade.hasAssessmentName("Quiz1"));
+        assertFalse(grade.hasAssessmentName(null));
+    }
+
+    @Test
     public void equalsAndHashCode_extraSpacesInAssessmentName_equal() {
         Grade first = new Grade("Quiz 1", new BigDecimal("97"));
         Grade second = new Grade("quiz    1", new BigDecimal("97.0"));

@@ -183,6 +183,23 @@ public class Person {
     }
 
     /**
+     * Returns a new Person without the given grade record.
+     * The original person and all other records are unchanged.
+     *
+     * @param grade Grade to remove.
+     * @return A new Person with the given grade record removed.
+     * @throws IllegalArgumentException If a record does not exist for that assessment.
+     */
+    public Person withoutGrade(Grade grade) {
+        requireNonNull(grade);
+        List<Grade> newGradeRecords = new ArrayList<>(gradeRecords);
+        if (!newGradeRecords.remove(grade)) {
+            throw new IllegalArgumentException("Grade record does not exist");
+        }
+        return new Person(name, className, Optional.ofNullable(email), tags, attendanceRecords, newGradeRecords);
+    }
+
+    /**
      * Returns true if both persons have the same name and class.
      * This defines a weaker notion of equality between two persons.
      */

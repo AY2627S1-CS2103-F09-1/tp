@@ -34,6 +34,8 @@ public class HelpWindow extends UiPart<Stage> {
             import PATH
             viewA /name NAME /class CLASS
             viewG /name NAME /class CLASS
+            deleteG INDEX /assessment ASSESSMENT_NAME
+            deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME
             help
             exit""";
 
