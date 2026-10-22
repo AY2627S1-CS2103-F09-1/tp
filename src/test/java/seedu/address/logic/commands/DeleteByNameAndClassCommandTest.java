@@ -38,6 +38,12 @@ public class DeleteByNameAndClassCommandTest {
     }
 
     @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, ALICE_CLASS);
+        assertThrows(NullPointerException.class, () -> deleteCommand.execute(null));
+    }
+
+    @Test
     public void execute_nameAndClassMatch_success() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, ALICE_CLASS);
 

@@ -13,6 +13,8 @@ import static seedu.address.testutil.TypicalIndexes.INDEX_THIRD_PERSON;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 import org.junit.jupiter.api.Test;
 
@@ -40,16 +42,35 @@ public class TagCommandTest {
     }
 
     @Test
-    public void constructor_duplicateIndices_throwsAssertionError() {
+    public void constructor_duplicateIndices_throwsIllegalArgumentException() {
         List<Index> indicesWithDuplicate =
                 List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON, INDEX_FIRST_PERSON);
-        assertThrows(AssertionError.class, () -> new TagCommand(GROUP_A, indicesWithDuplicate));
+        assertThrows(IllegalArgumentException.class, () -> new TagCommand(GROUP_A, indicesWithDuplicate));
+    }
+
+    @Test
+    public void constructor_noIndices_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, () -> new TagCommand(GROUP_A, List.of()));
     }
 
     @Test
     public void execute_nullModel_throwsNullPointerException() {
         TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
         assertThrows(NullPointerException.class, () -> tagCommand.execute(null));
+    }
+
+    @Test
+    public void execute_modelDoesNotStoreChangedContact_throwsAssertionError() {
+        Model modelThatKeepsContacts = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
+            @Override
+            public void setPerson(Person target, Person editedPerson) {
+                // Intentionally does nothing, to simulate a model that fails to store the contact
+            }
+        };
+        TagCommand tagCommand = new TagCommand(GROUP_A, List.of(INDEX_FIRST_PERSON));
+
+        // Gradle runs the tests with assertions enabled
+        assertThrows(AssertionError.class, () -> tagCommand.execute(modelThatKeepsContacts));
     }
 
     @Test
@@ -146,6 +167,36 @@ public class TagCommandTest {
     }
 
     @Test
+    public void execute_maxIndicesNotInList_namesAllOfThem() {
+        int size = model.getFilteredPersonList().size();
+        int missingCount = GroupMembershipCommand.MAX_INDICES_SHOWN;
+
+        assertCommandFailure(new TagCommand(GROUP_A, indicesNotInList(size, missingCount)), model,
+                String.format(TagCommand.MESSAGE_INDEX_NOT_FOUND, firstIndicesNotInList(size)));
+    }
+
+    @Test
+    public void execute_moreThanMaxIndicesNotInList_namesFirstFewAndCountOfRest() {
+        int size = model.getFilteredPersonList().size();
+        int missingCount = GroupMembershipCommand.MAX_INDICES_SHOWN + 1;
+
+        assertCommandFailure(new TagCommand(GROUP_A, indicesNotInList(size, missingCount)), model,
+                String.format(TagCommand.MESSAGE_INDEX_NOT_FOUND,
+                        firstIndicesNotInList(size) + String.format(TagCommand.MESSAGE_MORE_INDICES, 1)));
+    }
+
+    @Test
+    public void execute_veryManyIndicesNotInList_messageStaysShort() {
+        int size = model.getFilteredPersonList().size();
+        int missingCount = 100_000;
+
+        assertCommandFailure(new TagCommand(GROUP_A, indicesNotInList(size, missingCount)), model,
+                String.format(TagCommand.MESSAGE_INDEX_NOT_FOUND, firstIndicesNotInList(size)
+                        + String.format(TagCommand.MESSAGE_MORE_INDICES,
+                        missingCount - GroupMembershipCommand.MAX_INDICES_SHOWN)));
+    }
+
+    @Test
     public void execute_someContactsAlreadyInGroup_reportsThemAndChangesNothing() {
         // Alice already belongs to "friends"; Carl does not
         TagCommand tagCommand = new TagCommand(new Tag("friends"),
@@ -229,6 +280,23 @@ public class TagCommandTest {
         String expected = TagCommand.class.getCanonicalName() + "{group=" + GROUP_A
                 + ", memberIndices=" + indices + "}";
         assertEquals(expected, tagCommand.toString());
+    }
+
+    /**
+     * Returns {@code count} indices that follow the last index of a displayed list of {@code size} contacts.
+     */
+    private static List<Index> indicesNotInList(int size, int count) {
+        return IntStream.rangeClosed(size + 1, size + count).mapToObj(Index::fromOneBased).toList();
+    }
+
+    /**
+     * Returns the text that names the first {@code GroupMembershipCommand.MAX_INDICES_SHOWN} indices that
+     * follow the last index of a displayed list of {@code size} contacts.
+     */
+    private static String firstIndicesNotInList(int size) {
+        return IntStream.rangeClosed(size + 1, size + GroupMembershipCommand.MAX_INDICES_SHOWN)
+                .mapToObj(String::valueOf)
+                .collect(Collectors.joining(", "));
     }
 
     /**

@@ -2,6 +2,10 @@ package seedu.address.logic.parser;
 
 import static java.util.Objects.requireNonNull;
 
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -27,6 +31,7 @@ import seedu.address.model.tag.Tag;
 public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
+    public static final String MESSAGE_INVALID_DATE = "Invalid date format. Please use the format DD-MM-YYYY.";
     public static final String MESSAGE_INVALID_GROUP_NAME = "Invalid group name. Group names must be 1 to "
             + Tag.MAX_LENGTH + " characters long and can only contain letters, digits, spaces, hyphens, "
             + "and underscores";
@@ -38,6 +43,8 @@ public class ParserUtil {
             + "parameter that is missing a space before it";
 
     private static final String MEMBER_SEPARATOR = ",";
+    private static final DateTimeFormatter DATE_FORMATTER =
+            DateTimeFormatter.ofPattern("dd-MM-uuuu").withResolverStyle(ResolverStyle.STRICT);
 
     /** Matches any prefix, in any case, that ends the value it is in, such as the "/class" in "A1/class B". */
     private static final Pattern EMBEDDED_PREFIX_PATTERN = Pattern.compile(
@@ -60,6 +67,20 @@ public class ParserUtil {
             throw new ParseException(MESSAGE_INVALID_INDEX);
         }
         return Index.fromOneBased(Integer.parseInt(trimmedIndex));
+    }
+
+    /**
+     * Parses {@code date} into a {@code LocalDate}. Leading and trailing whitespaces will be trimmed.
+     *
+     * @throws ParseException If {@code date} is not a valid date in {@code DD-MM-YYYY} format.
+     */
+    public static LocalDate parseDate(String date) throws ParseException {
+        requireNonNull(date);
+        try {
+            return LocalDate.parse(date.trim(), DATE_FORMATTER);
+        } catch (DateTimeParseException e) {
+            throw new ParseException(MESSAGE_INVALID_DATE, e);
+        }
     }
 
     /**
@@ -156,8 +177,9 @@ public class ParserUtil {
     public static Email parseEmail(String email) throws ParseException {
         requireNonNull(email);
         String trimmedEmail = email.trim();
-        if (!Email.isValidEmail(trimmedEmail)) {
-            throw new ParseException(Email.MESSAGE_CONSTRAINTS);
+        Optional<String> constraintViolation = Email.getConstraintViolation(trimmedEmail);
+        if (constraintViolation.isPresent()) {
+            throw new ParseException(constraintViolation.get());
         }
         return new Email(trimmedEmail);
     }

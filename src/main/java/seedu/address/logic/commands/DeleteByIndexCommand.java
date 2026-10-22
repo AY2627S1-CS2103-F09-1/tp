@@ -3,7 +3,9 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 
 import java.util.List;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -16,12 +18,15 @@ import seedu.address.model.person.Person;
  */
 public class DeleteByIndexCommand extends DeleteCommand {
 
+    private static final Logger logger = LogsCenter.getLogger(DeleteByIndexCommand.class);
+
     private final Index targetIndex;
 
     /**
      * Creates a DeleteByIndexCommand to delete the person at {@code targetIndex} of the displayed list.
      */
     public DeleteByIndexCommand(Index targetIndex) {
+        requireNonNull(targetIndex);
         this.targetIndex = targetIndex;
     }
 
@@ -31,6 +36,8 @@ public class DeleteByIndexCommand extends DeleteCommand {
         List<Person> lastShownList = model.getFilteredPersonList();
 
         if (targetIndex.getZeroBased() >= lastShownList.size()) {
+            logger.info("Rejected an index outside the displayed list: " + targetIndex.getOneBased()
+                    + " (list size: " + lastShownList.size() + ")");
             throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
         }
 

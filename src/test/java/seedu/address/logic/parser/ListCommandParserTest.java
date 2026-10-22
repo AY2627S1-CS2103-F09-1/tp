@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -10,6 +11,17 @@ import seedu.address.model.person.PersonMatchesKeyword;
 public class ListCommandParserTest {
 
     private final ListCommandParser parser = new ListCommandParser();
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
+
+    @Test
+    public void parse_veryLongArgument_returnsListCommandWithKeyword() {
+        String longKeyword = "a".repeat(100_000);
+        assertParseSuccess(parser, longKeyword, new ListCommand(new PersonMatchesKeyword(longKeyword)));
+    }
 
     @Test
     public void parse_noArgument_returnsListAllCommand() {

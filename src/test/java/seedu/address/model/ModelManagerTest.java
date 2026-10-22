@@ -60,6 +60,16 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void addPerson_nullPerson_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.addPerson(null));
+    }
+
+    @Test
+    public void deletePerson_nullPerson_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> modelManager.deletePerson(null));
+    }
+
+    @Test
     public void hasPerson_personNotInAddressBook_returnsFalse() {
         assertFalse(modelManager.hasPerson(ALICE));
     }

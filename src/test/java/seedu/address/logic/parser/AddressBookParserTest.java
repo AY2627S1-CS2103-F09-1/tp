@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.DeleteAttendanceByIndexCommand;
+import seedu.address.logic.commands.DeleteAttendanceByNameAndClassCommand;
+import seedu.address.logic.commands.DeleteAttendanceCommand;
 import seedu.address.logic.commands.DeleteByIndexCommand;
 import seedu.address.logic.commands.DeleteByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -59,7 +62,16 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
-        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
+        assertTrue(parser.parseCommand("  " + ClearCommand.COMMAND_WORD + "   ") instanceof ClearCommand);
+    }
+
+    @Test
+    public void parseCommand_clearWithExtraText_throwsParseException() {
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ClearCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, expectedMessage, () ->
+                parser.parseCommand(ClearCommand.COMMAND_WORD + " 3"));
+        assertThrows(ParseException.class, expectedMessage, () ->
+                parser.parseCommand(ClearCommand.COMMAND_WORD + " everything"));
     }
 
     @Test
@@ -147,6 +159,28 @@ public class AddressBookParserTest {
     }
 
     @Test
+    public void parseCommand_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parseCommand(null));
+    }
+
+    @Test
+    public void parseCommand_inputAtLengthLimit_isParsed() throws Exception {
+        String longKeyword = "a".repeat(AddressBookParser.MAX_INPUT_LENGTH - ListCommand.COMMAND_WORD.length() - 1);
+        String inputAtLimit = ListCommand.COMMAND_WORD + " " + longKeyword;
+
+        assertEquals(AddressBookParser.MAX_INPUT_LENGTH, inputAtLimit.length());
+        assertTrue(parser.parseCommand(inputAtLimit) instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_inputLongerThanLimit_throwsParseException() {
+        String tooLongInput = ListCommand.COMMAND_WORD + " " + "a".repeat(AddressBookParser.MAX_INPUT_LENGTH);
+
+        assertThrows(ParseException.class, AddressBookParser.MESSAGE_INPUT_TOO_LONG, () ->
+                parser.parseCommand(tooLongInput));
+    }
+
+    @Test
     public void parseCommand_unknownCommand_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand("unknownCommand"));
     }
@@ -173,7 +207,7 @@ public class AddressBookParserTest {
                 TagCommand.COMMAND_WORD, UntagCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD,
                 HelpCommand.COMMAND_WORD, AttendanceCommand.COMMAND_WORD, ViewAttendanceCommand.COMMAND_WORD,
                 ImportCommand.COMMAND_WORD, GradeCommand.COMMAND_WORD, ViewGradeCommand.COMMAND_WORD,
-                DeleteGradeCommand.COMMAND_WORD);
+                DeleteAttendanceCommand.COMMAND_WORD, DeleteGradeCommand.COMMAND_WORD);
 
         for (String commandWord : commandWords) {
             for (String variant : List.of(commandWord.toUpperCase(), commandWord.toLowerCase())) {
@@ -240,5 +274,22 @@ public class AddressBookParserTest {
                 DeleteGradeCommand.COMMAND_WORD + " /name John Tan /class A1 /assessment WA2");
         assertEquals(new DeleteGradeByNameAndClassCommand("John Tan", "A1", "WA2"),
                 command);
+    }
+
+    @Test
+    public void parseCommand_deleteAttendance() throws Exception {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        DeleteAttendanceCommand expected = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, date);
+
+        assertEquals(expected, parser.parseCommand("deleteA 1 /date 16-09-2026"));
+    }
+
+    @Test
+    public void parseCommand_deleteAttendanceByNameAndClass() throws Exception {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        DeleteAttendanceCommand command = (DeleteAttendanceCommand) parser.parseCommand(
+                "deleteA /name John Tan /class A1 /date 16-09-2026");
+
+        assertEquals(new DeleteAttendanceByNameAndClassCommand("John Tan", "A1", date), command);
     }
 }

@@ -47,6 +47,21 @@ public class AddCommandTest {
     }
 
     @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        AddCommand addCommand = new AddCommand(new PersonBuilder().build());
+        assertThrows(NullPointerException.class, () -> addCommand.execute(null));
+    }
+
+    @Test
+    public void execute_modelDoesNotStorePerson_throwsAssertionError() {
+        AddCommand addCommand = new AddCommand(new PersonBuilder().build());
+        ModelStub modelStub = new ModelStubDroppingPersonAdded();
+
+        // Gradle runs the tests with assertions enabled
+        assertThrows(AssertionError.class, () -> addCommand.execute(modelStub));
+    }
+
+    @Test
     public void execute_duplicatePerson_throwsCommandException() {
         Person validPerson = new PersonBuilder().build();
         AddCommand addCommand = new AddCommand(validPerson);
@@ -170,6 +185,21 @@ public class AddCommandTest {
         public boolean hasPerson(Person person) {
             requireNonNull(person);
             return this.person.isSamePerson(person);
+        }
+    }
+
+    /**
+     * A Model stub that reports no person as present, and ignores the person being added.
+     */
+    private class ModelStubDroppingPersonAdded extends ModelStub {
+        @Override
+        public boolean hasPerson(Person person) {
+            return false;
+        }
+
+        @Override
+        public void addPerson(Person person) {
+            // Intentionally does nothing, to simulate a model that fails to store the person
         }
     }
 

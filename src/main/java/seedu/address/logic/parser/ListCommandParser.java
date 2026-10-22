@@ -1,5 +1,7 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
+
 import seedu.address.logic.commands.ListCommand;
 import seedu.address.model.person.PersonMatchesKeyword;
 
@@ -16,6 +18,7 @@ public class ListCommandParser implements Parser<ListCommand> {
      */
     @Override
     public ListCommand parse(String args) {
+        requireNonNull(args);
         String keyword = args.trim();
         if (keyword.isEmpty()) {
             return new ListCommand();

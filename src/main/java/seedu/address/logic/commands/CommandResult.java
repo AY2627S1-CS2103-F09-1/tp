@@ -1,6 +1,7 @@
 package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 
 import java.util.Objects;
 
@@ -10,6 +11,8 @@ import seedu.address.commons.util.ToStringBuilder;
  * Represents the result of a command execution.
  */
 public class CommandResult {
+
+    public static final String MESSAGE_HELP_AND_EXIT = "A command result cannot both show help and exit";
 
     private final String feedbackToUser;
 
@@ -21,8 +24,12 @@ public class CommandResult {
 
     /**
      * Constructs a {@code CommandResult} with the specified fields.
+     *
+     * @throws IllegalArgumentException if both {@code showHelp} and {@code exit} are true, as the app cannot
+     *         show help and exit in response to the same command.
      */
     public CommandResult(String feedbackToUser, boolean showHelp, boolean exit) {
+        checkArgument(!(showHelp && exit), MESSAGE_HELP_AND_EXIT);
         this.feedbackToUser = requireNonNull(feedbackToUser);
         this.showHelp = showHelp;
         this.exit = exit;

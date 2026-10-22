@@ -30,7 +30,8 @@ public class TagCommand extends GroupMembershipCommand {
 
     /**
      * Creates a {@code TagCommand} to link the contacts at {@code memberIndices} to {@code group}.
-     * The indices must not contain duplicates, as a contact can only be changed once by a command.
+     *
+     * @throws IllegalArgumentException if {@code memberIndices} is empty or contains duplicates.
      */
     public TagCommand(Tag group, List<Index> memberIndices) {
         super(group, memberIndices);

@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_UNKNOWN_COMMAND;
 
@@ -14,6 +15,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
+import seedu.address.logic.commands.DeleteAttendanceCommand;
 import seedu.address.logic.commands.DeleteCommand;
 import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
@@ -33,6 +35,12 @@ import seedu.address.logic.parser.exceptions.ParseException;
  */
 public class AddressBookParser {
 
+    /** The most characters that a command can have. A command that adds a contact needs about 450. */
+    public static final int MAX_INPUT_LENGTH = 5000;
+
+    public static final String MESSAGE_INPUT_TOO_LONG = "The command is too long. It can have at most "
+            + MAX_INPUT_LENGTH + " characters";
+
     /**
      * Used for initial separation of command word and args.
      */
@@ -41,13 +49,14 @@ public class AddressBookParser {
 
     /**
      * Maps each command word, in lower case, to the parser of its arguments. The commands that take no
-     * arguments ignore them. Two command words must not differ only in case, as the lookup ignores case.
+     * arguments ignore them, except {@code clear}, which rejects them because it deletes all contacts. Two
+     * command words must not differ only in case, as the lookup ignores case.
      */
     private static final Map<String, Parser<? extends Command>> COMMAND_PARSERS = Map.ofEntries(
             entry(AddCommand.COMMAND_WORD, new AddCommandParser()),
             entry(EditCommand.COMMAND_WORD, new EditCommandParser()),
             entry(DeleteCommand.COMMAND_WORD, new DeleteCommandParser()),
-            entry(ClearCommand.COMMAND_WORD, arguments -> new ClearCommand()),
+            entry(ClearCommand.COMMAND_WORD, new ClearCommandParser()),
             entry(ListCommand.COMMAND_WORD, new ListCommandParser()),
             entry(TagCommand.COMMAND_WORD, new TagCommandParser()),
             entry(UntagCommand.COMMAND_WORD, new UntagCommandParser()),
@@ -58,6 +67,7 @@ public class AddressBookParser {
             entry(ImportCommand.COMMAND_WORD, new ImportCommandParser()),
             entry(GradeCommand.COMMAND_WORD, new GradeCommandParser()),
             entry(ViewGradeCommand.COMMAND_WORD, new ViewGradeCommandParser()),
+            entry(DeleteAttendanceCommand.COMMAND_WORD, new DeleteAttendanceCommandParser()),
             entry(DeleteGradeCommand.COMMAND_WORD, new DeleteGradeCommandParser())
     );
 
@@ -72,9 +82,14 @@ public class AddressBookParser {
      *
      * @param userInput full user input string
      * @return the command based on the user input
-     * @throws ParseException if the user input does not conform to the expected format
+     * @throws ParseException if the user input is longer than {@code MAX_INPUT_LENGTH} or does not conform to
+     *         the expected format
      */
     public Command parseCommand(String userInput) throws ParseException {
+        requireNonNull(userInput);
+        if (userInput.length() > MAX_INPUT_LENGTH) {
+            throw new ParseException(MESSAGE_INPUT_TOO_LONG);
+        }
         final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(userInput.trim());
         if (!matcher.matches()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
