@@ -5,16 +5,25 @@ import java.util.logging.Logger;
 
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.Button;
+import javafx.scene.control.Label;
 import javafx.scene.control.MenuItem;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextInputControl;
 import javafx.scene.input.KeyCombination;
 import javafx.scene.input.KeyEvent;
+import javafx.scene.layout.Priority;
 import javafx.scene.layout.StackPane;
+import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
+import seedu.address.logic.commands.ViewAttendanceCommand;
+import seedu.address.logic.commands.ViewGradeCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -184,7 +193,14 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            String commandWord = commandText.trim().split("\\s+", 2)[0];
+
+            if (commandWord.equals(ViewAttendanceCommand.COMMAND_WORD)
+                || commandWord.equals(ViewGradeCommand.COMMAND_WORD)) {
+                showHistoryPopup(commandWord, commandResult.getFeedbackToUser());
+            } else {
+                resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            }
 
             if (commandResult.isShowHelp()) {
                 handleHelp();
@@ -201,4 +217,49 @@ public class MainWindow extends UiPart<Stage> {
             throw e;
         }
     }
+
+    /**
+     * Shows attendance or grade history in a separate pop-up window.
+     *
+     * @param commandWord command that generated the result
+     * @param feedback text to display in the pop-up
+     */
+    private void showHistoryPopup(String commandWord, String feedback) {
+        Stage popupStage = new Stage();
+        popupStage.setMinWidth(400);
+        popupStage.setMinHeight(300);
+        String title;
+
+        if (commandWord.equals(ViewAttendanceCommand.COMMAND_WORD)) {
+            title = "Attendance History";
+        } else {
+            title = "Grade History";
+        }
+
+        popupStage.setTitle("ClassMates");
+        popupStage.initOwner(primaryStage);
+
+        Label heading = new Label(title);
+        heading.setStyle("-fx-font-size: 20px; -fx-font-weight: bold;");
+
+        TextArea historyDisplay = new TextArea(feedback);
+        historyDisplay.setEditable(false);
+        historyDisplay.setWrapText(true);
+        historyDisplay.setStyle("-fx-font-size: 14px;");
+
+        VBox.setVgrow(historyDisplay, Priority.ALWAYS);
+
+        Button closeButton = new Button("Close");
+        closeButton.setOnAction(event -> popupStage.close());
+
+        VBox layout = new VBox(10, heading, historyDisplay, closeButton);
+        layout.setPadding(new Insets(10));
+        layout.setStyle("-fx-background-color: #C5A7C9;");
+
+        Scene scene = new Scene(layout, 500, 400);
+
+        popupStage.setScene(scene);
+        popupStage.show();
+    }
+
 }
