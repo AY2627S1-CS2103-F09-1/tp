@@ -404,7 +404,6 @@ or
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
 * Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
 * `/assessment` and `/score` can each be given at most once.
-* Grades are saved with the contact data. ClassMates does not show recorded grades yet.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
