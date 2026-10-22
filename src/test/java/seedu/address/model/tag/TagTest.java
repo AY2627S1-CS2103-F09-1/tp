@@ -3,8 +3,11 @@ package seedu.address.model.tag;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertTimeoutPreemptively;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
+
+import java.time.Duration;
 
 import org.junit.jupiter.api.Test;
 
@@ -63,6 +66,18 @@ public class TagTest {
     public void isValidTagName_surroundingAndRepeatedSpaces_ignoredWhenCheckingLength() {
         assertTrue(Tag.isValidTagName("  " + "a".repeat(Tag.MAX_LENGTH) + "  "));
         assertTrue(Tag.isValidTagName("a" + " ".repeat(5) + "b"));
+    }
+
+    @Test
+    public void isValidTagName_veryLongInput_returnsFalseQuickly() {
+        String veryLongName = "a".repeat(1_000_000);
+        String veryLongSpaces = "a" + " ".repeat(1_000_000) + "b";
+
+        assertTimeoutPreemptively(Duration.ofSeconds(1), () -> {
+            assertFalse(Tag.isValidTagName(veryLongName));
+            // The spaces are collapsed first, so this one is valid
+            assertTrue(Tag.isValidTagName(veryLongSpaces));
+        });
     }
 
     @Test

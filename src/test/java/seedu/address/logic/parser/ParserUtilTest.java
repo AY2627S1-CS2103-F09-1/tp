@@ -263,6 +263,17 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseEmail_invalidFormat_throwsParseExceptionWithConstraintsMessage() {
+        assertThrows(ParseException.class, Email.MESSAGE_CONSTRAINTS, () -> ParserUtil.parseEmail(INVALID_EMAIL));
+    }
+
+    @Test
+    public void parseEmail_tooLongValue_throwsParseExceptionWithTooLongMessage() {
+        String tooLongEmail = "a".repeat(Email.MAX_LENGTH + 1);
+        assertThrows(ParseException.class, Email.MESSAGE_TOO_LONG, () -> ParserUtil.parseEmail(tooLongEmail));
+    }
+
+    @Test
     public void parseEmail_validValueWithoutWhitespace_returnsEmail() throws Exception {
         Email expectedEmail = new Email(VALID_EMAIL);
         assertEquals(expectedEmail, ParserUtil.parseEmail(VALID_EMAIL));

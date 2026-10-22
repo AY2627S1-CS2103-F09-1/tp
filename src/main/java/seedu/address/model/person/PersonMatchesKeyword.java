@@ -26,6 +26,7 @@ public class PersonMatchesKeyword implements Predicate<Person> {
 
     @Override
     public boolean test(Person person) {
+        requireNonNull(person);
         return containsKeyword(person.getName().fullName)
                 || containsKeyword(person.getClassName().value)
                 || person.getTags().stream().map(tag -> tag.tagName).anyMatch(this::containsKeyword);

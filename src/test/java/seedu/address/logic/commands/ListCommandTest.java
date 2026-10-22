@@ -16,6 +16,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.function.Predicate;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,7 @@ import org.junit.jupiter.api.Test;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Person;
 import seedu.address.model.person.PersonMatchesKeyword;
 
 /**
@@ -130,6 +132,21 @@ public class ListCommandTest {
         assertThrows(NullPointerException.class, () -> new ListCommand().execute(null));
         assertThrows(NullPointerException.class, () ->
                 new ListCommand(new PersonMatchesKeyword("meier")).execute(null));
+    }
+
+    @Test
+    public void execute_modelHidesMatchingPersons_throwsAssertionError() {
+        Model modelThatHidesEveryone = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
+            @Override
+            public void updateFilteredPersonList(Predicate<Person> predicate) {
+                super.updateFilteredPersonList(person -> false);
+            }
+        };
+
+        // Gradle runs the tests with assertions enabled
+        assertThrows(AssertionError.class, () -> new ListCommand().execute(modelThatHidesEveryone));
+        assertThrows(AssertionError.class, () ->
+                new ListCommand(new PersonMatchesKeyword("meier")).execute(modelThatHidesEveryone));
     }
 
     @Test

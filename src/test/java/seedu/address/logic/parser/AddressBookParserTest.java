@@ -62,7 +62,16 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_clear() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
-        assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD + " 3") instanceof ClearCommand);
+        assertTrue(parser.parseCommand("  " + ClearCommand.COMMAND_WORD + "   ") instanceof ClearCommand);
+    }
+
+    @Test
+    public void parseCommand_clearWithExtraText_throwsParseException() {
+        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, ClearCommand.MESSAGE_USAGE);
+        assertThrows(ParseException.class, expectedMessage, () ->
+                parser.parseCommand(ClearCommand.COMMAND_WORD + " 3"));
+        assertThrows(ParseException.class, expectedMessage, () ->
+                parser.parseCommand(ClearCommand.COMMAND_WORD + " everything"));
     }
 
     @Test
@@ -147,6 +156,28 @@ public class AddressBookParserTest {
     public void parseCommand_unrecognisedInput_throwsParseException() {
         assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE), ()
             -> parser.parseCommand(""));
+    }
+
+    @Test
+    public void parseCommand_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parseCommand(null));
+    }
+
+    @Test
+    public void parseCommand_inputAtLengthLimit_isParsed() throws Exception {
+        String longKeyword = "a".repeat(AddressBookParser.MAX_INPUT_LENGTH - ListCommand.COMMAND_WORD.length() - 1);
+        String inputAtLimit = ListCommand.COMMAND_WORD + " " + longKeyword;
+
+        assertEquals(AddressBookParser.MAX_INPUT_LENGTH, inputAtLimit.length());
+        assertTrue(parser.parseCommand(inputAtLimit) instanceof ListCommand);
+    }
+
+    @Test
+    public void parseCommand_inputLongerThanLimit_throwsParseException() {
+        String tooLongInput = ListCommand.COMMAND_WORD + " " + "a".repeat(AddressBookParser.MAX_INPUT_LENGTH);
+
+        assertThrows(ParseException.class, AddressBookParser.MESSAGE_INPUT_TOO_LONG, () ->
+                parser.parseCommand(tooLongInput));
     }
 
     @Test

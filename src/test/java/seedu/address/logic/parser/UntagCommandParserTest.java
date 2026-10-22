@@ -12,6 +12,7 @@ import static seedu.address.logic.parser.ParserUtil.MESSAGE_DUPLICATE_MEMBER_IND
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_EMPTY_MEMBER;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_GROUP_NAME;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_MEMBER_INDEX;
+import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_THIRD_PERSON;
@@ -51,6 +52,11 @@ public class UntagCommandParserTest {
 
         // whitespace only preamble
         assertParseSuccess(parser, "\t  \r  \n" + GROUP_DESC + MEMBERS_DESC, expectedCommand);
+    }
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
 
     @Test

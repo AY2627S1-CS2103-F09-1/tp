@@ -85,8 +85,11 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 * Parameters can be in any order.<br>
   For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* Extraneous parameters for commands that take no parameters, such as `help` and `exit`, are ignored.<br>
+  For example, `help 123` is interpreted as `help`.<br>
+  The exception is `clear`, which does not accept anything after it, because it deletes all contacts. For example, `clear 3` shows an error and does not delete anything.
+
+* A command can have at most 5,000 characters. A longer command shows `The command is too long. It can have at most 5000 characters` and nothing happens.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
@@ -115,7 +118,7 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
   * A word that starts with `/` after a space is read as a parameter, so a `/` can be used inside a name, but not at the start of a word.
 * `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`.
 * A name or class cannot contain a parameter name that is stuck to the text before it, such as `John/class A1`, as this is most likely a missing space. The parameter names that are checked are `/name`, `/class`, `/email`, `/tag`, `/group`, `/members`, `/date`, `/status`, `/assessment` and `/score`, in any case.
-* `EMAIL` is optional. If given, it must be in the format `local-part@domain`.
+* `EMAIL` is optional. If given, it can be at most 254 characters long and must be in the format `local-part@domain`.
   * The local-part can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain is made up of one or more labels separated by periods, as in `example.com`. Each label can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last label must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
@@ -136,7 +139,7 @@ The name contains a parameter such as `/class` that is stuck to the text before 
 The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
 The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
 The class is empty, too long or has characters that are not allowed | `Class name cannot be empty`, `Class name is too long` or a description of the allowed characters
-The email is not valid, including `/email` with nothing after it | A description of the valid email format
+The email is too long, not valid, or `/email` has nothing after it | `Email is too long` or a description of the valid email format
 The same name already exists in the same class | `NAME already exists in class CLASS`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -277,7 +280,7 @@ The group name is empty, too long or has characters that are not allowed | `Inva
 An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
 An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
 The same index is given more than once | `Duplicate contact index: INDEX`
-An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`, naming at most the first 10 such indices, followed by `and N more` if there are more
 One or more of the contacts are already in the group | `One or more contacts are already in this group: NAME (CLASS)`
 
 If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
@@ -317,7 +320,7 @@ The group name is empty, too long or has characters that are not allowed | `Inva
 An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
 An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
 The same index is given more than once | `Duplicate contact index: INDEX`
-An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`, naming at most the first 10 such indices, followed by `and N more` if there are more
 One or more of the contacts are not in the group | `One or more contacts are not in this group: NAME (CLASS)`
 
 If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
@@ -340,6 +343,7 @@ Format: `import PATH`
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
 * The imported contacts are shown at the top of the list, in the same order as in the file.
+* The file can be at most 5 MiB, and can have at most 5,000 rows after the header row.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
@@ -369,8 +373,10 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | No file path is provided                                                                           | `Specify file path`                                  |
 | The file does not exist                                                                            | `File not found at <filepath>`                       |
 | The file does not use the `.csv` extension                                                         | `Only .csv files are supported`                      |
+| The file is larger than 5 MiB                                                                      | `File is too large. It can have at most 5 MiB`       |
 | The file is empty or contains only a header row                                                    | `File empty`                                         |
 | The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
+| The file has more than 5,000 rows after the header row                                            | `File has too many rows. It can have at most 5000 rows` |
 | A row has an invalid number of fields                                                              | `Invalid number of fields on row <row number>`       |
 | A contact duplicates an existing contact or an earlier imported contact                            | `Duplicate contact on row <row number>`              |
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
@@ -636,6 +642,15 @@ Clears all contacts from ClassMates.
 
 Format: `clear`
 
+* Nothing can be written after `clear`. This is so that a command such as `clear 3`, which may be meant to delete one contact, does not delete all of them. Use [`delete`](#deleting-a-contact-delete) to delete one contact.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+Anything is written after `clear`, such as `clear 3` | `Invalid command format!` followed by the usage of `clear`. No contact is deleted.
+The data file cannot be saved | A description of the problem, followed by `The change was undone.` No contact is deleted.
+
 On success, ClassMates shows `ClassMates has been cleared!`.
 
 ### Exiting the program: `exit`
@@ -670,6 +685,7 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 **Caution:**
 If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and tells you so in the result box. Your file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the same folder, such as `classmates.json.bad-20261021-101500-123`, and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. If ClassMates cannot rename the file, it says so, and the next command that you run replaces the file. We still recommend backing up the file before editing it.<br>
 Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid, and are kept in the same way.<br>
+A data file is also invalid if a contact has two attendance records for the same date, or two grades for the same assessment, ignoring case and extra spaces.<br>
 The file can be saved in UTF-8 with or without a byte order mark, so editors such as Notepad can be used.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
@@ -712,7 +728,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
 
 **Q**: ClassMates started with an empty list. What happened?<br>
-**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts and tells you so in the result box. The invalid file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the `data` folder and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. Alternatively, restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
 
 --------------------------------------------------------------------------------------------------------------------
 

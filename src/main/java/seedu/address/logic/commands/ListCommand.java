@@ -3,8 +3,11 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.util.List;
 import java.util.function.Predicate;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
 import seedu.address.model.Model;
@@ -26,6 +29,8 @@ public class ListCommand extends Command {
             + "Example: " + COMMAND_WORD + " John";
 
     public static final String MESSAGE_SUCCESS = "Listed all contacts.";
+
+    private static final Logger logger = LogsCenter.getLogger(ListCommand.class);
 
     private final Predicate<Person> predicate;
     private final boolean isFiltered;
@@ -51,11 +56,27 @@ public class ListCommand extends Command {
     public CommandResult execute(Model model) {
         requireNonNull(model);
         model.updateFilteredPersonList(predicate);
+        assert isShowingExactlyMatchingPersons(model) : "The displayed list must be the contacts that match";
+
+        logger.info("Listed " + model.getFilteredPersonList().size() + " of "
+                + model.getAddressBook().getPersonList().size() + " contacts, "
+                + (isFiltered ? "matching " + predicate : "without a keyword"));
         if (!isFiltered) {
             return new CommandResult(MESSAGE_SUCCESS);
         }
         return new CommandResult(
                 String.format(Messages.MESSAGE_PERSONS_LISTED_OVERVIEW, model.getFilteredPersonList().size()));
+    }
+
+    /**
+     * Returns true if the displayed contacts of {@code model} are exactly the contacts in its address book
+     * that are accepted by the predicate.
+     */
+    private boolean isShowingExactlyMatchingPersons(Model model) {
+        List<Person> expectedPersons = model.getAddressBook().getPersonList().stream()
+                .filter(predicate)
+                .toList();
+        return expectedPersons.equals(model.getFilteredPersonList());
     }
 
     @Override

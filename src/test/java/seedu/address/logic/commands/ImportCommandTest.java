@@ -171,6 +171,43 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_fileLargerThanLimit_reportsFileTooLarge() throws IOException, ParseException {
+        Path csv = tempDir.resolve("students.csv");
+        Files.write(csv, new byte[ImportCommand.MAX_FILE_SIZE_BYTES + 1]);
+        ImportCommand command = new ImportCommandParser().parse(csv.toString());
+        ModelManager model = new ModelManager();
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(ImportCommand.MESSAGE_FILE_TOO_LARGE, exception.getMessage());
+        assertEquals(0, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_moreRowsThanLimit_reportsTooManyRowsAndImportsNothing()
+            throws IOException, ParseException {
+        Path csv = writeCsv(csvWithRows(ImportCommand.MAX_ROWS + 1));
+        ImportCommand command = new ImportCommandParser().parse(csv.toString());
+        ModelManager model = new ModelManager();
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(ImportCommand.MESSAGE_TOO_MANY_ROWS, exception.getMessage());
+        assertEquals(0, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_exactlyLimitRows_isNotRejected() throws IOException, CommandException, ParseException {
+        // Blank rows count as rows, and are ignored when the contacts are imported, so this is quick
+        Path csv = writeCsv("name,class\nAlice,C1\n" + "\n".repeat(ImportCommand.MAX_ROWS - 1));
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
     public void execute_invalidExtension_reportsCsvOnly() throws IOException, ParseException {
         Path file = tempDir.resolve("students.txt");
         Files.writeString(file, "name,class\nAlice,A1\n");
@@ -395,6 +432,17 @@ public class ImportCommandTest {
         assertEquals(command.hashCode(), sameCommand.hashCode());
         assertNotEquals(command, differentCommand);
         assertNotEquals(null, command);
+    }
+
+    /**
+     * Returns the content of a CSV file with a header and {@code rowCount} rows of different contacts.
+     */
+    private static String csvWithRows(int rowCount) {
+        StringBuilder csv = new StringBuilder("name,class\n");
+        for (int i = 1; i <= rowCount; i++) {
+            csv.append("Alice,C").append(i).append('\n');
+        }
+        return csv.toString();
     }
 
     private Path writeCsv(String content) throws IOException {
