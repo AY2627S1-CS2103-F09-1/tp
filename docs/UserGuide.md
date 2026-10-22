@@ -399,7 +399,7 @@ or
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
 * `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
-* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain only English letters, digits, spaces and hyphens, such as `Assignment 1` or `Mid-term`. Spaces at the start and end are ignored.
+* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas, such as `Assignment 1`, `Mid-term` or `Quiz #1`. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
 * Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
@@ -569,7 +569,7 @@ Format: `viewA /name NAME /class CLASS`
 * The name and class are compared ignoring case and extra spaces. For example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
 * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * `/name` and `/class` can be given in either order, but each must be given exactly once.
-* All attendance records for the contact are shown in chronological order in a separate pop-up window, from earliest to latest.
+* All attendance records for the contact are shown in a separate pop-up window, from the most recent date to the earliest.
 * Each record is shown as the date followed by the status, separated by two spaces, such as `16-Sep-2026  absent`. The month is shown as three letters here, unlike the `DD-MM-YYYY` format used to record attendance.
 * If the contact has no attendance records, ClassMates shows `No attendance records.` in the pop-up window in place of the list.
 
@@ -585,14 +585,14 @@ There is text before the first parameter, such as `viewA John /class A1` | `Inva
 No contact matches the given name and class | `Contact not found`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
-On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Attendance History`, followed by `Here is the attendance for NAME from class CLASS` and one line for each grade.
+On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Attendance History`, followed by `Here is the attendance for NAME from class CLASS` and one line for each record.
 
 ```
 Attendance History
 
 Here is the attendance for John Tan from class A1
-14-Sep-2026  late
 16-Sep-2026  absent
+14-Sep-2026  late
 ```
 
 If the contact has no records, the lines after the first are replaced by `No attendance records.`

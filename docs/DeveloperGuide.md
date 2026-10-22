@@ -630,7 +630,7 @@ On success, the command returns a message naming the contact, date, and attendan
 
 * Consistent with commands such as `delete INDEX` and `tag`.
 * Convenient when recording attendance for several contacts from a displayed list.
-* Allows users to first use `list` or `find` to narrow down the contacts.
+* Allows users to first use `list` to narrow down the contacts.
 
   Cons:
 
@@ -673,7 +673,7 @@ The parser then:
 * validates the score as a number from 0 to 100;
 * creates a `Grade` object containing the assessment name and score.
 
-The assessment name must be between 1 and 80 characters long and can contain only English letters, digits, spaces and hyphens. The score may contain a decimal part but must be between 0 and 100, inclusive.
+The assessment name must be between 1 and 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas, which are the same characters as in a `Name`. The score may contain a decimal part but must be between 0 and 100, inclusive.
 
 `GradeCommand#execute(Model)` identifies the contact in one of two ways:
 
@@ -684,7 +684,7 @@ If no contact matches the supplied name and class, the command throws a `Command
 
 To record the grade, the command calls `Person#withGrade(Grade)`. This returns an updated `Person`; the command replaces the old person in the model using `Model#setPerson(Person, Person)`.
 
-A contact can have only one grade for each assessment. If the contact already has a grade for the assessment, `Person#withGrade(Grade)` throws an `IllegalArgumentException`. The command reports that the grade for the assessment already exists. Assessment names are compared ignoring case.
+A contact can have only one grade for each assessment. If the contact already has a grade for the assessment, `Person#withGrade(Grade)` throws an `IllegalArgumentException`. The command reports that the grade for the assessment already exists. Assessment names are compared ignoring case and extra spaces.
 
 On success, the command returns a message containing the score, assessment name, student name and class.
 
@@ -698,7 +698,7 @@ Aspect: How grades identify a contact
 
   * Consistent with commands such as `delete INDEX`, `tag` and `attendance INDEX`.
   * Convenient when recording grades for several contacts from a displayed list.
-  * Allows users to first use `list` or `find` to narrow down the contacts.
+  * Allows users to first use `list` to narrow down the contacts.
 
   Cons:
 
@@ -739,8 +739,8 @@ The `viewA` command displays all attendance records for a contact. It is impleme
 
 * `NameAndClassCommandParser#parse(String)`, which `ViewAttendanceCommandParser` inherits, uses `ArgumentTokenizer` with the `/name` and `/class` prefixes. It reports unrecognized prefixes first, then repeated prefixes, then text before the first prefix, and finally a missing or blank name or class. It then calls `NameAndClassCommandParser#createCommand(String, String)`, which `ViewAttendanceCommandParser` implements to create a `ViewAttendanceCommand` with the name and class as plain strings. They are not validated as a `Name` and `ClassName`, in the same way as for `delete /name NAME /class CLASS`.
 * `ViewAttendanceCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
-* If a contact is found, the command formats all of that contact’s attendance records in chronological order and returns them in the command result. If there are no records, it returns the no-attendance-records message instead.
-* The UI displays the result of a successful `viewA` command in a separate pop-up window rather than in the main result display. `MainWindow#executeCommand(String)` identifies `viewA` results and passes the returned command result to a dedicated history pop-up. The pop-up contains a heading, a scrollable text area containing the attendance records, and a close button. The text area expands when the window is resized.
+* If a contact is found, the command formats all of that contact’s attendance records from the most recent date to the earliest and returns them in the command result. If there are no records, it returns the no-attendance-records message instead.
+* The UI displays the result of a successful `viewA` command in a separate pop-up window rather than in the main result display. `MainWindow#executeCommand(String)` recognizes a `viewA` command by the command word that the user typed and passes the returned command result to a dedicated history pop-up. The pop-up contains a heading, a scrollable text area containing the attendance records, and a close button. The text area expands when the window is resized.
 
 #### Design considerations
 
@@ -819,7 +819,7 @@ The `viewG` command displays all grades of a contact. It is implemented by `View
 * `ViewGradeCommand#execute(Model)` searches the whole address book for a contact using `Person#hasNameAndClass(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message.
 * If a contact is found, the command lists the grades of the contact from the newest to the oldest, as `Grade#toString()`. If there are no grades, it returns the no-grades message instead.
 * `Grade#isSameAssessment(Grade)` and `Grade#equals(Object)` compare the assessment names with `StringUtil#toComparisonKey(String)`, so `Quiz 1` and ` quiz   1` are the same assessment, in the same way as names and classes. `Person#withGrade(Grade)` uses it to reject a second grade for the same assessment.
-* The UI displays the result of a successful `viewG` command in a separate pop-up window rather than in the main result display. `MainWindow#executeCommand(String)` identifies `viewG` results and passes the returned command result to a dedicated history pop-up. The pop-up contains a heading, a scrollable text area containing the grade records, and a close button. The text area expands when the window is resized.
+* The UI displays the result of a successful `viewG` command in a separate pop-up window rather than in the main result display. `MainWindow#executeCommand(String)` recognizes a `viewG` command by the command word that the user typed and passes the returned command result to a dedicated history pop-up. The pop-up contains a heading, a scrollable text area containing the grade records, and a close button. The text area expands when the window is resized.
 
 #### Design considerations
 
@@ -1184,22 +1184,11 @@ The use cases describe what the application does now.
 
     Use case resumes at step 1.
 * 2a. The student has no grades.
-  * 2a1. CM displays a message that no grades are recorded.
+  * 2a1. CM displays a message in the pop-up window that no grades are recorded.
 
     Use case ends.
-
-* 1b. The provided name and class do not match any student in CM.
-  * 1b1. CM displays an error message.
-
-    Use case resumes at step 1.
-
-* 2a. The student has no recorded grades.
-  * 2a1. CM displays a message stating that no grades have been recorded in the pop-up window.
-
-    Use case ends.
-
-* 3a. The student has many grades.
-  * 3a1. CM displays all grades in a scrollable pop-up window.
+* 2b. The student has many grades.
+  * 2b1. CM displays all grades in a scrollable pop-up window.
 
     Use case ends.
 
@@ -1502,22 +1491,11 @@ The use cases describe what the application does now.
 
     Use case resumes at step 1.
 * 2a. The student has no attendance records.
-  * 2a1. CM displays a message that no attendance is recorded.
+  * 2a1. CM displays a message in the pop-up window that no attendance is recorded.
 
     Use case ends.
-
-* 1b. The provided name and class do not match any student in CM.
-  * 1b1. CM displays an error message.
-
-    Use case resumes at step 1.
-
-* 2a. The student has no recorded attendance.
-  * 2a1. CM displays a message stating that no attendance records have been recorded in the pop-up window.
-
-    Use case ends.
-
-* 3a. The student has many attendance records.
-  * 3a1. CM displays all records in a scrollable pop-up window.
+* 2b. The student has many attendance records.
+  * 2b1. CM displays all records in a scrollable pop-up window.
 
     Use case ends.
 
@@ -1952,10 +1930,10 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data. Record attendance for Alex Yeoh using the `attendance` command above.
 
    1. Test case: `VIEWa /name Alex Yeoh /class A1`<br>
-      Expected: The case of the command word does not matter. The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by Alex Yeoh's attendance records in chronological order.
+      Expected: The case of the command word does not matter. A pop-up window with the heading `Attendance History` opens. It shows `Here is the attendance for Alex Yeoh from class A1`, followed by Alex Yeoh's attendance records, with the most recent date first.
 
    1. Test case: `viewA /name Bernice Yu /class A1`<br>
-      Expected: The status message shows `Here is the attendance for Bernice Yu from class A1`, followed by `No attendance records.`, as Bernice Yu has no attendance records.
+      Expected: A pop-up window with the heading `Attendance History` opens. It shows `Here is the attendance for Bernice Yu from class A1`, followed by `No attendance records.`, as Bernice Yu has no attendance records.
 
 1. Viewing the attendance of a contact unsuccessfully
 
@@ -2004,7 +1982,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The status message shows `Grade of 80 recorded for Quiz #1 for student Alex Yeoh in class A1.`, and the card of Alex Yeoh shows `Quiz #1: 80`.
 
    1. Test case: `VIEWG /name alex  yeoh /class a1`<br>
-      Expected: The status message shows `Here are the grades for Alex Yeoh from class A1`, followed by `Quiz #1: 80`. The case of the command word, and the case and extra spaces of the name and class, do not matter.
+      Expected: A pop-up window with the heading `Grade History` opens. It shows `Here are the grades for Alex Yeoh from class A1`, followed by `Quiz #1: 80`. The case of the command word, and the case and extra spaces of the name and class, do not matter.
 
 1. Recording and viewing grades unsuccessfully
 

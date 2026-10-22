@@ -195,8 +195,8 @@ public class MainWindow extends UiPart<Stage> {
             logger.info("Result: " + commandResult.getFeedbackToUser());
             String commandWord = commandText.trim().split("\\s+", 2)[0];
 
-            if (commandWord.equals(ViewAttendanceCommand.COMMAND_WORD)
-                || commandWord.equals(ViewGradeCommand.COMMAND_WORD)) {
+            if (commandWord.equalsIgnoreCase(ViewAttendanceCommand.COMMAND_WORD)
+                || commandWord.equalsIgnoreCase(ViewGradeCommand.COMMAND_WORD)) {
                 showHistoryPopup(commandWord, commandResult.getFeedbackToUser());
             } else {
                 resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
@@ -230,7 +230,7 @@ public class MainWindow extends UiPart<Stage> {
         popupStage.setMinHeight(300);
         String title;
 
-        if (commandWord.equals(ViewAttendanceCommand.COMMAND_WORD)) {
+        if (commandWord.equalsIgnoreCase(ViewAttendanceCommand.COMMAND_WORD)) {
             title = "Attendance History";
         } else {
             title = "Grade History";
