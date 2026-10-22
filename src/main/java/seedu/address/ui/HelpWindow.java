@@ -26,6 +26,8 @@ public class HelpWindow extends UiPart<Stage> {
             clear
             delete INDEX
             delete /name NAME /class CLASS
+            deleteA INDEX /date DATE
+            deleteA /name NAME /class CLASS /date DATE
             grade INDEX /assessment ASSESSMENT_NAME /score SCORE
             grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE
             tag /group GROUP_NAME /members INDEX[,INDEX]...
