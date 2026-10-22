@@ -107,7 +107,13 @@ class JsonAdaptedPerson {
         final Optional<Email> modelEmail = toModelEmail();
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelClassName, modelEmail, modelTags, modelAttendanceRecords, modelGradeRecords);
+        try {
+            return new Person(modelName, modelClassName, modelEmail, modelTags, modelAttendanceRecords,
+                    modelGradeRecords);
+        } catch (IllegalArgumentException e) {
+            // The Person rejects an attendance date or an assessment that is repeated
+            throw new IllegalValueException(e.getMessage(), e);
+        }
     }
 
     /**
@@ -152,8 +158,9 @@ class JsonAdaptedPerson {
         if (email == null) {
             return Optional.empty();
         }
-        if (!Email.isValidEmail(email)) {
-            throw new IllegalValueException(Email.MESSAGE_CONSTRAINTS);
+        Optional<String> emailConstraintViolation = Email.getConstraintViolation(email);
+        if (emailConstraintViolation.isPresent()) {
+            throw new IllegalValueException(emailConstraintViolation.get());
         }
         return Optional.of(new Email(email));
     }

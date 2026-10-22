@@ -418,7 +418,7 @@ The data file holds everything that a user has entered, and users are allowed to
 The `tag` command (`tag /group GROUP_NAME /members INDEX[,INDEX]...`) links the contacts at the given indices of the displayed list to a group. A group is represented as a `Tag` on each of its members, so a contact can be in several groups. It is implemented by `TagCommandParser` and `TagCommand`. Most of their work is done by the abstract classes `GroupMembershipCommandParser` and `GroupMembershipCommand`, which they share with the [`untag` command](#removing-contacts-from-a-group-feature).
 
 * `GroupMembershipCommandParser#parse(String)` reports problems in this order: unrecognized parameters, repeated parameters, text before the first parameter, a missing group name, missing members, an invalid group name, then invalid members (see `ParserUtil#parseMemberIndices(String)`). A parameter given without a value counts as missing. `TagCommandParser` only passes the usage message of `tag` and creates the `TagCommand`.
-* `GroupMembershipCommand#execute(Model)` is atomic. It first finds every contact, and reports all indices that are not in the displayed list. It then calls `GroupMembershipCommand#requireMembersCanBeChanged(List<Person>, Tag)`. `TagCommand` implements it by checking that none of the contacts is already in the group (`Person#hasTag(Tag)`), and it names every contact that is. Only after both checks pass does the command replace each contact with `GroupMembershipCommand#changeMembership(Person, Tag)`, which is `Person#withTag(Tag)` for `tag`, using `Model#setPerson(Person, Person)`. The constructor asserts that no index is repeated, because a contact that was already replaced could not be replaced a second time. The parser guarantees this by rejecting repeated indices. The displayed list is left as it was, so the indices stay valid.
+* `GroupMembershipCommand#execute(Model)` is atomic. It first finds every contact, and reports the indices that are not in the displayed list, naming at most the first `GroupMembershipCommand.MAX_INDICES_SHOWN` (10) of them and then how many more there are, as in `Contact index not found: 8, 9, 10, 11, 12, 13, 14, 15, 16, 17 and 5 more`. It then calls `GroupMembershipCommand#requireMembersCanBeChanged(List<Person>, Tag)`. `TagCommand` implements it by checking that none of the contacts is already in the group (`Person#hasTag(Tag)`), and it names every contact that is. Only after both checks pass does the command replace each contact with `GroupMembershipCommand#changeMembership(Person, Tag)`, which is `Person#withTag(Tag)` for `tag`, using `Model#setPerson(Person, Person)`. The constructor rejects an empty list of indices, and a list in which an index is repeated, with an `IllegalArgumentException`, because a contact that was already replaced could not be replaced a second time. The parser guarantees both by rejecting empty and repeated members. The displayed list is left as it was, so the indices stay valid.
 * The success message lists the linked contacts in the order the indices were given. It shows the group name with the casing it was typed in, after leading and trailing spaces are removed and repeated spaces are collapsed. Group names are compared ignoring case, but each contact keeps the casing it was linked with.
 
 #### Design considerations
@@ -604,7 +604,7 @@ The parser then:
 
 * validates the index when the index format is used;
 * validates the name and class when the name/class format is used;
-* validates the date strictly in `DD-MM-YYYY` format;
+* validates the date strictly in `DD-MM-YYYY` format and obtains the Date object (delegated to `ParserUtil#parseDate`);
 * converts the status to an `Attendance.Status`.
 
 `AttendanceCommand#execute(Model)` first rejects a date in the future. It then identifies the contact in one of two ways:
@@ -672,6 +672,125 @@ The `viewA` command displays all attendance records for a contact. It is impleme
 * **Alternative 2:** Identify the contact by its index in the displayed list.
   * Pros: Shorter to enter after displaying or searching for contacts.
   * Cons: The index depends on the current list, so the user may view attendance for a different contact if the list changes.
+
+### Defensive programming
+
+The code defends itself against bad input and against its own mistakes in four ways. Each is used for a different kind of problem.
+
+* **Exceptions** are for problems that the user can cause. `ParseException` reports invalid input and `CommandException` reports a command that cannot be carried out. Both carry a message that is shown to the user.
+* **`requireNonNull`** is for a caller that passes `null` to a method that does not accept it. It fails fast with a `NullPointerException` at the point of the mistake instead of later and elsewhere.
+* **Assertions** (`assert`) are for conditions that can only be false because of a bug in the code, never because of user input. Gradle enables them when the tests run and when the app is started with `gradle run`, so they catch such bugs during development. They are not enabled when the packaged jar is started with `java -jar`, so they cannot be the only protection of the user (see [Unexpected errors](#unexpected-errors)).
+* **Logging** records what happened for the developers. Each command logs at `INFO` level when it changes the data or rejects a change, and `LogicManager` already logs every command that the user enters.
+
+#### Adding a contact
+
+* `AddCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. All other problems in the input are reported as a `ParseException`, in the order described in its Javadoc.
+* `Email` is limited to `Email.MAX_LENGTH` characters, like `Name` and `ClassName`. The length is checked before the format, so a very long input is rejected at once. The `Email` constructor, `ParserUtil#parseEmail(String)` and `JsonAdaptedPerson#toModelEmail()` all report the message of the constraint that is violated, so a user sees `Email is too long` and not the description of the format, whether the email comes from a command or from the data file. Without the limit, checking the format of a 5,000-character invalid email froze the app for about 4 seconds.
+* `AddCommand#execute(Model)` logs both a rejected duplicate and a successful addition. After `Model#addPerson(Person)` it asserts that `Model#hasPerson(Person)` is true for the new contact, which would fail if a model silently dropped the contact.
+* `ModelManager#addPerson(Person)` rejects a `null` contact with `requireNonNull`, as `ModelManager#hasPerson(Person)` already did.
+
+#### Deleting a contact
+
+* `DeleteCommand#deletePerson(Model, Person)` is the one place where both kinds of delete remove a contact. It asserts that the contact is in the model before the removal and is no longer in it afterwards, and it logs the deleted contact. The first assertion would fail if a caller passed a contact that is not in the model, which `ModelManager#deletePerson(Person)` would otherwise report with a `PersonNotFoundException` that no command catches.
+* `DeleteByIndexCommand` rejects a `null` index with `requireNonNull`, so the mistake is found when the command is created and not when it runs. An index that is outside the displayed list is the user's mistake, so it is reported as a `CommandException` and logged.
+* `DeleteByNameAndClassCommand` logs when no contact is found, together with the name and class that were given.
+* `ModelManager#deletePerson(Person)` rejects a `null` contact with `requireNonNull`.
+* An index that is too large to be an `int`, such as a 1,000-digit number, is rejected by `ParserUtil#parseIndex(String)` with a `ParseException`, because `StringUtil#isNonZeroUnsignedInteger(String)` catches the `NumberFormatException`.
+
+#### Listing and searching contacts
+
+* `ListCommand#execute(Model)` asserts, after it changes the filter, that the displayed contacts are exactly the contacts of the address book that the predicate accepts (`ListCommand#isShowingExactlyMatchingPersons(Model)`). It would fail if a model hid a matching contact or showed one that does not match. The command also logs how many contacts are displayed out of the total, together with the keyword if one was given.
+* `ListCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. It never throws a `ParseException`, because every text is a valid keyword.
+* `PersonMatchesKeyword#test(Person)` rejects a `null` contact with `requireNonNull`.
+* A keyword is not limited in length. This is safe because the matching is a plain substring test, which stops at once when the keyword is longer than the field it is compared with, and `StringUtil#toComparisonKey(String)` uses a regex that takes time proportional to the length. Unlike the email format regex, there is no input for which it takes much longer.
+* A blank keyword is not rejected by `PersonMatchesKeyword`, which keeps the documented behavior that it matches every contact. The only caller, `ListCommandParser`, never creates one.
+
+#### Linking contacts to a group and removing them from a group
+
+`tag` and `untag` share their checks, because the work is done in `GroupMembershipCommand` and `GroupMembershipCommandParser`.
+
+* The `GroupMembershipCommand` constructor rejects an empty list of indices, and a list in which an index is repeated, with an `IllegalArgumentException` (`AppUtil#checkArgument`). The parser already guarantees both, but the constructor is public through `TagCommand` and `UntagCommand`, and an assertion would not run when the app is started without assertions enabled. A repeated index would then make the second replacement of the same contact fail with an unchecked `PersonNotFoundException`, and an empty list would report success without changing anything.
+* `GroupMembershipCommand#execute(Model)` names at most `GroupMembershipCommand.MAX_INDICES_SHOWN` (10) of the indices that are not in the displayed list, followed by how many more there are. Without the limit, a command with 100,000 indices that do not exist would show a message that names all of them.
+* `GroupMembershipCommand#execute(Model)` asserts, after it replaces the contacts, that every changed contact is in the address book. It checks the address book and not the displayed list, because a changed contact can leave the displayed list when a search for its old groups is shown. This would fail if `changeMembership(Person, Tag)` or the model lost a contact.
+* `GroupMembershipCommand#requireNoMemberMatching(List, Predicate, String)` rejects `null` arguments, because it is called by the subclasses.
+* The command logs the number of contacts it changed and the group. It also logs, at the point where it throws a `CommandException`, how many indices were outside the displayed list or how many contacts could not be changed. The names of those contacts are only in the message shown to the user.
+* An index that is too large for an `int` is reported by `ParserUtil#parseMemberIndices(String)` as an invalid index, and a very long group name is rejected by `Tag#isValidTagName(String)` in time proportional to its length.
+
+#### Editing a contact
+
+* The `EditCommand` constructor rejects an `EditPersonDescriptor` with no detail to edit, with an `IllegalArgumentException`. `EditCommandParser#parse(String)` already reports this to the user with a `ParseException`, but the constructor is public, and without the check `execute(Model)` would report that a contact was edited when nothing changed.
+* `EditCommand#execute(Model)` asserts, after `Model#setPerson(Person, Person)`, that the edited contact is in the address book. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` asserts that the edited contact has the same tags, attendance records and grade records as the contact before the edit, which is the guarantee described in [Editing a contact](#editing-a-contact-feature). It also rejects `null` arguments with `requireNonNull`, which replaces an assertion that only ran when assertions were enabled.
+* The command logs a successful edit, with the name and class before and after, an index that is outside the displayed list, and an edit that would duplicate another contact.
+
+#### Clearing all contacts
+
+* `clear` is the only command without arguments that does not ignore extra text, because it deletes all contacts. `ClearCommandParser#parse(String)` throws a `ParseException` with the usage of `clear` (`ClearCommand#MESSAGE_USAGE`) if the arguments are not blank, so a user who types `clear 3`, perhaps expecting to delete one contact, deletes nothing. `AddressBookParser` still creates `HelpCommand` and `ExitCommand` itself and ignores what follows them, as described in the User Guide.
+* `ClearCommand#execute(Model)` asserts that the address book is empty after `Model#setAddressBook(ReadOnlyAddressBook)`, and logs how many contacts were removed, as this is the only command that destroys data.
+* The `CommandResult` constructor rejects a result that both shows help and exits, with an `IllegalArgumentException`. No command produces one, and the UI would otherwise open the help window and then close the app.
+* A `clear` whose save fails is undone like any other command (see [Saving and loading data](#saving-and-loading-data)), so the contacts come back.
+
+#### Saving and loading data
+
+* `LogicManager#execute(String)` copies the address book before it executes a command. If the address book cannot be saved afterwards, `LogicManager` sets the data of the `Model` back to that copy and throws a `CommandException` that says that the change was undone (`LogicManager#MESSAGE_CHANGE_UNDONE`). Without this, the user would be told that the command failed while the contact was changed on the screen, and the next command that saves would store the change anyway. Only the data is restored. The filter of the displayed list is kept as the command left it.
+* `Person` does not accept two attendance records with the same date, or two grade records for the same assessment (compared ignoring case and extra spaces, as `Grade#isSameAssessment(Grade)` does). `Person#withAttendance(Attendance)` and `Person#withGrade(Grade)` already refused a second record, but the constructors did not, so a data file that was edited by hand, or damaged, could create a contact that the commands cannot produce. The constructors now throw an `IllegalArgumentException`, and `JsonAdaptedPerson#toModelType()` catches that `IllegalArgumentException` and reports its message as an `IllegalValueException`, which makes the data file invalid like any other broken rule. The adapter does not repeat the check itself, so the rule is in one place.
+
+#### Unexpected errors
+
+* `LogicManager#execute(String)` catches any `RuntimeException` thrown while it parses or executes a command. Such an exception is a bug, because the expected problems are reported as a `ParseException` or a `CommandException`. `LogicManager` logs it with its stack trace at `SEVERE` level, sets the data of the `Model` back to what it was before the command, and throws a `CommandException` with `LogicManager#MESSAGE_UNEXPECTED_ERROR`. Without this, the exception would reach the UI, which does not handle it, so the user would see nothing happen while the data may have been changed halfway. An `Error`, such as a failed assertion, is not caught, so that the bugs that assertions find are not hidden during development.
+
+#### Limits on the size of the input
+
+* `AddressBookParser#parseCommand(String)` rejects a command with more than `AddressBookParser.MAX_INPUT_LENGTH` (5,000) characters with a `ParseException`, before it does anything else. The longest real commands, such as one that adds a contact or links a class of 300 students to a group, have well under 5,000 characters. Without the limit, a text that was pasted into the command box, even one of several megabytes, would be matched and tokenized.
+* `LogicManager#execute(String)` writes at most `LogicManager.MAX_LOGGED_COMMAND_LENGTH` (500) characters of a command to the log, followed by how many were left out, so that a very long command does not flood the log. It also rejects a `null` command with `requireNonNull`.
+* `ImportCommand` rejects a file with more than `ImportCommand.MAX_FILE_SIZE_BYTES` (5 MiB, which is 5 * 1024 * 1024 bytes), before it reads the file, because the whole file is read into memory. It also rejects a file with more than `ImportCommand.MAX_ROWS` (5,000) rows, before it checks any row, because each contact is compared with all contacts before it, so the time to import grows with the square of the number of rows. Both are reported as a `CommandException`, and nothing is imported.
+
+#### Fuzz tests
+
+* `CommandFuzzTest` generates 10,000 random commands and 10,000 commands that have the form of a real one with values that may be wrong, such as an index that is too large, a name with a byte order mark or a repeated parameter. It parses each one and executes it on a new model, and checks that the only exceptions that come out are `ParseException` and `CommandException`. It also fails when an assertion fails, so it checks the assertions of the commands. The commands that read a file are not generated.
+* `DataFileFuzzTest` damages a valid data file in 500 random ways, such as cutting it short or replacing a value with `null`, and checks that the file is either loaded or rejected with a `DataLoadingException`. A file that is loaded must also be saved and read back as the same data.
+* Both tests use a fixed seed, so they run the same each time and a failure can be repeated. The failure message lists the first input that caused each different problem.
+
+### Deleting attendance feature
+
+#### Implementation
+
+The `deleteA` command removes one attendance record, identified by its date, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteAttendanceCommandParser` returns a `DeleteAttendanceByIndexCommand` or a `DeleteAttendanceByNameAndClassCommand` which both extend the abstract `DeleteAttendanceCommand`.
+
+* `DeleteAttendanceCommandParser#parse(String)` first rejects unrecognized and repeated parameters. If neither `/name` nor `/class` is present, it reads the contact index from the preamble and creates a `DeleteAttendanceByIndexCommand`. If either is present, it rejects a non-empty preamble, requires both parameters and creates a `DeleteAttendanceByNameAndClassCommand`.
+* The parser obtains the required `/date` value and passes it to `ParserUtil#parseDate(String)`. This shared utility parses dates strictly in `DD-MM-YYYY` format and is also used by `AttendanceCommandParser`.
+* `DeleteAttendanceByIndexCommand#execute(Model)` selects a contact from `Model#getFilteredPersonList()` so the index refers to the currently displayed list. `DeleteAttendanceByNameAndClassCommand#execute(Model)` searches the whole address book using `Person#hasNameAndClass(String, String)`. As with `delete`, `viewA`, `viewG` and `deleteG`, the supplied name and class are plain strings and are compared ignoring case and extra whitespace.
+* `DeleteAttendanceCommand#deleteAttendance(Model, Person, LocalDate)` contains the deletion shared by both subclasses. It finds the stored `Attendance` record by date and reports that the attendance record was not found if there is no match.
+* The shared operation passes the stored `Attendance` to `Person#withoutAttendance(Attendance)`. This returns a new `Person` with only that record removed. The command replaces the original person using `Model#setPerson(Person, Person)`. The success message uses the status and date from the stored record.
+* The public constructors and shared operation reject null arguments. `Person#withoutAttendance(Attendance)` throws an `IllegalArgumentException` if its precondition is violated and the command translates it into a `CommandException`. After deletion, an assertion checks that no attendance record remains for the date. These checks document and enforce assumptions between the parser, command and model layers.
+
+#### Design considerations
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `DeleteAttendanceCommand` with one subclass for each way of identifying the contact and a shared attendance-deletion method.
+  * Pros: Each subclass has one contact-selection responsibility, invalid combinations of identifier fields cannot be represented and deletion logic and messages are kept in one place.
+  * Cons: One command word maps to two command classes, so the parser must decide which class to create.
+* **Alternative 2:** A single command with optional fields for the index, name and class.
+  * Pros: Only one command class is needed.
+  * Cons: The command must branch during execution and invalid combinations of optional fields can be represented.
+
+**Aspect: How the attendance record to remove is represented**
+
+* **Alternative 1 (current choice):** Find the stored `Attendance` by date, then pass that object to `Person#withoutAttendance(Attendance)`.
+  * Pros: The user does not need to supply the status, and the stored status and date are available for the success message.
+  * Cons: Finding the record and removing it are separate operations over the attendance list.
+* **Alternative 2:** Add a `Person#withoutAttendance(LocalDate)` method that finds and removes a record by date.
+  * Pros: Encapsulates the lookup and removal in the model class.
+  * Cons: The command would need another way to obtain the removed record for its success message, or the model method would need a more complex return type.
+
+**Aspect: Which contacts a deletion by name and class searches**
+
+* **Alternative 1 (current choice):** The whole address book.
+  * Pros: The command works regardless of the current filter and is consistent with `delete /name NAME /class CLASS`, `viewA`, `viewG` and `deleteG`.
+  * Cons: It can modify a contact that is not currently displayed.
+* **Alternative 2:** Only the displayed contacts.
+  * Pros: The affected contact is visible before the command is run.
+  * Cons: A filter can hide the intended contact even though the name and class identify it directly.
 
 ### Viewing grades feature
 
@@ -780,48 +899,6 @@ The user can press the Up and Down keys in the command box to recall the command
 * **Alternative 2:** Save the history to a file and load it at the next launch.
   * Pros: Commands from earlier sessions can be recalled.
   * Cons: Needs a file and a format, with handling for a missing or invalid file. The commands also contain contact details, so the file would hold data that the user has not chosen to save.
-
-### Defensive programming
-
-The code defends itself against bad input and against its own mistakes in four ways. Each is used for a different kind of problem.
-
-* **Exceptions** are for problems that the user can cause. `ParseException` reports invalid input and `CommandException` reports a command that cannot be carried out. Both carry a message that is shown to the user.
-* **`requireNonNull`** is for a caller that passes `null` to a method that does not accept it. It fails fast with a `NullPointerException` at the point of the mistake instead of later and elsewhere.
-* **Assertions** (`assert`) are for conditions that can only be false because of a bug in the code, never because of user input. They are enabled when the tests run, so they catch such bugs during development.
-* **Logging** records what happened for the developers. Each command logs at `INFO` level when it changes the data or rejects a change, and `LogicManager` already logs every command that the user enters.
-
-#### Adding a contact
-
-* `AddCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. All other problems in the input are reported as a `ParseException`, in the order described in its Javadoc.
-* `Email` is limited to `Email.MAX_LENGTH` characters, like `Name` and `ClassName`. The length is checked before the format, so a very long input is rejected at once. Without the limit, checking the format of a 5,000-character invalid email froze the app for about 4 seconds.
-* `AddCommand#execute(Model)` logs both a rejected duplicate and a successful addition. After `Model#addPerson(Person)` it asserts that `Model#hasPerson(Person)` is true for the new contact, which would fail if a model silently dropped the contact.
-* `ModelManager#addPerson(Person)` rejects a `null` contact with `requireNonNull`, as `ModelManager#hasPerson(Person)` already did.
-
-#### Deleting a contact
-
-* `DeleteCommand#deletePerson(Model, Person)` is the one place where both kinds of delete remove a contact. It asserts that the contact is in the model before the removal and is no longer in it afterwards, and it logs the deleted contact. The first assertion would fail if a caller passed a contact that is not in the model, which `ModelManager#deletePerson(Person)` would otherwise report with a `PersonNotFoundException` that no command catches.
-* `DeleteByIndexCommand` rejects a `null` index with `requireNonNull`, so the mistake is found when the command is created and not when it runs. An index that is outside the displayed list is the user's mistake, so it is reported as a `CommandException` and logged.
-* `DeleteByNameAndClassCommand` logs when no contact is found, together with the name and class that were given.
-* `ModelManager#deletePerson(Person)` rejects a `null` contact with `requireNonNull`.
-* An index that is too large to be an `int`, such as a 1,000-digit number, is rejected by `ParserUtil#parseIndex(String)` with a `ParseException`, because `StringUtil#isNonZeroUnsignedInteger(String)` catches the `NumberFormatException`.
-
-#### Listing and searching contacts
-
-* `ListCommand#execute(Model)` asserts, after it changes the filter, that the displayed contacts are exactly the contacts of the address book that the predicate accepts (`ListCommand#isShowingExactlyMatchingPersons(Model)`). It would fail if a model hid a matching contact or showed one that does not match. The command also logs how many contacts are displayed out of the total, together with the keyword if one was given.
-* `ListCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. It never throws a `ParseException`, because every text is a valid keyword.
-* `PersonMatchesKeyword#test(Person)` rejects a `null` contact with `requireNonNull`.
-* A keyword is not limited in length. This is safe because the matching is a plain substring test, which stops at once when the keyword is longer than the field it is compared with, and `StringUtil#toComparisonKey(String)` uses a regex that takes time proportional to the length. Unlike the email format regex, there is no input for which it takes much longer.
-* A blank keyword is not rejected by `PersonMatchesKeyword`, which keeps the documented behavior that it matches every contact. The only caller, `ListCommandParser`, never creates one.
-
-#### Linking contacts to a group and removing them from a group
-
-`tag` and `untag` share their checks, because the work is done in `GroupMembershipCommand` and `GroupMembershipCommandParser`.
-
-* The `GroupMembershipCommand` constructor asserts that no index is repeated. This is a condition that the caller guarantees, since `ParserUtil#parseMemberIndices(String)` rejects repeated indices, so it is an assertion and not an exception. If it were false, the second replacement of the same contact would fail with an unchecked `PersonNotFoundException`.
-* `GroupMembershipCommand#execute(Model)` asserts, after it replaces the contacts, that every changed contact is in the address book. It checks the address book and not the displayed list, because a changed contact can leave the displayed list when a search for its old groups is shown. This would fail if `changeMembership(Person, Tag)` or the model lost a contact.
-* `GroupMembershipCommand#requireNoMemberMatching(List, Predicate, String)` rejects `null` arguments, because it is called by the subclasses.
-* The command logs the number of contacts it changed and the group. It also logs, at the point where it throws a `CommandException`, how many indices were outside the displayed list or how many contacts could not be changed. The names of those contacts are only in the message shown to the user.
-* An index that is too large for an `int` is reported by `ParserUtil#parseMemberIndices(String)` as an invalid index, and a very long group name is rejected by `Tag#isValidTagName(String)` in time proportional to its length.
 
 ### \[Proposed\] Undo/redo feature
 
@@ -1315,6 +1392,13 @@ The use cases describe what the application does now.
 
    Use case ends.
 
+**Extensions**
+
+* 1a. User writes anything after the command word, such as `clear 3`.
+  * 1a1. CM displays an error message and deletes nothing.
+
+    Use case resumes at step 1.
+
 
 **Use case: UC12 - View help**
 
@@ -1758,6 +1842,35 @@ testers are expected to do more *exploratory* testing.
    1. Other incorrect viewA commands to try: `viewA /class A1`, `viewA /name Alex Yeoh /class A1 /foo bar`<br>
       Expected: Similar to previous. An error message is shown.
 
+### Deleting attendance
+
+1. Deleting attendance by the index of a displayed contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh` then record two attendance entries using `attendance 1 /date 04-01-2024 /status present` and `attendance 1 /date 05-01-2024 /status late`.
+
+   1. Test case: `deleteA 1 /date 04-01-2024`<br>
+      Expected: The attendance entry for 4 January 2024 is removed from Alex Yeoh. The entry for 5 January 2024 and all other contact details remain unchanged. The status message shows `Attendance of present for Alex Yeoh on 04-01-2024 has been deleted`.
+
+1. Deleting attendance by name and class
+
+   1. Prerequisites: The app contains the sample data. Run `list bernice`, followed by `attendance 1 /date 03-01-2024 /status absent`, then run `list david` so that Bernice Yu is not displayed.
+
+   1. Test case: `deleteA /name bernice  yu /class a1 /date 03-01-2024`<br>
+      Expected: The attendance entry for 3 January 2024 is removed from Bernice Yu, even though she is not displayed. The status message shows `Attendance of absent for Bernice Yu on 03-01-2024 has been deleted`. The whole address book is searched, and case and extra spaces do not matter.
+
+1. Deleting attendance unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`.
+
+   1. Test case: `deleteA 1 /date 06-01-2024`<br>
+      Expected: No attendance entry is deleted. The status message shows `Attendance for this date not found`.
+
+   1. Test case: `deleteA /name Alex Yeoh /class B1 /date 01-01-2024`<br>
+      Expected: No attendance entry is deleted. The status message shows `No contact found` because both the name and class must match an existing contact.
+
+   1. Other incorrect commands to try: `deleteA`, `deleteA 0 /date 01-01-2024`, `deleteA 99 /date 01-01-2024`, `deleteA 1 /date 31-02-2024`, `deleteA 1 /status present`<br>
+      Expected: Similar to previous. No attendance entry is deleted and the status message describes the problem.
+
 ### Recording and viewing grades
 
 1. Recording and viewing the grades of a contact
@@ -1818,6 +1931,9 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `clear`<br>
       Expected: All contacts are removed from the list. The status message shows `ClassMates has been cleared!`.
+
+   1. Test case: `clear 3`<br>
+      Expected: No contact is removed. The status message shows `Invalid command format!` followed by the usage of `clear`.
 
 ### Viewing help
 

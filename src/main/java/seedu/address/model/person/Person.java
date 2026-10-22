@@ -1,6 +1,7 @@
 package seedu.address.model.person;
 
 import static java.util.Objects.requireNonNull;
+import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.ArrayList;
@@ -11,15 +12,20 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.model.tag.Tag;
 
 /**
  * Represents a Person in the address book.
  * Guarantees: details are present and not null (except the email, which is optional), field values are
- * validated, immutable.
+ * validated, no two attendance records have the same date, no two grade records are for the same assessment,
+ * immutable.
  */
 public class Person {
+
+    public static final String MESSAGE_DUPLICATE_ATTENDANCE_DATE = "Attendance records must have different dates";
+    public static final String MESSAGE_DUPLICATE_ASSESSMENT = "Grade records must be for different assessments";
 
     // Identity fields
     private final Name name;
@@ -40,41 +46,54 @@ public class Person {
 
     /**
      * Creates a Person with the given name, className, email, tags, and attendance records.
-     * @param name
-     * @param className
-     * @param email
-     * @param tags
-     * @param attendanceRecords
+     *
+     * @throws IllegalArgumentException if two of the {@code attendanceRecords} have the same date.
      */
     public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
         List<Attendance> attendanceRecords) {
-        requireAllNonNull(name, className, email, tags, attendanceRecords);
-        this.name = name;
-        this.className = className;
-        this.email = email.orElse(null);
-        this.tags.addAll(tags);
-        this.attendanceRecords = new ArrayList<>(attendanceRecords);
-        this.gradeRecords = new ArrayList<>();
+        this(name, className, email, tags, attendanceRecords, Collections.emptyList());
     }
 
     /**
      * Creates a Person with the given name, className, email, tags, attendance records and grade records.
-     * @param name
-     * @param className
-     * @param email
-     * @param tags
-     * @param attendanceRecords
-     * @param gradeRecords
+     *
+     * @throws IllegalArgumentException if two of the {@code attendanceRecords} have the same date, or two of
+     *         the {@code gradeRecords} are for the same assessment.
      */
     public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
         List<Attendance> attendanceRecords, List<Grade> gradeRecords) {
         requireAllNonNull(name, className, email, tags, attendanceRecords, gradeRecords);
+        checkArgument(hasUniqueAttendanceDates(attendanceRecords), MESSAGE_DUPLICATE_ATTENDANCE_DATE);
+        checkArgument(hasUniqueAssessments(gradeRecords), MESSAGE_DUPLICATE_ASSESSMENT);
         this.name = name;
         this.className = className;
         this.email = email.orElse(null);
         this.tags.addAll(tags);
         this.attendanceRecords = new ArrayList<>(attendanceRecords);
         this.gradeRecords = new ArrayList<>(gradeRecords);
+    }
+
+    /**
+     * Returns true if no two of {@code attendanceRecords} have the same date.
+     */
+    public static boolean hasUniqueAttendanceDates(List<Attendance> attendanceRecords) {
+        requireNonNull(attendanceRecords);
+        return attendanceRecords.stream()
+                .map(Attendance::getDate)
+                .distinct()
+                .count() == attendanceRecords.size();
+    }
+
+    /**
+     * Returns true if no two of {@code gradeRecords} are for the same assessment. Assessment names are
+     * compared ignoring case and extra spaces, as in {@link Grade#isSameAssessment(Grade)}.
+     */
+    public static boolean hasUniqueAssessments(List<Grade> gradeRecords) {
+        requireNonNull(gradeRecords);
+        return gradeRecords.stream()
+                .map(grade -> StringUtil.toComparisonKey(grade.getAssessmentName()))
+                .distinct()
+                .count() == gradeRecords.size();
     }
 
     public Name getName() {
@@ -160,6 +179,23 @@ public class Person {
         }
         List<Attendance> newAttendanceRecords = new ArrayList<>(attendanceRecords);
         newAttendanceRecords.add(attendance);
+        return new Person(name, className, Optional.ofNullable(email), tags, newAttendanceRecords, gradeRecords);
+    }
+
+    /**
+     * Returns a new Person without the given attendance record.
+     * The original person and all other records are unchanged.
+     *
+     * @param attendance Attendance record to remove.
+     * @return A new Person with the given attendance record removed.
+     * @throws IllegalArgumentException If the attendance record does not exist.
+     */
+    public Person withoutAttendance(Attendance attendance) {
+        requireNonNull(attendance);
+        List<Attendance> newAttendanceRecords = new ArrayList<>(attendanceRecords);
+        if (!newAttendanceRecords.remove(attendance)) {
+            throw new IllegalArgumentException("Attendance record does not exist");
+        }
         return new Person(name, className, Optional.ofNullable(email), tags, newAttendanceRecords, gradeRecords);
     }
 

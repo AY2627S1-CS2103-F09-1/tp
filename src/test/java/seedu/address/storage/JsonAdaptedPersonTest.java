@@ -131,6 +131,14 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_tooLongEmail_throwsIllegalValueExceptionWithTooLongMessage() {
+        String tooLongEmail = "a".repeat(Email.MAX_LENGTH + 1);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, tooLongEmail, VALID_TAGS,
+            List.of(), List.of());
+        assertThrows(IllegalValueException.class, Email.MESSAGE_TOO_LONG, person::toModelType);
+    }
+
+    @Test
     public void toModelType_nullEmail_returnsPersonWithoutEmail() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, null, VALID_TAGS,
             List.of(), List.of());
@@ -205,6 +213,29 @@ public class JsonAdaptedPersonTest {
             null);
 
         assertTrue(adaptedPerson.toModelType().getAttendanceRecords().isEmpty());
+    }
+
+    @Test
+    public void toModelType_duplicateAttendanceDates_throwsIllegalValueException() {
+        JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL,
+                VALID_TAGS,
+                List.of(new JsonAdaptedAttendance("2026-09-16", "present"),
+                        new JsonAdaptedAttendance("2026-09-16", "absent")),
+                List.of());
+
+        assertThrows(IllegalValueException.class, Person.MESSAGE_DUPLICATE_ATTENDANCE_DATE,
+                adaptedPerson::toModelType);
+    }
+
+    @Test
+    public void toModelType_duplicateAssessments_throwsIllegalValueException() {
+        JsonAdaptedPerson adaptedPerson = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, VALID_EMAIL,
+                VALID_TAGS, List.of(),
+                List.of(new JsonAdaptedGrade("Quiz 1", BigDecimal.valueOf(80)),
+                        new JsonAdaptedGrade("quiz 1", BigDecimal.valueOf(20))));
+
+        assertThrows(IllegalValueException.class, Person.MESSAGE_DUPLICATE_ASSESSMENT,
+                adaptedPerson::toModelType);
     }
 
     @Test

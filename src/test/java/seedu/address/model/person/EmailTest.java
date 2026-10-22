@@ -25,6 +25,17 @@ public class EmailTest {
     }
 
     @Test
+    public void constructor_wrongFormat_throwsIllegalArgumentExceptionWithConstraintsMessage() {
+        assertThrows(IllegalArgumentException.class, Email.MESSAGE_CONSTRAINTS, () -> new Email("example.com"));
+    }
+
+    @Test
+    public void constructor_tooLong_throwsIllegalArgumentExceptionWithTooLongMessage() {
+        String tooLongEmail = "a".repeat(Email.MAX_LENGTH + 1);
+        assertThrows(IllegalArgumentException.class, Email.MESSAGE_TOO_LONG, () -> new Email(tooLongEmail));
+    }
+
+    @Test
     public void isValidEmail() {
         // null email
         assertThrows(NullPointerException.class, () -> Email.isValidEmail(null));

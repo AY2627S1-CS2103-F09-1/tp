@@ -85,8 +85,11 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 * Parameters can be in any order.<br>
   For example, if the command specifies `/name NAME /class CLASS`, `/class CLASS /name NAME` is also acceptable.
 
-* Extraneous parameters for commands that take no parameters, such as `help`, `exit`, and `clear`, are ignored.<br>
-  For example, `help 123` is interpreted as `help`.
+* Extraneous parameters for commands that take no parameters, such as `help` and `exit`, are ignored.<br>
+  For example, `help 123` is interpreted as `help`.<br>
+  The exception is `clear`, which does not accept anything after it, because it deletes all contacts. For example, `clear 3` shows an error and does not delete anything.
+
+* A command can have at most 5,000 characters. A longer command shows `The command is too long. It can have at most 5000 characters` and nothing happens.
 
 * If you are using a PDF version of this document, be careful when copying and pasting commands that span multiple lines as space characters surrounding line-breaks may be omitted when copied over to the application.
 </box>
@@ -277,7 +280,7 @@ The group name is empty, too long or has characters that are not allowed | `Inva
 An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
 An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
 The same index is given more than once | `Duplicate contact index: INDEX`
-An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`, naming at most the first 10 such indices, followed by `and N more` if there are more
 One or more of the contacts are already in the group | `One or more contacts are already in this group: NAME (CLASS)`
 
 If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
@@ -317,7 +320,7 @@ The group name is empty, too long or has characters that are not allowed | `Inva
 An entry in `/members` is empty, such as in `1,,3` or `1,3,` | `Members cannot contain empty entries`
 An entry in `/members` is not a positive integer, such as `0`, `-1`, `abc` or `1 3` | `Contact index must be a positive integer: ENTRY`
 The same index is given more than once | `Duplicate contact index: INDEX`
-An index does not match a contact in the displayed list | `Contact index not found: INDEX`
+An index does not match a contact in the displayed list | `Contact index not found: INDEX`, naming at most the first 10 such indices, followed by `and N more` if there are more
 One or more of the contacts are not in the group | `One or more contacts are not in this group: NAME (CLASS)`
 
 If more than one problem applies, only the first one in the table above is reported, except that the entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
@@ -340,6 +343,7 @@ Format: `import PATH`
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
 * The imported contacts are shown at the top of the list, in the same order as in the file.
+* The file can be at most 5 MiB, and can have at most 5,000 rows after the header row.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
@@ -369,8 +373,10 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | No file path is provided                                                                           | `Specify file path`                                  |
 | The file does not exist                                                                            | `File not found at <filepath>`                       |
 | The file does not use the `.csv` extension                                                         | `Only .csv files are supported`                      |
+| The file is larger than 5 MiB                                                                      | `File is too large. It can have at most 5 MiB`       |
 | The file is empty or contains only a header row                                                    | `File empty`                                         |
 | The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
+| The file has more than 5,000 rows after the header row                                            | `File has too many rows. It can have at most 5000 rows` |
 | A row has an invalid number of fields                                                              | `Invalid number of fields on row <row number>`       |
 | A contact duplicates an existing contact or an earlier imported contact                            | `Duplicate contact on row <row number>`              |
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
@@ -591,11 +597,59 @@ Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
 * `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
+### Deleting attendance: `deleteA`
+
+Deletes a recorded attendance entry from a contact.
+
+Format: `deleteA INDEX /date DATE` or `deleteA /name NAME /class CLASS /date DATE`
+
+* `deleteA INDEX /date DATE` deletes the attendance entry for `DATE` from the contact at the specified `INDEX`.
+    * `INDEX` refers to the index number shown in the displayed contact list for the results of a command such as `list Betsy`.
+    * The index **must be a positive integer** 1, 2, 3, ...
+    * `INDEX` must be placed before `/date` and cannot be used together with `/name` or `/class`.
+* `deleteA /name NAME /class CLASS /date DATE` deletes the attendance entry for `DATE` from the contact with that name and class in the entire address book.
+    * Both `NAME` and `CLASS` are required and are compared ignoring case and extra spaces.
+    * `/name`, `/class` and `/date` can be given in any order, but each can be given at most once.
+* `DATE` must be a real calendar date in the format `DD-MM-YYYY`, such as `16-09-2026`.
+
+If the command is successful, only the matching attendance entry is deleted. The contact's other attendance entries and details are not changed.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+| Problem                                                                                                                                                | Message                                                                           |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| A parameter other than `/name`, `/class` or `/date` is given, such as `/status`                                                                        | `Unknown parameter. Use /name, /class or /date`                                   |
+| A parameter is given more than once                                                                                                                    | `Each parameter can only be specified once`                                       |
+| The command does not match either format, the index is not a positive integer or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteA`                      |
+| `/name` is missing or has nothing after it in the name-and-class format                                                                                | `Command requires a name`                                                         |
+| `/class` is missing or has nothing after it in the name-and-class format                                                                               | `Command requires a class`                                                        |
+| `/date` is missing or has nothing after it                                                                                                             | `Missing date. Please provide the date of attendance.`                            |
+| The date is not a real date in the format `DD-MM-YYYY`                                                                                                 | `Invalid date format. Please use the format DD-MM-YYYY.`                          |
+| The index is larger than the number of contacts displayed                                                                                              | `The contact index provided is invalid.`                                          |
+| No contact matches the given name and class                                                                                                            | `No contact found`                                                                |
+| The contact has no attendance entry for the given date                                                                                                 | `Attendance for this date not found`                                              |
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Attendance of STATUS for NAME on DATE has been deleted`.
+
+Examples:
+* `deleteA 2 /date 16-09-2026` deletes the attendance entry for 16 September 2026 from the 2nd contact in the displayed list.
+* `deleteA /name John Tan /class A1 /date 16-09-2026` deletes John Tan's attendance entry for 16 September 2026, even if John Tan is not in the displayed contact list.
+
 ### Clearing all entries: `clear`
 
 Clears all contacts from ClassMates.
 
 Format: `clear`
+
+* Nothing can be written after `clear`. This is so that a command such as `clear 3`, which may be meant to delete one contact, does not delete all of them. Use [`delete`](#deleting-a-contact-delete) to delete one contact.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+Problem | Message
+--------|--------
+Anything is written after `clear`, such as `clear 3` | `Invalid command format!` followed by the usage of `clear`. No contact is deleted.
+The data file cannot be saved | A description of the problem, followed by `The change was undone.` No contact is deleted.
 
 On success, ClassMates shows `ClassMates has been cleared!`.
 
@@ -631,6 +685,7 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 **Caution:**
 If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and tells you so in the result box. Your file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the same folder, such as `classmates.json.bad-20261021-101500-123`, and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. If ClassMates cannot rename the file, it says so, and the next command that you run replaces the file. We still recommend backing up the file before editing it.<br>
 Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid, and are kept in the same way.<br>
+A data file is also invalid if a contact has two attendance records for the same date, or two grades for the same assessment, ignoring case and extra spaces.<br>
 The file can be saved in UTF-8 with or without a byte order mark, so editors such as Notepad can be used.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>
@@ -673,7 +728,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
 
 **Q**: ClassMates started with an empty list. What happened?<br>
-**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts. Restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts and tells you so in the result box. The invalid file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the `data` folder and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. Alternatively, restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -686,20 +741,21 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 
 ## Command summary
 
-| Action           | Format, Examples                                                                                                                                                                                             |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Add**          | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`                                                                                            |
-| **Attendance**   | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`                                                                                                        |
-| **Clear**        | `clear`                                                                                                                                                                                                      |
-| **Delete**       | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`                                                                                                   |
-| **Edit**         | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /email`                                                                                      |
-| **Grade**        | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`                                                                                                |
-| **View grade**   | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`                                                                                                                                  |
-| **Delete grade** | `deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`<br> e.g., `deleteG 2 /assessment Quiz 1`, `deleteG /name John Tan /class A1 /assessment Quiz 1` |
-| **Tag**          | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`                                                                                                              |
-| **Untag**        | `untag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `untag /group Group A /members 1,3,5`                                                                                                          |
-| **List**         | `list [KEYWORD]`<br> e.g., `list John`                                                                                                                                                                       |
-| **Import**       | `import PATH`<br> e.g., `import data/students.csv`                                                                                                                                                           |
-| **viewA**        | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`                                                                                                                                  |
-| **Help**         | `help`                                                                                                                                                                                                       |
-| **Exit**         | `exit`                                                                                                                                                                                                       |
+| Action                | Format, Examples                                                                                                                                                                                             |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Add**               | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`                                                                                            |
+| **Attendance**        | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`                                                                                                        |
+| **View attendance**   | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`                                                                                                                                  |
+| **Delete attendance** | `deleteA INDEX /date DATE` or `deleteA /name NAME /class CLASS /date DATE`<br> e.g., `deleteA 2 /date 17-09-2026`, `deleteA /name John Tan /class A1 /date 17-09-2026`                                       |
+| **Clear**             | `clear`                                                                                                                                                                                                      |
+| **Delete**            | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`                                                                                                   |
+| **Edit**              | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /email`                                                                                      |
+| **Grade**             | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`                                                                                                |
+| **View grade**        | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`                                                                                                                                  |
+| **Delete grade**      | `deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`<br> e.g., `deleteG 2 /assessment Quiz 1`, `deleteG /name John Tan /class A1 /assessment Quiz 1` |
+| **Tag**               | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`                                                                                                              |
+| **Untag**             | `untag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `untag /group Group A /members 1,3,5`                                                                                                          |
+| **List**              | `list [KEYWORD]`<br> e.g., `list John`                                                                                                                                                                       |
+| **Import**            | `import PATH`<br> e.g., `import data/students.csv`                                                                                                                                                           |
+| **Help**              | `help`                                                                                                                                                                                                       |
+| **Exit**              | `exit`                                                                                                                                                                                                       |

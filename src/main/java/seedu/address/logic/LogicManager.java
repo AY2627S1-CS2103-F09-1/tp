@@ -1,5 +1,7 @@
 package seedu.address.logic;
 
+import static java.util.Objects.requireNonNull;
+
 import java.io.IOException;
 import java.nio.file.AccessDeniedException;
 import java.util.logging.Logger;
@@ -7,12 +9,15 @@ import java.util.logging.Logger;
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.CommandResult;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.AddressBookParser;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.AddressBook;
 import seedu.address.model.Model;
+import seedu.address.model.ReadOnlyAddressBook;
 import seedu.address.model.person.Person;
 import seedu.address.storage.Storage;
 
@@ -20,10 +25,21 @@ import seedu.address.storage.Storage;
  * The main LogicManager of the app.
  */
 public class LogicManager implements Logic {
-    public static final String FILE_OPS_ERROR_FORMAT = "Could not save data due to the following error: %s";
+    public static final String MESSAGE_CHANGE_UNDONE = "\nThe change was undone.";
+
+    public static final String MESSAGE_UNEXPECTED_ERROR =
+            "Something went wrong while carrying out the command. The details are in the log file."
+                    + MESSAGE_CHANGE_UNDONE;
+
+    public static final String FILE_OPS_ERROR_FORMAT =
+            "Could not save data due to the following error: %s" + MESSAGE_CHANGE_UNDONE;
 
     public static final String FILE_OPS_PERMISSION_ERROR_FORMAT =
-            "Could not save data to file %s due to insufficient permissions to write to the file or the folder.";
+            "Could not save data to file %s due to insufficient permissions to write to the file or the folder."
+                    + MESSAGE_CHANGE_UNDONE;
+
+    /** The most characters of a command that are written to the log. */
+    static final int MAX_LOGGED_COMMAND_LENGTH = 500;
 
     private final Logger logger = LogsCenter.getLogger(LogicManager.class);
 
@@ -42,21 +58,75 @@ public class LogicManager implements Logic {
 
     @Override
     public CommandResult execute(String commandText) throws CommandException, ParseException {
-        logger.info("----------------[USER COMMAND][" + commandText + "]");
+        requireNonNull(commandText);
+        logger.info("----------------[USER COMMAND][" + shortenForLog(commandText) + "]");
 
+        ReadOnlyAddressBook addressBookBeforeCommand = new AddressBook(model.getAddressBook());
         CommandResult commandResult;
-        Command command = addressBookParser.parseCommand(commandText);
-        commandResult = command.execute(model);
+        try {
+            Command command = addressBookParser.parseCommand(commandText);
+            commandResult = command.execute(model);
+        } catch (RuntimeException e) {
+            throw handleUnexpectedError(e, addressBookBeforeCommand);
+        }
 
+        saveAddressBookOrUndo(addressBookBeforeCommand);
+
+        return commandResult;
+    }
+
+    /**
+     * Returns {@code commandText}, or its first {@code MAX_LOGGED_COMMAND_LENGTH} characters followed by how
+     * many were left out, so that a very long command does not flood the log.
+     */
+    private static String shortenForLog(String commandText) {
+        if (commandText.length() <= MAX_LOGGED_COMMAND_LENGTH) {
+            return commandText;
+        }
+        return commandText.substring(0, MAX_LOGGED_COMMAND_LENGTH) + "... ("
+                + (commandText.length() - MAX_LOGGED_COMMAND_LENGTH) + " more characters)";
+    }
+
+    /**
+     * Records {@code e}, an unexpected {@code RuntimeException}, in the log and sets the data of the model back
+     * to {@code addressBookBeforeCommand}, as the command may have changed it before it failed. {@code Error}s
+     * such as a failed assertion are not handled, so that they are not hidden during development.
+     *
+     * @return the {@code CommandException} to throw, which tells the user that something went wrong.
+     */
+    private CommandException handleUnexpectedError(RuntimeException e,
+            ReadOnlyAddressBook addressBookBeforeCommand) {
+        logger.severe("Unexpected error while executing a command: " + StringUtil.getDetails(e));
+        undoCommand("The command failed unexpectedly", addressBookBeforeCommand);
+        return new CommandException(MESSAGE_UNEXPECTED_ERROR, e);
+    }
+
+    /**
+     * Saves the address book of the model. If it cannot be saved, the data of the model is set back to
+     * {@code addressBookBeforeCommand}, so that the data in memory is never different from the data in the file
+     * because of a command that appeared to fail.
+     *
+     * @throws CommandException if the address book cannot be saved.
+     */
+    private void saveAddressBookOrUndo(ReadOnlyAddressBook addressBookBeforeCommand) throws CommandException {
         try {
             storage.saveAddressBook(model.getAddressBook());
         } catch (AccessDeniedException e) {
+            undoCommand("The address book could not be saved", addressBookBeforeCommand);
             throw new CommandException(String.format(FILE_OPS_PERMISSION_ERROR_FORMAT, e.getMessage()), e);
         } catch (IOException ioe) {
+            undoCommand("The address book could not be saved", addressBookBeforeCommand);
             throw new CommandException(String.format(FILE_OPS_ERROR_FORMAT, ioe.getMessage()), ioe);
         }
+    }
 
-        return commandResult;
+    /**
+     * Sets the data of the model back to {@code addressBookBeforeCommand}, and logs that this was done
+     * because of {@code reason}.
+     */
+    private void undoCommand(String reason, ReadOnlyAddressBook addressBookBeforeCommand) {
+        logger.warning(reason + ", so the change of the command is undone");
+        model.setAddressBook(addressBookBeforeCommand);
     }
 
     @Override

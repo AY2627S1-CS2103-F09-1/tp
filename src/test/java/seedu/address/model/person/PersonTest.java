@@ -27,6 +27,58 @@ import seedu.address.testutil.PersonBuilder;
 public class PersonTest {
 
     @Test
+    public void constructor_duplicateAttendanceDates_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build();
+        List<Attendance> sameDate = List.of(
+                new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT),
+                new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.ABSENT));
+
+        assertThrows(IllegalArgumentException.class, Person.MESSAGE_DUPLICATE_ATTENDANCE_DATE, () ->
+                new Person(person.getName(), person.getClassName(), person.getEmail(), person.getTags(), sameDate));
+        assertThrows(IllegalArgumentException.class, Person.MESSAGE_DUPLICATE_ATTENDANCE_DATE, () ->
+                new Person(person.getName(), person.getClassName(), person.getEmail(), person.getTags(), sameDate,
+                        List.of()));
+    }
+
+    @Test
+    public void constructor_duplicateAssessments_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build();
+        // assessment names are compared ignoring case
+        List<Grade> sameAssessment = List.of(new Grade("Quiz 1", BigDecimal.valueOf(80)),
+                new Grade("quiz 1", BigDecimal.valueOf(20)));
+
+        assertThrows(IllegalArgumentException.class, Person.MESSAGE_DUPLICATE_ASSESSMENT, () ->
+                new Person(person.getName(), person.getClassName(), person.getEmail(), person.getTags(),
+                        List.of(), sameAssessment));
+    }
+
+    @Test
+    public void constructor_differentDatesAndAssessments_success() {
+        Person person = new PersonBuilder().build();
+        List<Attendance> differentDates = List.of(
+                new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT),
+                new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.PRESENT));
+        List<Grade> differentAssessments = List.of(new Grade("Quiz 1", BigDecimal.valueOf(80)),
+                new Grade("Quiz 2", BigDecimal.valueOf(80)));
+
+        Person withRecords = new Person(person.getName(), person.getClassName(), person.getEmail(),
+                person.getTags(), differentDates, differentAssessments);
+
+        assertEquals(differentDates, withRecords.getAttendanceRecords());
+        assertEquals(differentAssessments, withRecords.getGradeRecords());
+    }
+
+    @Test
+    public void hasUniqueAttendanceDates_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> Person.hasUniqueAttendanceDates(null));
+    }
+
+    @Test
+    public void hasUniqueAssessments_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> Person.hasUniqueAssessments(null));
+    }
+
+    @Test
     public void asObservableList_modifyList_throwsUnsupportedOperationException() {
         Person person = new PersonBuilder().build();
         assertThrows(UnsupportedOperationException.class, () -> person.getTags().remove(0));
@@ -346,6 +398,32 @@ public class PersonTest {
 
         assertThrows(IllegalArgumentException.class, () ->
             person.withAttendance(new Attendance(date, Attendance.Status.ABSENT)));
+    }
+
+    @Test
+    public void withoutAttendance_existingAttendance_removesOnlySpecifiedAttendance() {
+        Attendance first = new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT);
+        Attendance second = new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.ABSENT);
+        Person original = new PersonBuilder().build().withAttendance(first).withAttendance(second);
+
+        Person updated = original.withoutAttendance(first);
+
+        assertEquals(List.of(first, second), original.getAttendanceRecords());
+        assertEquals(List.of(second), updated.getAttendanceRecords());
+    }
+
+    @Test
+    public void withoutAttendance_nullAttendance_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().withoutAttendance(null));
+    }
+
+    @Test
+    public void withoutAttendance_missingAttendance_throwsIllegalArgumentException() {
+        Person person = new PersonBuilder().build().withAttendance(
+                new Attendance(LocalDate.of(2026, 9, 16), Attendance.Status.PRESENT));
+
+        assertThrows(IllegalArgumentException.class, () -> person.withoutAttendance(
+                new Attendance(LocalDate.of(2026, 9, 17), Attendance.Status.PRESENT)));
     }
 
     @Test
