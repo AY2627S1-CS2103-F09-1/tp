@@ -1797,30 +1797,15 @@ testers are expected to do more *exploratory* testing.
 
 1. Recording attendance unsuccessfully
 
-   1. Prerequisites: Complete the previous test case. List all contacts using the `list` command.
+   1. Prerequisites: Complete the previous test cases. List all contacts using the `list` command.
 
    1. Test case: `attendance 1 /date 01-01-2024 /status absent`<br>
       Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
-  
-   1. Test case: `attendance /name Alex Yeoh /class A1 /date 02-01-2024 /status absent`<br>
-      Expected: No record is added. The status message shows `Attendance record already exists`, because Alex Yeoh already has a record for that date.
-  
+
    1. Test case: `attendance /name Unknown Student /class A1 /date 03-01-2024 /status present`<br>
       Expected: No record is added. The status message shows `Contact not found`.
 
-   1. Test case: `attendance /name Alex Yeoh /date 03-01-2024 /status present`<br>
-      Expected: No record is added. The status message indicates that the class is missing.
-
-   1. Test case: `attendance 1 /date 01-01-2999 /status present`<br>
-      Expected: No record is added. The status message shows `Attendance date cannot be in the future.`.
-
-   1. Test case: `attendance 99 /date 03-01-2024 /status present`<br>
-      Expected: No record is added. The status message shows `The contact index provided is invalid.`.
-  
-   1. Test case: `attendance 1 /name Alex Yeoh /class A1 /date 03-01-2024 /status present`<br>
-      Expected: No record is added. The status message indicates that either an index or a name/class pair should be provided, but not both.
-
-   1. Other incorrect attendance commands to try: `attendance 1 /date 2024-01-01 /status present`, `attendance 1 /date 03-01-2024 /status sick`, `attendance 1 /status present`<br>
+   1. Other incorrect attendance commands to try: `attendance 1 /date 2024-01-01 /status present`, `attendance 1 /date 03-01-2024 /status sick`, `attendance 1 /date 01-01-2999 /status present`, `attendance 99 /date 03-01-2024 /status present`<br>
       Expected: Similar to previous. No record is added, and an error message is shown.
 
 ### Viewing attendance
