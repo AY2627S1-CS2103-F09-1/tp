@@ -33,7 +33,7 @@ import seedu.address.ui.UiManager;
  */
 public class MainApp extends Application {
 
-    public static final String VERSION = "V1.3.0";
+    public static final String VERSION = "V1.4.0";
     public static final String MESSAGE_DATA_FILE_KEPT = "ClassMates could not read the data file and started "
             + "with an empty list.\nThe file was kept as %s so that you can fix it.";
     public static final String MESSAGE_DATA_FILE_NOT_KEPT = "ClassMates could not read the data file and started "
