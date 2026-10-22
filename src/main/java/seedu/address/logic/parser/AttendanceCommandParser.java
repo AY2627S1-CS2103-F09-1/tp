@@ -1,6 +1,5 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
@@ -9,9 +8,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_STATUS;
 
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
-import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.AttendanceCommand;
@@ -33,12 +29,8 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         "Use either an index or name and class, not both.";
     private static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
     private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
-    private static final String MESSAGE_INVALID_DATE =
-        "Invalid date format. Please use the format DD-MM-YYYY.";
     private static final String MESSAGE_INVALID_STATUS =
         "Invalid status. Please use 'present', 'absent' or 'late'.";
-    private static final DateTimeFormatter DATE_FORMATTER =
-        DateTimeFormatter.ofPattern("dd-MM-uuuu").withResolverStyle(ResolverStyle.STRICT);
 
     @Override
     public AttendanceCommand parse(String args) throws ParseException {
@@ -75,17 +67,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         if (statusArgument.isBlank()) {
             throw new ParseException(MESSAGE_MISSING_STATUS);
         }
-        if (argMultimap.getAllValues(PREFIX_DATE).size() > 1 || argMultimap.getAllValues(PREFIX_STATUS).size() > 1) {
-            throw new ParseException(MESSAGE_DUPLICATE_PARAMETERS);
-        }
-
-        LocalDate date;
-
-        try {
-            date = LocalDate.parse(dateArgument, DATE_FORMATTER);
-        } catch (DateTimeParseException e) {
-            throw new ParseException(MESSAGE_INVALID_DATE, e);
-        }
+        LocalDate date = ParserUtil.parseDate(dateArgument);
 
         Attendance.Status status;
 

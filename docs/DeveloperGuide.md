@@ -559,7 +559,7 @@ The parser then:
 
 * validates the index when the index format is used;
 * validates the name and class when the name/class format is used;
-* validates the date strictly in `DD-MM-YYYY` format;
+* validates the date strictly in `DD-MM-YYYY` format and obtains the Date object (delegated to `ParserUtil#parseDate`);
 * converts the status to an `Attendance.Status`.
 
 `AttendanceCommand#execute(Model)` first rejects a date in the future. It then identifies the contact in one of two ways:
@@ -704,6 +704,48 @@ The code defends itself against bad input and against its own mistakes in four w
 * `CommandFuzzTest` generates 10,000 random commands and 10,000 commands that have the form of a real one with values that may be wrong, such as an index that is too large, a name with a byte order mark or a repeated parameter. It parses each one and executes it on a new model, and checks that the only exceptions that come out are `ParseException` and `CommandException`. It also fails when an assertion fails, so it checks the assertions of the commands. The commands that read a file are not generated.
 * `DataFileFuzzTest` damages a valid data file in 500 random ways, such as cutting it short or replacing a value with `null`, and checks that the file is either loaded or rejected with a `DataLoadingException`. A file that is loaded must also be saved and read back as the same data.
 * Both tests use a fixed seed, so they run the same each time and a failure can be repeated. The failure message lists the first input that caused each different problem.
+
+### Deleting attendance feature
+
+#### Implementation
+
+The `deleteA` command removes one attendance record, identified by its date, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteAttendanceCommandParser` returns a `DeleteAttendanceByIndexCommand` or a `DeleteAttendanceByNameAndClassCommand` which both extend the abstract `DeleteAttendanceCommand`.
+
+* `DeleteAttendanceCommandParser#parse(String)` first rejects unrecognized and repeated parameters. If neither `/name` nor `/class` is present, it reads the contact index from the preamble and creates a `DeleteAttendanceByIndexCommand`. If either is present, it rejects a non-empty preamble, requires both parameters and creates a `DeleteAttendanceByNameAndClassCommand`.
+* The parser obtains the required `/date` value and passes it to `ParserUtil#parseDate(String)`. This shared utility parses dates strictly in `DD-MM-YYYY` format and is also used by `AttendanceCommandParser`.
+* `DeleteAttendanceByIndexCommand#execute(Model)` selects a contact from `Model#getFilteredPersonList()` so the index refers to the currently displayed list. `DeleteAttendanceByNameAndClassCommand#execute(Model)` searches the whole address book using `Person#hasNameAndClass(String, String)`. As with `delete`, `viewA`, `viewG` and `deleteG`, the supplied name and class are plain strings and are compared ignoring case and extra whitespace.
+* `DeleteAttendanceCommand#deleteAttendance(Model, Person, LocalDate)` contains the deletion shared by both subclasses. It finds the stored `Attendance` record by date and reports that the attendance record was not found if there is no match.
+* The shared operation passes the stored `Attendance` to `Person#withoutAttendance(Attendance)`. This returns a new `Person` with only that record removed. The command replaces the original person using `Model#setPerson(Person, Person)`. The success message uses the status and date from the stored record.
+* The public constructors and shared operation reject null arguments. `Person#withoutAttendance(Attendance)` throws an `IllegalArgumentException` if its precondition is violated and the command translates it into a `CommandException`. After deletion, an assertion checks that no attendance record remains for the date. These checks document and enforce assumptions between the parser, command and model layers.
+
+#### Design considerations
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `DeleteAttendanceCommand` with one subclass for each way of identifying the contact and a shared attendance-deletion method.
+  * Pros: Each subclass has one contact-selection responsibility, invalid combinations of identifier fields cannot be represented and deletion logic and messages are kept in one place.
+  * Cons: One command word maps to two command classes, so the parser must decide which class to create.
+* **Alternative 2:** A single command with optional fields for the index, name and class.
+  * Pros: Only one command class is needed.
+  * Cons: The command must branch during execution and invalid combinations of optional fields can be represented.
+
+**Aspect: How the attendance record to remove is represented**
+
+* **Alternative 1 (current choice):** Find the stored `Attendance` by date, then pass that object to `Person#withoutAttendance(Attendance)`.
+  * Pros: The user does not need to supply the status, and the stored status and date are available for the success message.
+  * Cons: Finding the record and removing it are separate operations over the attendance list.
+* **Alternative 2:** Add a `Person#withoutAttendance(LocalDate)` method that finds and removes a record by date.
+  * Pros: Encapsulates the lookup and removal in the model class.
+  * Cons: The command would need another way to obtain the removed record for its success message, or the model method would need a more complex return type.
+
+**Aspect: Which contacts a deletion by name and class searches**
+
+* **Alternative 1 (current choice):** The whole address book.
+  * Pros: The command works regardless of the current filter and is consistent with `delete /name NAME /class CLASS`, `viewA`, `viewG` and `deleteG`.
+  * Cons: It can modify a contact that is not currently displayed.
+* **Alternative 2:** Only the displayed contacts.
+  * Pros: The affected contact is visible before the command is run.
+  * Cons: A filter can hide the intended contact even though the name and class identify it directly.
 
 ### Viewing grades feature
 
@@ -1735,6 +1777,35 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect viewA commands to try: `viewA /class A1`, `viewA /name Alex Yeoh /class A1 /foo bar`<br>
       Expected: Similar to previous. An error message is shown.
+
+### Deleting attendance
+
+1. Deleting attendance by the index of a displayed contact
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh` then record two attendance entries using `attendance 1 /date 04-01-2024 /status present` and `attendance 1 /date 05-01-2024 /status late`.
+
+   1. Test case: `deleteA 1 /date 04-01-2024`<br>
+      Expected: The attendance entry for 4 January 2024 is removed from Alex Yeoh. The entry for 5 January 2024 and all other contact details remain unchanged. The status message shows `Attendance of present for Alex Yeoh on 04-01-2024 has been deleted`.
+
+1. Deleting attendance by name and class
+
+   1. Prerequisites: The app contains the sample data. Run `list bernice`, followed by `attendance 1 /date 03-01-2024 /status absent`, then run `list david` so that Bernice Yu is not displayed.
+
+   1. Test case: `deleteA /name bernice  yu /class a1 /date 03-01-2024`<br>
+      Expected: The attendance entry for 3 January 2024 is removed from Bernice Yu, even though she is not displayed. The status message shows `Attendance of absent for Bernice Yu on 03-01-2024 has been deleted`. The whole address book is searched, and case and extra spaces do not matter.
+
+1. Deleting attendance unsuccessfully
+
+   1. Prerequisites: The app contains the sample data. Run `list yeoh`.
+
+   1. Test case: `deleteA 1 /date 06-01-2024`<br>
+      Expected: No attendance entry is deleted. The status message shows `Attendance for this date not found`.
+
+   1. Test case: `deleteA /name Alex Yeoh /class B1 /date 01-01-2024`<br>
+      Expected: No attendance entry is deleted. The status message shows `No contact found` because both the name and class must match an existing contact.
+
+   1. Other incorrect commands to try: `deleteA`, `deleteA 0 /date 01-01-2024`, `deleteA 99 /date 01-01-2024`, `deleteA 1 /date 31-02-2024`, `deleteA 1 /status present`<br>
+      Expected: Similar to previous. No attendance entry is deleted and the status message describes the problem.
 
 ### Recording and viewing grades
 

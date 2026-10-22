@@ -18,6 +18,9 @@ import org.junit.jupiter.api.Test;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.DeleteAttendanceByIndexCommand;
+import seedu.address.logic.commands.DeleteAttendanceByNameAndClassCommand;
+import seedu.address.logic.commands.DeleteAttendanceCommand;
 import seedu.address.logic.commands.DeleteByIndexCommand;
 import seedu.address.logic.commands.DeleteByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteCommand;
@@ -204,7 +207,7 @@ public class AddressBookParserTest {
                 TagCommand.COMMAND_WORD, UntagCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD,
                 HelpCommand.COMMAND_WORD, AttendanceCommand.COMMAND_WORD, ViewAttendanceCommand.COMMAND_WORD,
                 ImportCommand.COMMAND_WORD, GradeCommand.COMMAND_WORD, ViewGradeCommand.COMMAND_WORD,
-                DeleteGradeCommand.COMMAND_WORD);
+                DeleteAttendanceCommand.COMMAND_WORD, DeleteGradeCommand.COMMAND_WORD);
 
         for (String commandWord : commandWords) {
             for (String variant : List.of(commandWord.toUpperCase(), commandWord.toLowerCase())) {
@@ -271,5 +274,22 @@ public class AddressBookParserTest {
                 DeleteGradeCommand.COMMAND_WORD + " /name John Tan /class A1 /assessment WA2");
         assertEquals(new DeleteGradeByNameAndClassCommand("John Tan", "A1", "WA2"),
                 command);
+    }
+
+    @Test
+    public void parseCommand_deleteAttendance() throws Exception {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        DeleteAttendanceCommand expected = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, date);
+
+        assertEquals(expected, parser.parseCommand("deleteA 1 /date 16-09-2026"));
+    }
+
+    @Test
+    public void parseCommand_deleteAttendanceByNameAndClass() throws Exception {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        DeleteAttendanceCommand command = (DeleteAttendanceCommand) parser.parseCommand(
+                "deleteA /name John Tan /class A1 /date 16-09-2026");
+
+        assertEquals(new DeleteAttendanceByNameAndClassCommand("John Tan", "A1", date), command);
     }
 }

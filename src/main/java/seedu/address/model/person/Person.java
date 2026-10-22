@@ -183,6 +183,23 @@ public class Person {
     }
 
     /**
+     * Returns a new Person without the given attendance record.
+     * The original person and all other records are unchanged.
+     *
+     * @param attendance Attendance record to remove.
+     * @return A new Person with the given attendance record removed.
+     * @throws IllegalArgumentException If the attendance record does not exist.
+     */
+    public Person withoutAttendance(Attendance attendance) {
+        requireNonNull(attendance);
+        List<Attendance> newAttendanceRecords = new ArrayList<>(attendanceRecords);
+        if (!newAttendanceRecords.remove(attendance)) {
+            throw new IllegalArgumentException("Attendance record does not exist");
+        }
+        return new Person(name, className, Optional.ofNullable(email), tags, newAttendanceRecords, gradeRecords);
+    }
+
+    /**
      * Returns a new Person with the given grade record added.
      *
      * @param grade

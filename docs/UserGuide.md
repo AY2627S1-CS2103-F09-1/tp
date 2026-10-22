@@ -597,6 +597,45 @@ Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
 * `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
+### Deleting attendance: `deleteA`
+
+Deletes a recorded attendance entry from a contact.
+
+Format: `deleteA INDEX /date DATE` or `deleteA /name NAME /class CLASS /date DATE`
+
+* `deleteA INDEX /date DATE` deletes the attendance entry for `DATE` from the contact at the specified `INDEX`.
+    * `INDEX` refers to the index number shown in the displayed contact list for the results of a command such as `list Betsy`.
+    * The index **must be a positive integer** 1, 2, 3, ...
+    * `INDEX` must be placed before `/date` and cannot be used together with `/name` or `/class`.
+* `deleteA /name NAME /class CLASS /date DATE` deletes the attendance entry for `DATE` from the contact with that name and class in the entire address book.
+    * Both `NAME` and `CLASS` are required and are compared ignoring case and extra spaces.
+    * `/name`, `/class` and `/date` can be given in any order, but each can be given at most once.
+* `DATE` must be a real calendar date in the format `DD-MM-YYYY`, such as `16-09-2026`.
+
+If the command is successful, only the matching attendance entry is deleted. The contact's other attendance entries and details are not changed.
+
+If the command cannot be carried out, ClassMates shows one of these messages:
+
+| Problem                                                                                                                                                | Message                                                                           |
+|--------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
+| A parameter other than `/name`, `/class` or `/date` is given, such as `/status`                                                                        | `Unknown parameter. Use /name, /class or /date`                                   |
+| A parameter is given more than once                                                                                                                    | `Each parameter can only be specified once`                                       |
+| The command does not match either format, the index is not a positive integer or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteA`                      |
+| `/name` is missing or has nothing after it in the name-and-class format                                                                                | `Command requires a name`                                                         |
+| `/class` is missing or has nothing after it in the name-and-class format                                                                               | `Command requires a class`                                                        |
+| `/date` is missing or has nothing after it                                                                                                             | `Missing date. Please provide the date of attendance.`                            |
+| The date is not a real date in the format `DD-MM-YYYY`                                                                                                 | `Invalid date format. Please use the format DD-MM-YYYY.`                          |
+| The index is larger than the number of contacts displayed                                                                                              | `The contact index provided is invalid.`                                          |
+| No contact matches the given name and class                                                                                                            | `No contact found`                                                                |
+| The contact has no attendance entry for the given date                                                                                                 | `Attendance for this date not found`                                              |
+
+If more than one problem applies, only the first one in the table above is reported.<br>
+On success, ClassMates shows `Attendance of STATUS for NAME on DATE has been deleted`.
+
+Examples:
+* `deleteA 2 /date 16-09-2026` deletes the attendance entry for 16 September 2026 from the 2nd contact in the displayed list.
+* `deleteA /name John Tan /class A1 /date 16-09-2026` deletes John Tan's attendance entry for 16 September 2026, even if John Tan is not in the displayed contact list.
+
 ### Clearing all entries: `clear`
 
 Clears all contacts from ClassMates.
@@ -702,20 +741,21 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 
 ## Command summary
 
-| Action           | Format, Examples                                                                                                                                                                                             |
-|------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| **Add**          | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`                                                                                            |
-| **Attendance**   | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`                                                                                                        |
-| **Clear**        | `clear`                                                                                                                                                                                                      |
-| **Delete**       | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`                                                                                                   |
-| **Edit**         | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /email`                                                                                      |
-| **Grade**        | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`                                                                                                |
-| **View grade**   | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`                                                                                                                                  |
-| **Delete grade** | `deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`<br> e.g., `deleteG 2 /assessment Quiz 1`, `deleteG /name John Tan /class A1 /assessment Quiz 1` |
-| **Tag**          | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`                                                                                                              |
-| **Untag**        | `untag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `untag /group Group A /members 1,3,5`                                                                                                          |
-| **List**         | `list [KEYWORD]`<br> e.g., `list John`                                                                                                                                                                       |
-| **Import**       | `import PATH`<br> e.g., `import data/students.csv`                                                                                                                                                           |
-| **viewA**        | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`                                                                                                                                  |
-| **Help**         | `help`                                                                                                                                                                                                       |
-| **Exit**         | `exit`                                                                                                                                                                                                       |
+| Action                | Format, Examples                                                                                                                                                                                             |
+|-----------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| **Add**               | `add /name NAME /class CLASS [/email EMAIL]` <br> e.g., `add /name James Ho /class A1 /email jamesho@example.com`                                                                                            |
+| **Attendance**        | `attendance INDEX /date DATE /status STATUS`<br> e.g., `attendance 5 /date 16-09-2026 /status absent`                                                                                                        |
+| **View attendance**   | `viewA /name NAME /class CLASS` <br> e.g., `viewA /name John Tan /class A1`                                                                                                                                  |
+| **Delete attendance** | `deleteA INDEX /date DATE` or `deleteA /name NAME /class CLASS /date DATE`<br> e.g., `deleteA 2 /date 17-09-2026`, `deleteA /name John Tan /class A1 /date 17-09-2026`                                       |
+| **Clear**             | `clear`                                                                                                                                                                                                      |
+| **Delete**            | `delete INDEX` or `delete /name NAME /class CLASS`<br> e.g., `delete 3`, `delete /name John Tan /class A1`                                                                                                   |
+| **Edit**              | `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`<br> e.g., `edit 2 /name John Tann /class A2`, `edit 3 /email`                                                                                      |
+| **Grade**             | `grade INDEX /assessment ASSESSMENT_NAME /score SCORE`<br> e.g., `grade 5 /assessment Assignment 1 /score 97`                                                                                                |
+| **View grade**        | `viewG /name NAME /class CLASS` <br> e.g., `viewG /name John Tan /class A1`                                                                                                                                  |
+| **Delete grade**      | `deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`<br> e.g., `deleteG 2 /assessment Quiz 1`, `deleteG /name John Tan /class A1 /assessment Quiz 1` |
+| **Tag**               | `tag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `tag /group Group A /members 1,3,5`                                                                                                              |
+| **Untag**             | `untag /group GROUP_NAME /members INDEX[,INDEX]...`<br> e.g., `untag /group Group A /members 1,3,5`                                                                                                          |
+| **List**              | `list [KEYWORD]`<br> e.g., `list John`                                                                                                                                                                       |
+| **Import**            | `import PATH`<br> e.g., `import data/students.csv`                                                                                                                                                           |
+| **Help**              | `help`                                                                                                                                                                                                       |
+| **Exit**              | `exit`                                                                                                                                                                                                       |
