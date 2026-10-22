@@ -40,8 +40,11 @@ public class ImportCommand extends Command {
     public static final String MESSAGE_INVALID_CONTACT = "Invalid contact data on row %d";
     public static final String MESSAGE_FAILURE = "Failed to import from %s";
 
-    /** The most bytes that a file can have. The whole file is read into memory. */
-    public static final int MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
+    /** The most mebibytes (MiB, each 1024 * 1024 bytes) that a file can have. The whole file is read into memory. */
+    public static final int MAX_FILE_SIZE_MIB = 5;
+
+    /** The most bytes that a file can have. */
+    public static final int MAX_FILE_SIZE_BYTES = MAX_FILE_SIZE_MIB * 1024 * 1024;
 
     /**
      * The most rows with contacts that a file can have. Each contact is compared with the contacts before it,
@@ -50,7 +53,7 @@ public class ImportCommand extends Command {
     public static final int MAX_ROWS = 5000;
 
     public static final String MESSAGE_FILE_TOO_LARGE = "File is too large. It can have at most "
-            + MAX_FILE_SIZE_BYTES / (1024 * 1024) + " MB";
+            + MAX_FILE_SIZE_MIB + " MiB";
     public static final String MESSAGE_TOO_MANY_ROWS = "File has too many rows. It can have at most "
             + MAX_ROWS + " rows";
 

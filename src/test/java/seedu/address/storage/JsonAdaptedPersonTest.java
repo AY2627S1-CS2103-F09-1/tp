@@ -131,6 +131,14 @@ public class JsonAdaptedPersonTest {
     }
 
     @Test
+    public void toModelType_tooLongEmail_throwsIllegalValueExceptionWithTooLongMessage() {
+        String tooLongEmail = "a".repeat(Email.MAX_LENGTH + 1);
+        JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, tooLongEmail, VALID_TAGS,
+            List.of(), List.of());
+        assertThrows(IllegalValueException.class, Email.MESSAGE_TOO_LONG, person::toModelType);
+    }
+
+    @Test
     public void toModelType_nullEmail_returnsPersonWithoutEmail() throws Exception {
         JsonAdaptedPerson person = new JsonAdaptedPerson(VALID_NAME, VALID_CLASS_NAME, null, VALID_TAGS,
             List.of(), List.of());

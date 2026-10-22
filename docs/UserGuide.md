@@ -343,7 +343,7 @@ Format: `import PATH`
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * The command is fail-fast, i.e. the whole import is canceled upon the first error.
 * The imported contacts are shown at the top of the list, in the same order as in the file.
-* The file can be at most 5 MB, and can have at most 5,000 rows after the header row.
+* The file can be at most 5 MiB, and can have at most 5,000 rows after the header row.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`, e.g. `Imported 10 contacts from data/students.csv`.
 
@@ -373,7 +373,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | No file path is provided                                                                           | `Specify file path`                                  |
 | The file does not exist                                                                            | `File not found at <filepath>`                       |
 | The file does not use the `.csv` extension                                                         | `Only .csv files are supported`                      |
-| The file is larger than 5 MB                                                                       | `File is too large. It can have at most 5 MB`        |
+| The file is larger than 5 MiB                                                                      | `File is too large. It can have at most 5 MiB`       |
 | The file is empty or contains only a header row                                                    | `File empty`                                         |
 | The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
 | The file has more than 5,000 rows after the header row                                            | `File has too many rows. It can have at most 5000 rows` |
@@ -689,7 +689,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: Not yet. `attendance` records one contact per command. Use `list CLASS` to show a class and run the command for each contact.
 
 **Q**: ClassMates started with an empty list. What happened?<br>
-**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts and tells you so in the result box. The invalid file is copied to `classmates.json.unreadable-DATE-TIME` in the `data` folder first, so you can fix it and rename it back to `classmates.json`. Alternatively, restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
+**A**: If the data file is invalid, for example after a manual edit, ClassMates starts with no contacts and tells you so in the result box. The invalid file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the `data` folder and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. Alternatively, restore a backup of `classmates.json`, or delete the `data` folder to start with the sample contacts.
 
 --------------------------------------------------------------------------------------------------------------------
 

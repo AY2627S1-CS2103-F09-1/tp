@@ -48,10 +48,13 @@ public class Email {
      * Constructs an {@code Email}.
      *
      * @param email A valid email address.
+     * @throws IllegalArgumentException with the message of the constraint that {@code email} violates, such as
+     *         {@code MESSAGE_TOO_LONG}, if {@code email} is not valid.
      */
     public Email(String email) {
         requireNonNull(email);
-        checkArgument(isValidEmail(email), MESSAGE_CONSTRAINTS);
+        Optional<String> constraintViolation = getConstraintViolation(email);
+        checkArgument(constraintViolation.isEmpty(), constraintViolation.orElse(MESSAGE_CONSTRAINTS));
         value = email;
     }
 

@@ -92,7 +92,6 @@ class JsonAdaptedPerson {
         for (JsonAdaptedGrade grade : requireNoEmptyEntries(gradeRecords, "gradeRecords")) {
             modelGradeRecords.add(grade.toModelType());
         }
-        requireNoDuplicateRecords(modelAttendanceRecords, modelGradeRecords);
 
         if (name == null) {
             throw new IllegalValueException(String.format(MISSING_FIELD_MESSAGE_FORMAT, Name.class.getSimpleName()));
@@ -108,22 +107,12 @@ class JsonAdaptedPerson {
         final Optional<Email> modelEmail = toModelEmail();
 
         final Set<Tag> modelTags = new HashSet<>(personTags);
-        return new Person(modelName, modelClassName, modelEmail, modelTags, modelAttendanceRecords, modelGradeRecords);
-    }
-
-    /**
-     * Checks that no two of the attendance records have the same date, and that no two of the grade records are
-     * for the same assessment, which a {@code Person} does not accept.
-     *
-     * @throws IllegalValueException if a date or an assessment is repeated.
-     */
-    private static void requireNoDuplicateRecords(List<Attendance> attendanceRecords, List<Grade> gradeRecords)
-            throws IllegalValueException {
-        if (!Person.hasUniqueAttendanceDates(attendanceRecords)) {
-            throw new IllegalValueException(Person.MESSAGE_DUPLICATE_ATTENDANCE_DATE);
-        }
-        if (!Person.hasUniqueAssessments(gradeRecords)) {
-            throw new IllegalValueException(Person.MESSAGE_DUPLICATE_ASSESSMENT);
+        try {
+            return new Person(modelName, modelClassName, modelEmail, modelTags, modelAttendanceRecords,
+                    modelGradeRecords);
+        } catch (IllegalArgumentException e) {
+            // The Person rejects an attendance date or an assessment that is repeated
+            throw new IllegalValueException(e.getMessage(), e);
         }
     }
 
@@ -169,8 +158,9 @@ class JsonAdaptedPerson {
         if (email == null) {
             return Optional.empty();
         }
-        if (!Email.isValidEmail(email)) {
-            throw new IllegalValueException(Email.MESSAGE_CONSTRAINTS);
+        Optional<String> emailConstraintViolation = Email.getConstraintViolation(email);
+        if (emailConstraintViolation.isPresent()) {
+            throw new IllegalValueException(emailConstraintViolation.get());
         }
         return Optional.of(new Email(email));
     }
