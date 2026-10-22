@@ -6,12 +6,16 @@ box Logic LOGIC_COLOR_T1
 participant ":LogicManager" as LogicManager LOGIC_COLOR
 participant ":AddressBookParser" as AddressBookParser LOGIC_COLOR
 participant ":DeleteCommandParser" as DeleteCommandParser LOGIC_COLOR
-participant "d:DeleteCommand" as DeleteCommand LOGIC_COLOR
+participant "d:DeleteByIndexCommand" as DeleteByIndexCommand LOGIC_COLOR
 participant "r:CommandResult" as CommandResult LOGIC_COLOR
 end box
 
 box Model MODEL_COLOR_T1
 participant "m:Model" as Model MODEL_COLOR
+end box
+
+box Storage STORAGE_COLOR_T1
+participant "s:Storage" as Storage STORAGE_COLOR
 end box
 
 [-> LogicManager : execute("delete 1")
@@ -30,12 +34,12 @@ deactivate DeleteCommandParser
 AddressBookParser -> DeleteCommandParser : parse("1")
 activate DeleteCommandParser
 
-create DeleteCommand
-DeleteCommandParser -> DeleteCommand
-activate DeleteCommand
+create DeleteByIndexCommand
+DeleteCommandParser -> DeleteByIndexCommand : DeleteByIndexCommand(index)
+activate DeleteByIndexCommand
 
-DeleteCommand --> DeleteCommandParser :
-deactivate DeleteCommand
+DeleteByIndexCommand --> DeleteCommandParser :
+deactivate DeleteByIndexCommand
 
 DeleteCommandParser --> AddressBookParser : d
 deactivate DeleteCommandParser
@@ -46,24 +50,36 @@ destroy DeleteCommandParser
 AddressBookParser --> LogicManager : d
 deactivate AddressBookParser
 
-LogicManager -> DeleteCommand : execute(m)
-activate DeleteCommand
+LogicManager -> DeleteByIndexCommand : execute(m)
+activate DeleteByIndexCommand
 
-DeleteCommand -> Model : deletePerson(1)
+DeleteByIndexCommand -> Model : getFilteredPersonList()
 activate Model
 
-Model --> DeleteCommand
+Model --> DeleteByIndexCommand : shownPersons
+deactivate Model
+
+DeleteByIndexCommand -> Model : deletePerson(p)
+activate Model
+
+Model --> DeleteByIndexCommand
 deactivate Model
 
 create CommandResult
-DeleteCommand -> CommandResult
+DeleteByIndexCommand -> CommandResult
 activate CommandResult
 
-CommandResult --> DeleteCommand
+CommandResult --> DeleteByIndexCommand
 deactivate CommandResult
 
-DeleteCommand --> LogicManager : r
-deactivate DeleteCommand
+DeleteByIndexCommand --> LogicManager : r
+deactivate DeleteByIndexCommand
+
+LogicManager -> Storage : saveAddressBook(addressBook)
+activate Storage
+
+Storage --> LogicManager
+deactivate Storage
 
 [<--LogicManager
 deactivate LogicManager
