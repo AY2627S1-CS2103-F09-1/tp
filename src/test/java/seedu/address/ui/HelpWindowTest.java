@@ -3,6 +3,7 @@ package seedu.address.ui;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.lang.reflect.Field;
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
@@ -23,6 +24,8 @@ import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
 import seedu.address.logic.commands.ViewGradeCommand;
+import seedu.address.logic.parser.CliSyntax;
+import seedu.address.logic.parser.Prefix;
 
 public class HelpWindowTest {
 
@@ -81,11 +84,38 @@ public class HelpWindowTest {
     }
 
     @Test
+    public void helpMessage_prefixAliases_areListedWithTheirPrefixes() throws Exception {
+        String shortcuts = shortcutsOfHelpMessage();
+        int checkedAliasCount = 0;
+
+        // every alias of every prefix is checked, so that a new alias cannot be left out of the help message
+        for (Field field : CliSyntax.class.getFields()) {
+            if (field.getType() != Prefix.class) {
+                continue;
+            }
+            Prefix prefix = (Prefix) field.get(null);
+            for (String alias : prefix.getAliases()) {
+                assertTrue(shortcuts.contains(alias + " = " + prefix.getPrefix()),
+                        "Help message has no shortcut for " + alias);
+                checkedAliasCount++;
+            }
+        }
+
+        assertTrue(checkedAliasCount > 0);
+    }
+
+    @Test
+    public void helpMessage_shortcuts_areAfterAllTheCommands() {
+        String shortcuts = shortcutsOfHelpMessage();
+        String commands = HelpWindow.HELP_MESSAGE.substring(0, HelpWindow.HELP_MESSAGE.indexOf(shortcuts));
+
+        assertTrue(commands.contains("exit"));
+        assertTrue(shortcuts.startsWith("Shortcuts"));
+    }
+
+    @Test
     public void helpMessage_commandAliases_areListedWithTheirCommandWords() {
-        String shortcuts = HelpWindow.HELP_MESSAGE.lines()
-                .filter(line -> line.startsWith("Shortcuts:"))
-                .findFirst()
-                .orElse("");
+        String shortcuts = shortcutsOfHelpMessage();
 
         assertTrue(shortcuts.contains(AttendanceCommand.COMMAND_ALIAS + " = " + AttendanceCommand.COMMAND_WORD));
         assertTrue(shortcuts.contains(
@@ -105,5 +135,14 @@ public class HelpWindowTest {
     @Test
     public void userGuideUrl_isTeamUserGuide() {
         assertEquals("https://ay2627s1-cs2103-f09-1.github.io/tp/UserGuide.html", HelpWindow.USERGUIDE_URL);
+    }
+
+    /**
+     * Returns the part of the help message that starts at the heading of the shortcuts.
+     */
+    private static String shortcutsOfHelpMessage() {
+        int headingIndex = HelpWindow.HELP_MESSAGE.indexOf("Shortcuts");
+        assertTrue(headingIndex >= 0, "Help message has no shortcuts");
+        return HelpWindow.HELP_MESSAGE.substring(headingIndex);
     }
 }

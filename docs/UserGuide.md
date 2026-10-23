@@ -73,6 +73,10 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.<br>
   Prefixes are not case-sensitive. For example, `/NAME John Doe` and `/Name John Doe` are the same as `/name John Doe`.
 
+* Some prefixes also have a short form, which works in the same way as the full prefix: `/n` for `/name`, `/c` for `/class`, `/m` for `/members`, `/as` for `/assessment`, `/st` for `/status` and `/sc` for `/score`.<br>
+  For example, `delete /n John Tan /c A1` is the same as `delete /name John Tan /class A1`.<br>
+  Giving both forms of a prefix in one command, such as `/name` and `/n`, counts as giving the parameter twice.
+
 * Command words are not case-sensitive.<br>
   For example, `list`, `LIST` and `List` are the same command, and `viewA` can also be typed as `viewa` or `VIEWA`.
 
