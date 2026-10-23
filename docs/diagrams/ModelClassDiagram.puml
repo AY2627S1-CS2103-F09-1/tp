@@ -18,6 +18,8 @@ Class ClassName
 Class Email
 Class Name
 Class Tag
+Class Attendance
+Class Grade
 
 Class I #FFFFFF
 }
@@ -40,6 +42,8 @@ Person *--> Name
 Person *--> ClassName
 Person *--> "0..1" Email
 Person *--> "*" Tag
+Person *--> "*" Attendance
+Person *--> "*" Grade
 
 Person -[hidden]up--> I
 UniquePersonList -[hidden]right-> I
