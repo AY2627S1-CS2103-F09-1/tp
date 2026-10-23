@@ -43,8 +43,8 @@ public class ArgumentTokenizer {
     /**
      * Returns the tokens in the arguments string that look like prefixes, i.e. start with a slash and are
      * preceded by a whitespace, but are not one of the {@code knownPrefixes}. The tokens are returned in the
-     * order they appear, including repeated occurrences. A token that only differs from a known prefix in the
-     * case of its English letters is a known prefix.
+     * order they appear, including repeated occurrences. A token that only differs from a known prefix, or one
+     * of its aliases, in the case of its English letters is a known prefix.
      *
      * E.g. if {@code argsString} = " /name John /phone 123 /names" and {@code knownPrefixes} = {"/name"},
      * this method returns ["/phone", "/names"].
@@ -55,7 +55,8 @@ public class ArgumentTokenizer {
      */
     public static List<String> findUnrecognizedPrefixes(String argsString, Prefix... knownPrefixes) {
         Set<String> knownPrefixStrings = Arrays.stream(knownPrefixes)
-                .map(prefix -> StringUtil.toAsciiLowerCase(prefix.getPrefix()))
+                .flatMap(prefix -> prefix.getAllForms().stream())
+                .map(StringUtil::toAsciiLowerCase)
                 .collect(Collectors.toSet());
 
         List<String> unrecognizedPrefixes = new ArrayList<>();
@@ -87,12 +88,24 @@ public class ArgumentTokenizer {
      */
     private static List<PrefixPosition> findPrefixPositions(String argsString, Prefix prefix) {
         List<PrefixPosition> positions = new ArrayList<>();
+        for (String form : prefix.getAllForms()) {
+            positions.addAll(findFormPositions(argsString, prefix, form));
+        }
+        return positions;
+    }
 
-        int prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), 0);
-        while (prefixPosition != -1) {
-            PrefixPosition extendedPrefix = new PrefixPosition(prefix, prefixPosition);
-            positions.add(extendedPrefix);
-            prefixPosition = findPrefixPosition(argsString, prefix.getPrefix(), prefixPosition);
+    /**
+     * Finds the zero-based positions of {@code form}, which is the full form or an alias of {@code prefix}, in
+     * the given arguments string. Each position is for {@code prefix}, and remembers the length of
+     * {@code form}.
+     */
+    private static List<PrefixPosition> findFormPositions(String argsString, Prefix prefix, String form) {
+        List<PrefixPosition> positions = new ArrayList<>();
+
+        int formPosition = findPrefixPosition(argsString, form, 0);
+        while (formPosition != -1) {
+            positions.add(new PrefixPosition(prefix, formPosition, form.length()));
+            formPosition = findPrefixPosition(argsString, form, formPosition);
         }
 
         return positions;
@@ -156,11 +169,11 @@ public class ArgumentTokenizer {
         prefixPositions.sort((prefix1, prefix2) -> prefix1.getStartPosition() - prefix2.getStartPosition());
 
         // Insert a PrefixPosition to represent the preamble
-        PrefixPosition preambleMarker = new PrefixPosition(new Prefix(""), 0);
+        PrefixPosition preambleMarker = new PrefixPosition(new Prefix(""), 0, 0);
         prefixPositions.addFirst(preambleMarker);
 
         // Add a dummy PrefixPosition to represent the end of the string
-        PrefixPosition endPositionMarker = new PrefixPosition(new Prefix(""), argsString.length());
+        PrefixPosition endPositionMarker = new PrefixPosition(new Prefix(""), argsString.length(), 0);
         prefixPositions.add(endPositionMarker);
 
         // Map prefixes to their argument values (if any)
@@ -182,28 +195,33 @@ public class ArgumentTokenizer {
     private static String extractArgumentValue(String argsString,
                                         PrefixPosition currentPrefixPosition,
                                         PrefixPosition nextPrefixPosition) {
-        Prefix prefix = currentPrefixPosition.getPrefix();
-
-        int valueStartPos = currentPrefixPosition.getStartPosition() + prefix.getPrefix().length();
+        int valueStartPos = currentPrefixPosition.getStartPosition() + currentPrefixPosition.getLength();
         String value = argsString.substring(valueStartPos, nextPrefixPosition.getStartPosition());
 
         return value.trim();
     }
 
     /**
-     * Represents a prefix's position in an arguments string.
+     * Represents a prefix's position in an arguments string. The length is the length of the text that was
+     * found, which is the full form of the prefix or one of its aliases.
      */
     private static class PrefixPosition {
         private int startPosition;
         private final Prefix prefix;
+        private final int length;
 
-        PrefixPosition(Prefix prefix, int startPosition) {
+        PrefixPosition(Prefix prefix, int startPosition, int length) {
             this.prefix = prefix;
             this.startPosition = startPosition;
+            this.length = length;
         }
 
         int getStartPosition() {
             return startPosition;
+        }
+
+        int getLength() {
+            return length;
         }
 
         Prefix getPrefix() {
