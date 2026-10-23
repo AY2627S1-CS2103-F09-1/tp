@@ -138,6 +138,7 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 How the parsing works:
 * When called upon to parse a user command, the `AddressBookParser` class finds the `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) of the command word. The parsers are kept in a map whose keys are the command words in lower case, and the command word that the user typed is converted to lower case in the same way before it is looked up, so that `LIST` and `viewa` are the commands `list` and `viewA`. Only the English letters `A-Z` are converted, by `StringUtil#toAsciiLowerCase(String)`, and two command words must therefore not differ only in case. The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`). The `AddressBookParser` returns that object as a `Command` object. `ExitCommand` and `HelpCommand` take no arguments, so they have no `XYZCommandParser` class. Their entries in the map are lambda expressions that ignore the arguments and create the command. `ClearCommand` has a `ClearCommandParser`, because `clear` deletes all contacts and therefore does not ignore extra text. It throws a `ParseException` with the usage of `clear` if the arguments are not blank (see [Clearing all contacts](#clearing-all-contacts)).
 * Some commands also have a shorter alias, which is a `COMMAND_ALIAS` constant of the command class: `att` for `attendance`, `va` for `viewA`, `vg` for `viewG`, `da` for `deleteA` and `dg` for `deleteG`. `AddressBookParser` has a map entry for each alias, with the same kind of parser as for the command word.
+* Some prefixes also have a shorter alias, which is kept in the `Prefix` and read by `ArgumentTokenizer` in the same way as the full prefix: `/n` for `/name`, `/c` for `/class`, `/m` for `/members`, `/as` for `/assessment`, `/st` for `/status` and `/sc` for `/score`.
 * All `XYZCommandParser` classes, such as `AddCommandParser` and `DeleteCommandParser`, implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing.
 * Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` only recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input, whatever the case of its letters. Only the English letters `A-Z` are matched ignoring case, by `StringUtil#toAsciiLowerCase(String)`, which never changes the length of the text. `String#toLowerCase()` is not used, as it would also make letters such as the Kelvin sign match `k`. The values are stored under the `Prefix` that was given to the tokenizer, so `/NAME` and `/name` in the same command count as the same parameter and are reported as repeated. A parser can call `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)`, which uses `ArgumentTokenizer#findUnrecognizedPrefixes(String, Prefix...)`, to reject tokens that look like prefixes but that its command does not accept. `AddCommandParser`, `DeleteCommandParser`, `EditCommandParser`, `AttendanceCommandParser`, `GradeCommandParser`, `DeleteGradeCommandParser`, `NameAndClassCommandParser` (for `viewA` and `viewG`) and `GroupMembershipCommandParser` (for `tag` and `untag`) do this. `ListCommandParser` and `ImportCommandParser` do not, because they take the whole argument as one text, which is a keyword or a file path. `AddCommandParser` reports problems in a fixed order: unrecognized parameters, repeated parameters, text before the first parameter, a missing name, a missing class, then invalid values.
 * `ParserUtil#parseGroupName(String)` parses a group name into a `Tag`, and `ParserUtil#parseMemberIndices(String)` parses a comma-separated list such as `1, 3,5` into a list of `Index`. Whitespace around each entry is ignored. The latter reports an empty entry (e.g. a trailing comma) or an entry that is not a positive integer first, checking the entries from left to right, and an index that appears more than once only after that, naming every repeated index.
@@ -1140,7 +1141,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | TA coordinating group assignments          | remove students from a group | keep each group correct when the teams change                          |
 | `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
 | `* *`    | experienced user                           | recall my earlier commands   | run or correct a command again without typing it out again             |
-| `* *`    | experienced user                           | use shorter forms of the commands I use most | run them with fewer keystrokes                        |
+| `* *`    | experienced user                           | use shorter forms of the commands and parameters I use most | run them with fewer keystrokes         |
 | `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
 | `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
 | `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
@@ -2025,6 +2026,27 @@ testers are expected to do more *exploratory* testing.
 
    1. Other incorrect commands to try: `deleteG`, `deleteG 0 /assessment Quiz #1`, `deleteG 99 /assessment Quiz #1`, `deleteG 1 /assessment Quiz,1`, `deleteG 1 /score 80`<br>
       Expected: Similar to previous. No grade is deleted and the status message describes the problem.
+
+### Using shortcuts
+
+1. Using the short forms of commands and prefixes
+
+   1. Prerequisites: The app contains the sample data. List all contacts using the `list` command.
+
+   1. Test case: `att 1 /date 16-09-2026 /st present`<br>
+      Expected: The status message shows `Attendance for Alex Yeoh on 16-09-2026 recorded as present.`, the same as for `attendance 1 /date 16-09-2026 /status present`.
+
+   1. Test case: `va /n Alex Yeoh /c A1`<br>
+      Expected: The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by the record of 16-09-2026.
+
+   1. Test case: `tag /group Group A /m 1,2`<br>
+      Expected: The status message shows `Contacts successfully linked to group Group A: Alex Yeoh (A1), Bernice Yu (A1)`.
+
+   1. Test case: `delete /name Alex Yeoh /n Alex Yeoh /class A1`<br>
+      Expected: No contact is deleted. The status message shows `Each parameter can only be specified once`, because `/name` and `/n` are the same parameter.
+
+   1. Other short forms to try: `grade 1 /as WA2 /sc 90`, `dg 1 /as WA2`, `da 1 /date 16-09-2026`, `vg /n Alex Yeoh /c A1`<br>
+      Expected: The same results as for the commands with the full command words and prefixes.
 
 ### Clearing all contacts
 
