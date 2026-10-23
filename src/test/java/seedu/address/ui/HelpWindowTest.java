@@ -12,6 +12,7 @@ import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteAttendanceCommand;
 import seedu.address.logic.commands.DeleteCommand;
+import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.ExitCommand;
 import seedu.address.logic.commands.GradeCommand;
@@ -21,6 +22,7 @@ import seedu.address.logic.commands.ListCommand;
 import seedu.address.logic.commands.TagCommand;
 import seedu.address.logic.commands.UntagCommand;
 import seedu.address.logic.commands.ViewAttendanceCommand;
+import seedu.address.logic.commands.ViewGradeCommand;
 
 public class HelpWindowTest {
 
@@ -76,6 +78,22 @@ public class HelpWindowTest {
     public void helpMessage_editCommand_hasSummaryLine() {
         assertTrue(HelpWindow.HELP_MESSAGE.lines().anyMatch(
                 line -> line.equals("edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]")));
+    }
+
+    @Test
+    public void helpMessage_commandAliases_areListedWithTheirCommandWords() {
+        String shortcuts = HelpWindow.HELP_MESSAGE.lines()
+                .filter(line -> line.startsWith("Shortcuts:"))
+                .findFirst()
+                .orElse("");
+
+        assertTrue(shortcuts.contains(AttendanceCommand.COMMAND_ALIAS + " = " + AttendanceCommand.COMMAND_WORD));
+        assertTrue(shortcuts.contains(
+                ViewAttendanceCommand.COMMAND_ALIAS + " = " + ViewAttendanceCommand.COMMAND_WORD));
+        assertTrue(shortcuts.contains(ViewGradeCommand.COMMAND_ALIAS + " = " + ViewGradeCommand.COMMAND_WORD));
+        assertTrue(shortcuts.contains(
+                DeleteAttendanceCommand.COMMAND_ALIAS + " = " + DeleteAttendanceCommand.COMMAND_WORD));
+        assertTrue(shortcuts.contains(DeleteGradeCommand.COMMAND_ALIAS + " = " + DeleteGradeCommand.COMMAND_WORD));
     }
 
     @Test
