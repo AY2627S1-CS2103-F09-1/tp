@@ -23,6 +23,7 @@ import seedu.address.model.person.Person;
 public class AttendanceCommand extends Command {
 
     public static final String COMMAND_WORD = "attendance";
+    public static final String COMMAND_ALIAS = "att";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Records a person's attendance for a date.\n"

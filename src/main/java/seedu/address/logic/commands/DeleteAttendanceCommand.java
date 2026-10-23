@@ -19,6 +19,7 @@ import seedu.address.model.person.Person;
 public abstract class DeleteAttendanceCommand extends Command {
 
     public static final String COMMAND_WORD = "deleteA";
+    public static final String COMMAND_ALIAS = "da";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Deletes an attendance record identified by its date from a contact identified either by the index "
