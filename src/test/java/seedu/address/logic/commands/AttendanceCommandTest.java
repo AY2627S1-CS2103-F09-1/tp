@@ -126,7 +126,7 @@ public class AttendanceCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_indexCommands_followsEqualityContract() {
         Index index = Index.fromOneBased(1);
         LocalDate date = LocalDate.of(2026, 9, 16);
         AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.PRESENT);
@@ -145,7 +145,7 @@ public class AttendanceCommandTest {
     }
 
     @Test
-    public void equals_nameAndClassCommands() {
+    public void equals_nameAndClassCommands_followsEqualityContract() {
         Name name = new Name("Amy");
         ClassName className = new ClassName("A1");
         LocalDate date = LocalDate.of(2026, 9, 16);
@@ -163,7 +163,7 @@ public class AttendanceCommandTest {
     }
 
     @Test
-    public void toStringMethod_indexCommand() {
+    public void toString_indexCommand_returnsFieldsRepresentation() {
         Index index = Index.fromOneBased(1);
         LocalDate date = LocalDate.of(2026, 9, 16);
         AttendanceCommand command = new AttendanceCommand(index, date, Attendance.Status.PRESENT);
@@ -171,13 +171,13 @@ public class AttendanceCommandTest {
         String expected = AttendanceCommand.class.getCanonicalName()
                 + "{index=" + Optional.of(index)
                 + ", date=" + date
-                + ", status=PRESENT}";
+                + ", status=present}";
 
         assertEquals(expected, command.toString());
     }
 
     @Test
-    public void toStringMethod_nameAndClassCommand() {
+    public void toString_nameAndClassCommand_returnsFieldsRepresentation() {
         Name name = new Name("Alex Yeoh");
         ClassName className = new ClassName("A1");
         LocalDate date = LocalDate.of(2026, 9, 16);
@@ -188,7 +188,7 @@ public class AttendanceCommandTest {
                 + "{name=" + Optional.of(name)
                 + ", className=" + Optional.of(className)
                 + ", date=" + date
-                + ", status=PRESENT}";
+                + ", status=present}";
 
         assertEquals(expected, command.toString());
     }

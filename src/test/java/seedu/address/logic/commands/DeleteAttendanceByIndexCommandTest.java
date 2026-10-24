@@ -117,7 +117,7 @@ public class DeleteAttendanceByIndexCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteAttendanceByIndexCommand deleteFirstDate =
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
 
@@ -130,7 +130,7 @@ public class DeleteAttendanceByIndexCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteAttendanceByIndexCommand command =
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
         String expected = DeleteAttendanceByIndexCommand.class.getCanonicalName()

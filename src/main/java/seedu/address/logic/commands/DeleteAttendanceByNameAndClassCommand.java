@@ -34,9 +34,7 @@ public class DeleteAttendanceByNameAndClassCommand extends DeleteAttendanceComma
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        Person person = model.getAddressBook().getPersonList().stream()
-                .filter(candidate -> candidate.hasNameAndClass(name, className))
-                .findFirst()
+        Person person = model.findPerson(name, className)
                 .orElseThrow(() -> new CommandException(MESSAGE_NOT_FOUND));
         return deleteAttendance(model, person, date);
     }

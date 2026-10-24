@@ -15,6 +15,8 @@ public class Messages {
     public static final String MESSAGE_DUPLICATE_PARAMETERS = "Each parameter can only be specified once";
     public static final String MESSAGE_MISSING_NAME = "Command requires a name";
     public static final String MESSAGE_MISSING_CLASS = "Command requires a class";
+    public static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
+    public static final String MESSAGE_MISSING_ASSESSMENT = "Assessment name missing";
     public static final String MESSAGE_CONTACT_NOT_FOUND = "Contact not found";
 
     /**

@@ -78,7 +78,7 @@ public class GradeCommand extends Command {
             person = displayedPeople.get(index.get().getZeroBased());
         } else {
             person = model.findPerson(name.get(), className.get())
-                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+                    .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
         }
         try {
             model.setPerson(person, person.withGrade(grade));
@@ -98,7 +98,7 @@ public class GradeCommand extends Command {
             return false;
         }
         return index.equals(otherCommand.index) && grade.equals(otherCommand.grade)
-            && name.equals(otherCommand.name) && className.equals(otherCommand.className);
+                && name.equals(otherCommand.name) && className.equals(otherCommand.className);
     }
 
     @Override

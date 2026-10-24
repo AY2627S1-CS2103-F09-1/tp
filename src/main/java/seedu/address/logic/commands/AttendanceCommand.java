@@ -97,14 +97,13 @@ public class AttendanceCommand extends Command {
             person = lastShownList.get(index.get().getZeroBased());
         } else {
             person = model.findPerson(name.get(), className.get())
-                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+                    .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
         }
 
         try {
             Person updatedPerson = person.withAttendance(new Attendance(date, status));
             model.setPerson(person, updatedPerson);
-            return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), date, status.name()
-                    .toLowerCase()));
+            return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), date, status));
         } catch (IllegalArgumentException e) {
             throw new CommandException(MESSAGE_DUPLICATE_ATTENDANCE);
         }

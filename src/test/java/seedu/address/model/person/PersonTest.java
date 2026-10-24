@@ -278,7 +278,7 @@ public class PersonTest {
     }
 
     @Test
-    public void hasNameAndClass() {
+    public void hasNameAndClass_variousInputs_matchesIgnoringCaseAndExtraSpaces() {
         // exact name and class -> returns true
         assertTrue(BOB.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_BOB));
 
@@ -381,7 +381,7 @@ public class PersonTest {
     }
 
     @Test
-    public void withAttendance_addsRecord() {
+    public void withAttendance_newDate_returnsPersonWithRecord() {
         LocalDate date = LocalDate.of(2026, 9, 16);
         Attendance record = new Attendance(date, Attendance.Status.PRESENT);
 
@@ -453,7 +453,7 @@ public class PersonTest {
     }
 
     @Test
-    public void withGrade_addsGrade() {
+    public void withGrade_newAssessment_returnsPersonWithGrade() {
         Person original = new PersonBuilder().build();
         Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
 

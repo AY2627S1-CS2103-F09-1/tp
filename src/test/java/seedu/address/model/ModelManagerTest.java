@@ -104,6 +104,21 @@ public class ModelManagerTest {
     }
 
     @Test
+    public void findPerson_stringNameAndClass_ignoresCaseAndExtraSpaces() {
+        modelManager.addPerson(ALICE);
+        String name = "  " + ALICE.getName().toString().toUpperCase().replace(" ", "   ") + " ";
+        String className = ALICE.getClassName().toString().toLowerCase();
+        assertEquals(Optional.of(ALICE), modelManager.findPerson(name, className));
+    }
+
+    @Test
+    public void findPerson_stringNameAndClassNotValidOrNotFound_returnsEmpty() {
+        modelManager.addPerson(ALICE);
+        assertTrue(modelManager.findPerson("@@@", "!!!").isEmpty());
+        assertTrue(modelManager.findPerson(ALICE.getName().toString(), "B999").isEmpty());
+    }
+
+    @Test
     public void equals() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
         AddressBook differentAddressBook = new AddressBook();

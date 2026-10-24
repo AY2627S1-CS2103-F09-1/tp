@@ -81,4 +81,19 @@ public interface Model {
      */
     Optional<Person> findPerson(Name name, ClassName className);
 
+    /**
+     * Finds a person whose name and class match {@code name} and {@code className}, ignoring case and extra
+     * whitespace. Unlike {@link #findPerson(Name, ClassName)}, the strings do not need to be a valid name or
+     * class, in which case they simply do not match.
+     *
+     * @param name name of the person
+     * @param className class of the person
+     * @return the matching person, if one exists
+     */
+    default Optional<Person> findPerson(String name, String className) {
+        return getAddressBook().getPersonList().stream()
+                .filter(person -> person.hasNameAndClass(name, className))
+                .findFirst();
+    }
+
 }

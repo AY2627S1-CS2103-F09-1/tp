@@ -11,12 +11,19 @@ import org.junit.jupiter.api.Test;
 public class AttendanceTest {
 
     @Test
-    public void toStringMethod() {
+    public void toString_validAttendance_returnsDateAndStatus() {
         Attendance attendance = new Attendance(
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.PRESENT);
 
         assertEquals("2026-09-16: present", attendance.toString());
+    }
+
+    @Test
+    public void statusToString_allStatuses_returnsLowerCaseName() {
+        assertEquals("present", Attendance.Status.PRESENT.toString());
+        assertEquals("absent", Attendance.Status.ABSENT.toString());
+        assertEquals("late", Attendance.Status.LATE.toString());
     }
 
     @Test

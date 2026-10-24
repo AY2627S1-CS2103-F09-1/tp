@@ -1,20 +1,18 @@
 package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_ASSESSMENT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_ASSESSMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
-import java.util.Optional;
-
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.DeleteGradeByIndexCommand;
 import seedu.address.logic.commands.DeleteGradeByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.Grade;
 
 /**
  * Parses input arguments and creates a {@link DeleteGradeCommand}.
@@ -23,7 +21,6 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER =
             "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_ASSESSMENT;
-    public static final String MESSAGE_MISSING_ASSESSMENT = "Assessment name missing";
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteGradeCommand.MESSAGE_USAGE);
@@ -84,12 +81,7 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
     private static String parseAssessmentName(ArgumentMultimap argMultimap) throws ParseException {
         String assessmentName = ParserUtil.getNonBlankValue(
                 argMultimap, PREFIX_ASSESSMENT, MESSAGE_MISSING_ASSESSMENT);
-        ParserUtil.requireNoEmbeddedPrefix(assessmentName, "assessment name");
-        Optional<String> constraintViolation = Grade.getAssessmentNameConstraintViolation(assessmentName);
-        if (constraintViolation.isPresent()) {
-            throw new ParseException(constraintViolation.get());
-        }
-        return assessmentName;
+        return ParserUtil.parseAssessmentName(assessmentName);
     }
 
 }

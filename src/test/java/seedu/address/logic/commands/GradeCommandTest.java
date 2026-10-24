@@ -101,7 +101,7 @@ public class GradeCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_indexCommands_followsEqualityContract() {
         Index index = Index.fromOneBased(1);
         Grade grade = new Grade("Assignment 1", new BigDecimal("97"));
         GradeCommand command = new GradeCommand(index, grade);
@@ -116,7 +116,7 @@ public class GradeCommandTest {
     }
 
     @Test
-    public void equals_nameAndClassCommands() {
+    public void equals_nameAndClassCommands_followsEqualityContract() {
         Person person = model.getFilteredPersonList().get(0);
         Name name = person.getName();
         ClassName className = person.getClassName();
@@ -133,7 +133,7 @@ public class GradeCommandTest {
     }
 
     @Test
-    public void toStringMethod_indexCommand() {
+    public void toString_indexCommand_returnsFieldsRepresentation() {
         Index index = Index.fromOneBased(1);
         Grade grade = new Grade("Assignment 1", new BigDecimal("97"));
         GradeCommand command = new GradeCommand(index, grade);
@@ -144,7 +144,7 @@ public class GradeCommandTest {
     }
 
     @Test
-    public void toStringMethod_nameAndClassCommand() {
+    public void toString_nameAndClassCommand_returnsFieldsRepresentation() {
         Person person = model.getFilteredPersonList().get(0);
         Name name = person.getName();
         ClassName className = person.getClassName();

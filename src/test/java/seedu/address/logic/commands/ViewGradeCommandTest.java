@@ -98,7 +98,7 @@ public class ViewGradeCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         ViewGradeCommand command = new ViewGradeCommand("Alex Tan", "A1");
 
         assertTrue(command.equals(command));
@@ -110,7 +110,7 @@ public class ViewGradeCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         ViewGradeCommand command = new ViewGradeCommand("Alex Tan", "A1");
 
         String expected = ViewGradeCommand.class.getCanonicalName()

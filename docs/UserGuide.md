@@ -409,7 +409,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/assessment` or `/score` is given, such as `/name` | `Unknown parameter. Use /assessment or /score`
+A parameter other than `/name`, `/class`, `/assessment` or `/score` is given, such as `/email` | `Unknown parameter. Use /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
@@ -417,10 +417,14 @@ The index, or name and class, is missing | `Use either an index, or both /name a
 `/class` is missing when using the name/class format | `Command requires a class`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
-The index is not a positive integer | `Index must be a positive integer.`
 The assessment name contains a parameter such as `/score` that is stuck to the text before it | `The assessment name contains '/score', which looks like a parameter that is missing a space before it`
 The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
+The index is not a positive integer | `Index must be a positive integer.`
+The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
+The name is too long or has characters that are not allowed | `Name is too long` or a description of the allowed characters
+The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
+The class is too long or has characters that are not allowed | `Class name is too long` or a description of the allowed characters
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`
@@ -535,16 +539,21 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
+A parameter other than `/name`, `/class`, `/date` or `/status` is given, such as `/email` | `Unknown parameter. Use /date or /status`
+A parameter is given more than once | `Each parameter can only be specified once`
+The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
 `/name` is missing when using the name/class format | `Command requires a name`
 `/class` is missing when using the name/class format | `Command requires a class`
-The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
-A parameter is given more than once | `Each parameter can only be specified once`
-The index is not a positive integer | `Index must be a positive integer.`
 The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. Please use the format DD-MM-YYYY.`
 The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
+The index is not a positive integer | `Index must be a positive integer.`
+The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
+The name is too long or has characters that are not allowed | `Name is too long` or a description of the allowed characters
+The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
+The class is too long or has characters that are not allowed | `Class name is too long` or a description of the allowed characters
 The date is in the future | `Attendance date cannot be in the future.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`

@@ -31,9 +31,18 @@ public class Attendance {
                         "Invalid attendance status. Use present, absent, or late", e);
             }
         }
+
+        /**
+         * Returns the status in lower case, as it is typed by the user and shown in messages.
+         */
+        @Override
+        public String toString() {
+            return name().toLowerCase(Locale.ROOT);
+        }
     }
+
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
-        DateTimeFormatter.ofPattern("dd-MMM-uuuu", Locale.ENGLISH);
+            DateTimeFormatter.ofPattern("dd-MMM-uuuu", Locale.ENGLISH);
 
     private final LocalDate date;
     private final Status status;
@@ -55,7 +64,7 @@ public class Attendance {
      * Returns this attendance record in a format suitable for display.
      */
     public String toDisplayString() {
-        return DISPLAY_DATE_FORMAT.format(date) + "  " + status.toString().toLowerCase(Locale.ROOT);
+        return DISPLAY_DATE_FORMAT.format(date) + "  " + status;
     }
 
     public LocalDate getDate() {
@@ -68,7 +77,7 @@ public class Attendance {
 
     @Override
     public String toString() {
-        return date + ": " + status.name().toLowerCase(Locale.ROOT);
+        return date + ": " + status;
     }
 
     @Override

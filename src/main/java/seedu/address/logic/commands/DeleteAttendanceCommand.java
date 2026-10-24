@@ -6,7 +6,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
 import java.time.LocalDate;
-import java.util.Locale;
 
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -46,14 +45,12 @@ public abstract class DeleteAttendanceCommand extends Command {
                 .findFirst()
                 .orElseThrow(() -> new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND));
 
-        // previous operation catches nonexistent attendance record
-        // so following operation need not check for it again
         Person personWithoutAttendance = person.withoutAttendance(attendance);
         assert personWithoutAttendance.getAttendanceRecords().stream()
                 .noneMatch(record -> record.getDate().equals(date)) : "Attendance record was not removed";
 
         model.setPerson(person, personWithoutAttendance);
         return new CommandResult(String.format(MESSAGE_SUCCESS,
-                attendance.getStatus().name().toLowerCase(Locale.ROOT), person.getName(), attendance.getDate()));
+                attendance.getStatus(), person.getName(), attendance.getDate()));
     }
 }

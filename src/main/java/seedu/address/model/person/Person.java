@@ -50,7 +50,7 @@ public class Person {
      * @throws IllegalArgumentException if two of the {@code attendanceRecords} have the same date.
      */
     public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
-        List<Attendance> attendanceRecords) {
+            List<Attendance> attendanceRecords) {
         this(name, className, email, tags, attendanceRecords, Collections.emptyList());
     }
 
@@ -61,7 +61,7 @@ public class Person {
      *         the {@code gradeRecords} are for the same assessment.
      */
     public Person(Name name, ClassName className, Optional<Email> email, Set<Tag> tags,
-        List<Attendance> attendanceRecords, List<Grade> gradeRecords) {
+            List<Attendance> attendanceRecords, List<Grade> gradeRecords) {
         requireAllNonNull(name, className, email, tags, attendanceRecords, gradeRecords);
         checkArgument(hasUniqueAttendanceDates(attendanceRecords), MESSAGE_DUPLICATE_ATTENDANCE_DATE);
         checkArgument(hasUniqueAssessments(gradeRecords), MESSAGE_DUPLICATE_ASSESSMENT);
@@ -166,9 +166,9 @@ public class Person {
     /**
      * Returns a new Person with the given attendance record added.
      *
-     * @param attendance
-     * @return a new Person with the given attendance record added
-     * @throws IllegalArgumentException if a record already exists for that date
+     * @param attendance Attendance record to add.
+     * @return A new Person with the given attendance record added.
+     * @throws IllegalArgumentException If a record already exists for that date.
      */
     public Person withAttendance(Attendance attendance) {
         requireNonNull(attendance);
@@ -202,9 +202,9 @@ public class Person {
     /**
      * Returns a new Person with the given grade record added.
      *
-     * @param grade
-     * @return a new Person with the given grade record added
-     * @throws IllegalArgumentException if a record already exists for that assessment
+     * @param grade Grade record to add.
+     * @return A new Person with the given grade record added.
+     * @throws IllegalArgumentException If a record already exists for that assessment.
      */
     public Person withGrade(Grade grade) {
         requireNonNull(grade);

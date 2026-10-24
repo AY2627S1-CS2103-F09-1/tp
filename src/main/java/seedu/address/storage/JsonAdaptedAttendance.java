@@ -1,6 +1,7 @@
 package seedu.address.storage;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeParseException;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -31,7 +32,7 @@ class JsonAdaptedAttendance {
      */
     public JsonAdaptedAttendance(Attendance source) {
         date = source.getDate().toString();
-        status = source.getStatus().name().toLowerCase();
+        status = source.getStatus().toString();
     }
 
     /**
@@ -51,7 +52,7 @@ class JsonAdaptedAttendance {
             LocalDate modelDate = LocalDate.parse(date);
             Attendance.Status modelStatus = Attendance.Status.fromString(status);
             return new Attendance(modelDate, modelStatus);
-        } catch (Exception e) {
+        } catch (DateTimeParseException | IllegalArgumentException e) {
             throw new IllegalValueException("Attendance record has an invalid date or status.");
         }
     }

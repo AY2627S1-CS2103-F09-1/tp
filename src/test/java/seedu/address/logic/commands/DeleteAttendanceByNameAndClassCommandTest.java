@@ -116,7 +116,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteAttendanceByNameAndClassCommand deleteAliceDate =
                 new DeleteAttendanceByNameAndClassCommand("Alice", "A1", DATE);
 
@@ -135,7 +135,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteAttendanceByNameAndClassCommand command =
                 new DeleteAttendanceByNameAndClassCommand("Alice", "A1", DATE);
         String expected = DeleteAttendanceByNameAndClassCommand.class.getCanonicalName()

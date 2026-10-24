@@ -124,7 +124,7 @@ public class DeleteGradeByIndexCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteGradeByIndexCommand deleteFirstQuiz =
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 1");
 
@@ -140,7 +140,7 @@ public class DeleteGradeByIndexCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteGradeByIndexCommand command =
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 1");
         String expected = DeleteGradeByIndexCommand.class.getCanonicalName()
