@@ -65,7 +65,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
-                "late", ALICE.getName(), DATE);
+                "late", ALICE.getName(), Attendance.formatDate(DATE));
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 

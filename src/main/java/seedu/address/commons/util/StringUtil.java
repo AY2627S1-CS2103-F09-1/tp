@@ -46,15 +46,19 @@ public class StringUtil {
     /**
      * Returns {@code s} in lower case with leading and trailing whitespace removed and repeated whitespace
      * collapsed into a single space, so that strings that only differ in these respects have the same key.
-     * Accented letters are compared in their normalized form (see {@link #toNormalizedForm(String)}).
+     * Accented letters are compared in their normalized form, and so are letters that only look like
+     * another letter, such as the full-width {@code Ａ}, which has the same key as {@code A}. This is Unicode
+     * normalization form KC.
      *   <br>examples:<pre>
      *       toComparisonKey("John   TAN ") equals "john tan"
+     *       toComparisonKey("Ｊohn") equals "john"
      *       </pre>
      * @param s cannot be null
      */
     public static String toComparisonKey(String s) {
         requireNonNull(s);
-        return toNormalizedForm(s).trim().replaceAll(WHITESPACE_REGEX, " ").toLowerCase(Locale.ROOT);
+        return Normalizer.normalize(s, Normalizer.Form.NFKC).trim().replaceAll(WHITESPACE_REGEX, " ")
+                .toLowerCase(Locale.ROOT);
     }
 
     /**

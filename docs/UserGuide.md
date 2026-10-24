@@ -122,7 +122,7 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
   * The local-part can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain is made up of one or more labels separated by periods, as in `example.com`. Each label can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last label must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. An accented letter typed as one character and the same letter typed as a letter followed by an accent are also treated as the same.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. An accented letter typed as one character and the same letter typed as a letter followed by an accent are also treated as the same, and so is a full-width letter such as `Ａ` and the letter `A`. The same applies to assessment names.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -698,6 +698,7 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and tells you so in the result box. Your file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the same folder, such as `classmates.json.bad-20261021-101500-123`, and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. If ClassMates cannot rename the file, it says so, and the next command that you run replaces the file. We still recommend backing up the file before editing it.<br>
 Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid, and are kept in the same way.<br>
 A data file is also invalid if a contact has two attendance records for the same date, or two grades for the same assessment, ignoring case and extra spaces.<br>
+In the data file, an attendance date is written as `YYYY-MM-DD` with exactly four digits in the year, such as `2026-09-16`. Unlike the `attendance` command, ClassMates does not check that the date is not in the future when it reads the file.<br>
 The file can be saved in UTF-8 with or without a byte order mark, so editors such as Notepad can be used.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>

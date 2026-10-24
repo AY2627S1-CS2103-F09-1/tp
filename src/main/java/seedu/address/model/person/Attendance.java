@@ -4,6 +4,9 @@ import static java.util.Objects.requireNonNull;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.format.ResolverStyle;
+import java.time.temporal.ChronoField;
 import java.util.Locale;
 import java.util.Objects;
 
@@ -41,6 +44,20 @@ public class Attendance {
         }
     }
 
+    /**
+     * The format {@code DD-MM-YYYY} of a date that is typed into a command and shown in the messages of a
+     * command. Every part has a fixed number of digits, so a sign or a year of more than four digits is not
+     * accepted.
+     */
+    public static final DateTimeFormatter DATE_FORMAT = new DateTimeFormatterBuilder()
+            .appendValue(ChronoField.DAY_OF_MONTH, 2)
+            .appendLiteral('-')
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+            .appendLiteral('-')
+            .appendValue(ChronoField.YEAR, 4)
+            .toFormatter(Locale.ROOT)
+            .withResolverStyle(ResolverStyle.STRICT);
+
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd-MMM-uuuu", Locale.ENGLISH);
 
@@ -58,6 +75,14 @@ public class Attendance {
         requireNonNull(status);
         this.date = date;
         this.status = status;
+    }
+
+    /**
+     * Returns {@code date} in the format {@link #DATE_FORMAT}, the same format in which a date is typed.
+     */
+    public static String formatDate(LocalDate date) {
+        requireNonNull(date);
+        return DATE_FORMAT.format(date);
     }
 
     /**

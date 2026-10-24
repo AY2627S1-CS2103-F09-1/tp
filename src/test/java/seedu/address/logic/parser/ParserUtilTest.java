@@ -88,6 +88,18 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseDate_yearZero_success() throws Exception {
+        assertEquals(LocalDate.of(0, 1, 1), ParserUtil.parseDate("01-01-0000"));
+    }
+
+    @Test
+    public void parseDate_signedOrLongYear_throwsParseException() {
+        for (String invalidDate : List.of("16-09-+2026", "16-09--0001", "16-09-12026", "16-09-+12026")) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate(invalidDate));
+        }
+    }
+
+    @Test
     public void parseScore_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseScore(null));
     }

@@ -1,7 +1,12 @@
 package seedu.address.storage;
 
 import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
 import java.time.format.DateTimeParseException;
+import java.time.format.ResolverStyle;
+import java.time.temporal.ChronoField;
+import java.util.Locale;
 
 import com.fasterxml.jackson.annotation.JsonCreator;
 import com.fasterxml.jackson.annotation.JsonProperty;
@@ -13,6 +18,20 @@ import seedu.address.model.person.Attendance;
  * Jackson-friendly version of {@link Attendance}.
  */
 class JsonAdaptedAttendance {
+
+    /**
+     * The format {@code YYYY-MM-DD} with exactly four digits in the year, which is what
+     * {@link LocalDate#toString()} writes for the dates that a command accepts. A sign or a year of more than
+     * four digits is not accepted.
+     */
+    private static final DateTimeFormatter DATE_FORMAT = new DateTimeFormatterBuilder()
+            .appendValue(ChronoField.YEAR, 4)
+            .appendLiteral('-')
+            .appendValue(ChronoField.MONTH_OF_YEAR, 2)
+            .appendLiteral('-')
+            .appendValue(ChronoField.DAY_OF_MONTH, 2)
+            .toFormatter(Locale.ROOT)
+            .withResolverStyle(ResolverStyle.STRICT);
 
     private final String date;
     private final String status;
@@ -49,7 +68,7 @@ class JsonAdaptedAttendance {
         }
 
         try {
-            LocalDate modelDate = LocalDate.parse(date);
+            LocalDate modelDate = LocalDate.parse(date, DATE_FORMAT);
             Attendance.Status modelStatus = Attendance.Status.fromString(status);
             return new Attendance(modelDate, modelStatus);
         } catch (DateTimeParseException | IllegalArgumentException e) {

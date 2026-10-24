@@ -8,9 +8,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.time.format.ResolverStyle;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
@@ -25,6 +23,7 @@ import java.util.stream.Collectors;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.parser.exceptions.ParseException;
+import seedu.address.model.person.Attendance;
 import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Email;
 import seedu.address.model.person.Grade;
@@ -52,9 +51,6 @@ public class ParserUtil {
             + "parameter that is missing a space before it";
 
     private static final String MEMBER_SEPARATOR = ",";
-    private static final DateTimeFormatter DATE_FORMATTER =
-            DateTimeFormatter.ofPattern("dd-MM-uuuu").withResolverStyle(ResolverStyle.STRICT);
-
     /** Matches a score such as {@code 97}, {@code 97.5} or {@code .5}, without a sign or an exponent. */
     private static final Pattern SCORE_PATTERN = Pattern.compile("[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+");
 
@@ -89,7 +85,7 @@ public class ParserUtil {
     public static LocalDate parseDate(String date) throws ParseException {
         requireNonNull(date);
         try {
-            return LocalDate.parse(date.trim(), DATE_FORMATTER);
+            return LocalDate.parse(date.trim(), Attendance.DATE_FORMAT);
         } catch (DateTimeParseException e) {
             throw new ParseException(MESSAGE_INVALID_DATE, e);
         }

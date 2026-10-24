@@ -27,6 +27,13 @@ public class AttendanceTest {
     }
 
     @Test
+    public void formatDate_variousDates_returnsDayMonthYearWithFourDigitYear() {
+        assertEquals("16-09-2026", Attendance.formatDate(LocalDate.of(2026, 9, 16)));
+        assertEquals("01-01-0001", Attendance.formatDate(LocalDate.of(1, 1, 1)));
+        assertEquals("01-01-0000", Attendance.formatDate(LocalDate.of(0, 1, 1)));
+    }
+
+    @Test
     public void equals_sameValues_returnsTrue() {
         Attendance attendance = new Attendance(
                 LocalDate.of(2026, 9, 16),

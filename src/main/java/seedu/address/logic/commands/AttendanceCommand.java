@@ -31,7 +31,7 @@ public class AttendanceCommand extends Command {
             + "Example: " + COMMAND_WORD + " 5 /date 16-09-2026 /status absent";
 
     public static final String MESSAGE_SUCCESS =
-            "Attendance for %1$s on %2$td-%2$tm-%2$tY recorded as %3$s.";
+            "Attendance for %1$s on %2$s recorded as %3$s.";
     public static final String MESSAGE_FUTURE_DATE = "Attendance date cannot be in the future.";
     public static final String MESSAGE_DUPLICATE_ATTENDANCE = "Attendance record already exists";
 
@@ -103,7 +103,8 @@ public class AttendanceCommand extends Command {
         try {
             Person updatedPerson = person.withAttendance(new Attendance(date, status));
             model.setPerson(person, updatedPerson);
-            return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), date, status));
+            return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), Attendance.formatDate(date),
+                    status));
         } catch (IllegalArgumentException e) {
             throw new CommandException(MESSAGE_DUPLICATE_ATTENDANCE);
         }

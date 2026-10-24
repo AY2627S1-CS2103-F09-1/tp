@@ -20,6 +20,14 @@ public class GradeTest {
     }
 
     @Test
+    public void isSameAssessment_fullWidthLetters_returnsTrue() {
+        Grade grade = new Grade("Quiz 1", BigDecimal.ONE);
+
+        assertTrue(grade.isSameAssessment(new Grade("\uff31uiz 1", BigDecimal.TEN)));
+        assertTrue(grade.hasAssessmentName("\uff31\uff35\uff29\uff3a 1"));
+    }
+
+    @Test
     public void isValidScore_boundaryValues_returnsExpected() {
         assertTrue(Grade.isValidScore(Grade.MIN_SCORE));
         assertTrue(Grade.isValidScore(Grade.MAX_SCORE));

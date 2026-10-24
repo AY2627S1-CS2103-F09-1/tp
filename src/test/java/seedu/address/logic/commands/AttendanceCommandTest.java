@@ -39,7 +39,7 @@ public class AttendanceCommandTest {
 
         AttendanceCommand command = new AttendanceCommand(index, date, status);
         String expectedMessage = String.format(
-                AttendanceCommand.MESSAGE_SUCCESS, person.getName(), date, "absent");
+                AttendanceCommand.MESSAGE_SUCCESS, person.getName(), Attendance.formatDate(date), "absent");
 
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
@@ -60,8 +60,22 @@ public class AttendanceCommandTest {
         AttendanceCommand command = new AttendanceCommand(name, className, date, status);
 
         String expectedMessage = String.format(
-            AttendanceCommand.MESSAGE_SUCCESS, person.getName(), date, "absent");
+            AttendanceCommand.MESSAGE_SUCCESS, person.getName(), Attendance.formatDate(date), "absent");
 
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_yearZeroDate_messageShowsYearZero() {
+        Person person = model.getFilteredPersonList().get(0);
+        LocalDate date = LocalDate.of(0, 1, 1);
+        Attendance.Status status = Attendance.Status.LATE;
+        AttendanceCommand command = new AttendanceCommand(Index.fromOneBased(1), date, status);
+
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.setPerson(person, person.withAttendance(new Attendance(date, status)));
+
+        String expectedMessage = "Attendance for " + person.getName() + " on 01-01-0000 recorded as late.";
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
