@@ -35,10 +35,12 @@ public class CommandFuzzTest {
 
     /** The command words are mostly real ones. The commands that read a file are left out. */
     private static final String[] COMMAND_WORDS = {"add", "edit", "delete", "list", "tag", "untag", "attendance",
-        "grade", "viewA", "viewG", "deleteG", "clear", "help", "exit", "LIST", "Delete", "frobnicate", ""};
+        "grade", "viewA", "viewG", "deleteG", "clear", "help", "exit", "LIST", "Delete", "frobnicate", "",
+        "att", "va", "vg", "da", "dg", "ATT"};
 
     private static final String[] TOKENS = {"/name", "/class", "/email", "/group", "/members", "/date", "/status",
-        "/assessment", "/score", "/tag", "/foo", "/", "//", "/NAME", "/Class", "John", "Amy Bee", "A1", "Sec 3-2",
+        "/assessment", "/score", "/tag", "/foo", "/", "//", "/NAME", "/Class", "/n", "/c", "/m", "/as", "/st", "/sc",
+        "/N", "/Sc", "John", "Amy Bee", "A1", "Sec 3-2",
         "a@b.co", "bad@", "@", "0", "1", "2", "3", "-1", "+1", "99999999999", "2147483647", "2147483648", "1.5",
         "1e3", ".5", "100", "101", "1,2", "1,,2", "1,2,", ",", "1, 2 ,3", "present", "late", "16-09-2026",
         "31-02-2026", "Quiz 1", "Group A", "friends", "Zoë", "名前", " ", " ", "\t", "\r",
@@ -53,7 +55,11 @@ public class CommandFuzzTest {
         "attendance %I /date %V /status %V", "grade %I /assessment %V /score %V", "viewA /name %V /class %V",
         "viewG /name %V /class %V", "deleteG %I /assessment %V", "deleteG /name %V /class %V /assessment %V",
         "list %V", "DELETEG %I /ASSESSMENT %V", "Add /NAME %V /Class %V", "EDIT %I /Email %V",
-        "tag /GROUP %V /MEMBERS %M", "grade %I /assessment %V /score %V /score %V"};
+        "tag /GROUP %V /MEMBERS %M", "grade %I /assessment %V /score %V /score %V",
+        "add /n %V /c %V /email %V", "edit %I /n %V /c %V", "delete /n %V /c %V", "tag /group %V /m %M",
+        "untag /group %V /m %M", "att %I /date %V /st %V", "attendance /n %V /c %V /date %V /st %V",
+        "grade %I /as %V /sc %V", "va /n %V /c %V", "vg /n %V /c %V", "dg %I /as %V", "da %I /date %V",
+        "grade %I /as %V /assessment %V /sc %V", "add /n %V /name %V /c %V"};
 
     private static final String[] VALUES = {"Alice Pauline", "alice  pauline", "Benson Meier", "A1", "a1", "B2",
         "friends", "Group A", "group   a", "Amy Bee", "X9", "a@b.co", "", " ", "present", "late", "16-09-2026",

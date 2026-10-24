@@ -39,7 +39,14 @@ public class HelpWindow extends UiPart<Stage> {
             deleteG INDEX /assessment ASSESSMENT_NAME
             deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME
             help
-            exit""";
+            exit
+
+            Shortcuts
+
+            Commands   att = attendance, va = viewA, vg = viewG,
+                       da = deleteA, dg = deleteG
+            Prefixes   /n = /name, /c = /class, /m = /members,
+                       /as = /assessment, /st = /status, /sc = /score""";
 
     private static final Logger logger = LogsCenter.getLogger(HelpWindow.class);
     private static final String FXML = "HelpWindow.fxml";

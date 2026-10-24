@@ -15,9 +15,11 @@ import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DeleteAttendanceByIndexCommand;
 import seedu.address.logic.commands.DeleteAttendanceByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteAttendanceCommand;
@@ -291,5 +293,69 @@ public class AddressBookParserTest {
                 "deleteA /name John Tan /class A1 /date 16-09-2026");
 
         assertEquals(new DeleteAttendanceByNameAndClassCommand("John Tan", "A1", date), command);
+    }
+
+    @Test
+    public void parseCommand_commandAlias_givesSameCommandAsCommandWord() throws Exception {
+        assertAliasGivesSameCommand(AttendanceCommand.COMMAND_ALIAS, AttendanceCommand.COMMAND_WORD,
+                " 1 /date 16-09-2026 /status absent");
+        assertAliasGivesSameCommand(AttendanceCommand.COMMAND_ALIAS, AttendanceCommand.COMMAND_WORD,
+                " /name John Tan /class A1 /date 16-09-2026 /status late");
+        assertAliasGivesSameCommand(ViewAttendanceCommand.COMMAND_ALIAS, ViewAttendanceCommand.COMMAND_WORD,
+                " /name John Tan /class A1");
+        assertAliasGivesSameCommand(ViewGradeCommand.COMMAND_ALIAS, ViewGradeCommand.COMMAND_WORD,
+                " /name John Tan /class A1");
+        assertAliasGivesSameCommand(DeleteAttendanceCommand.COMMAND_ALIAS, DeleteAttendanceCommand.COMMAND_WORD,
+                " 1 /date 16-09-2026");
+        assertAliasGivesSameCommand(DeleteAttendanceCommand.COMMAND_ALIAS, DeleteAttendanceCommand.COMMAND_WORD,
+                " /name John Tan /class A1 /date 16-09-2026");
+        assertAliasGivesSameCommand(DeleteGradeCommand.COMMAND_ALIAS, DeleteGradeCommand.COMMAND_WORD,
+                " 1 /assessment WA2");
+        assertAliasGivesSameCommand(DeleteGradeCommand.COMMAND_ALIAS, DeleteGradeCommand.COMMAND_WORD,
+                " /name John Tan /class A1 /assessment WA2");
+    }
+
+    @Test
+    public void parseCommand_commandAliasInOtherCase_givesSameCommand() throws Exception {
+        assertEquals(parser.parseCommand("attendance 1 /date 16-09-2026 /status absent"),
+                parser.parseCommand("ATT 1 /date 16-09-2026 /status absent"));
+        assertEquals(parser.parseCommand("viewA /name John Tan /class A1"),
+                parser.parseCommand("Va /name John Tan /class A1"));
+    }
+
+    @Test
+    public void parseCommand_notACommandAlias_throwsParseException() {
+        for (String word : List.of("a", "at", "atte", "v", "vgg", "d", "dd", "dag")) {
+            assertThrows(ParseException.class, MESSAGE_UNKNOWN_COMMAND, () -> parser.parseCommand(word + " 1"));
+        }
+    }
+
+    @Test
+    public void commandWordsAndAliases_areDistinctIgnoringCase() {
+        List<String> commandWordsAndAliases = List.of(
+                AddCommand.COMMAND_WORD, EditCommand.COMMAND_WORD, DeleteCommand.COMMAND_WORD,
+                ClearCommand.COMMAND_WORD, ListCommand.COMMAND_WORD, TagCommand.COMMAND_WORD,
+                UntagCommand.COMMAND_WORD, ExitCommand.COMMAND_WORD, HelpCommand.COMMAND_WORD,
+                AttendanceCommand.COMMAND_WORD, ViewAttendanceCommand.COMMAND_WORD, ImportCommand.COMMAND_WORD,
+                GradeCommand.COMMAND_WORD, ViewGradeCommand.COMMAND_WORD, DeleteAttendanceCommand.COMMAND_WORD,
+                DeleteGradeCommand.COMMAND_WORD,
+                AttendanceCommand.COMMAND_ALIAS, ViewAttendanceCommand.COMMAND_ALIAS,
+                ViewGradeCommand.COMMAND_ALIAS, DeleteAttendanceCommand.COMMAND_ALIAS,
+                DeleteGradeCommand.COMMAND_ALIAS);
+
+        long distinctCount = commandWordsAndAliases.stream().map(StringUtil::toAsciiLowerCase).distinct().count();
+
+        assertEquals(commandWordsAndAliases.size(), distinctCount);
+    }
+
+    /**
+     * Asserts that {@code alias} followed by {@code arguments} is parsed into the same command as
+     * {@code commandWord} followed by {@code arguments}.
+     */
+    private void assertAliasGivesSameCommand(String alias, String commandWord, String arguments)
+            throws Exception {
+        Command expectedCommand = parser.parseCommand(commandWord + arguments);
+
+        assertEquals(expectedCommand, parser.parseCommand(alias + arguments));
     }
 }

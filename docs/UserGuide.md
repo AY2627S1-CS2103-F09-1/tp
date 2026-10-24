@@ -73,6 +73,10 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.<br>
   Prefixes are not case-sensitive. For example, `/NAME John Doe` and `/Name John Doe` are the same as `/name John Doe`.
 
+* Some prefixes also have a short form, which works in the same way as the full prefix: `/n` for `/name`, `/c` for `/class`, `/m` for `/members`, `/as` for `/assessment`, `/st` for `/status` and `/sc` for `/score`.<br>
+  For example, `delete /n John Tan /c A1` is the same as `delete /name John Tan /class A1`.<br>
+  Giving both forms of a prefix in one command, such as `/name` and `/n`, counts as giving the parameter twice.
+
 * Command words are not case-sensitive.<br>
   For example, `list`, `LIST` and `List` are the same command, and `viewA` can also be typed as `viewa` or `VIEWA`.
 
@@ -433,7 +437,7 @@ Examples:
 * `list Betsy` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list Betsy` command.
 * `grade /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for Alex Yeoh from class A1.
 
-### Viewing grades: `viewG`
+### Viewing grades: `viewG` or `vg`
 
 Shows all recorded grades for a contact.
 
@@ -472,7 +476,7 @@ Examples:
 * `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
 * `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
-### Deleting grades: `deleteG`
+### Deleting grades: `deleteG` or `dg`
 
 Deletes a recorded grade from a contact.
 
@@ -512,7 +516,7 @@ Examples:
 * `deleteG 2 /assessment Quiz 1` deletes the grade for Quiz 1 from the 2nd contact in the displayed list.
 * `deleteG /name John Tan /class A1 /assessment Final Exam` deletes John Tan's grade for Final Exam, even if John Tan is not in the displayed contact list.
 
-### Recording attendance: `attendance`
+### Recording attendance: `attendance` or `att`
 
 Records whether a contact was present, absent or late on a date.
 
@@ -558,7 +562,7 @@ Examples:
 * `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
 * `attendance /name Alex Yeoh /class A1 /date 16-09-2026 /status absent` records Alex Yeoh from class A1 as absent on 16 September 2026.
 
-### Viewing attendance: `viewA`
+### Viewing attendance: `viewA` or `va`
 
 Shows all recorded attendance for a contact.
 
@@ -600,7 +604,7 @@ Examples:
 * `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
 * `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
 
-### Deleting attendance: `deleteA`
+### Deleting attendance: `deleteA` or `da`
 
 Deletes a recorded attendance entry from a contact.
 

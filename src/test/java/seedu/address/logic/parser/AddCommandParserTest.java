@@ -43,7 +43,7 @@ public class AddCommandParserTest {
 
     private static final String PHONE_DESC = " /phone 91234567";
     private static final String ADDRESS_DESC = " /address Blk 30 Geylang Street 29";
-    private static final String TAG_DESC = " " + CliSyntax.PREFIX_TAG + " friends";
+    private static final String TAG_DESC = " /tag friends";
 
     private AddCommandParser parser = new AddCommandParser();
 
