@@ -16,6 +16,8 @@ public class Grade {
             + "and can only contain English letters (accented letters are allowed), digits, spaces and the "
             + "symbols on a standard keyboard, except commas.";
     public static final String MESSAGE_INVALID_SCORE = "Score must be a numerical value (0-100).";
+    public static final BigDecimal MIN_SCORE = BigDecimal.ZERO;
+    public static final BigDecimal MAX_SCORE = BigDecimal.valueOf(100);
 
     private final String assessmentName;
     private final String assessmentKey;
@@ -29,12 +31,20 @@ public class Grade {
         if (getAssessmentNameConstraintViolation(normalizedAssessmentName).isPresent()) {
             throw new IllegalArgumentException(MESSAGE_INVALID_ASSESSMENT_NAME);
         }
-        if (score.compareTo(BigDecimal.ZERO) < 0 || score.compareTo(BigDecimal.valueOf(100)) > 0) {
+        if (!isValidScore(score)) {
             throw new IllegalArgumentException(MESSAGE_INVALID_SCORE);
         }
         this.assessmentName = normalizedAssessmentName;
         this.assessmentKey = StringUtil.toComparisonKey(normalizedAssessmentName);
         this.score = score;
+    }
+
+    /**
+     * Returns true if {@code score} is between {@link #MIN_SCORE} and {@link #MAX_SCORE}, inclusive.
+     */
+    public static boolean isValidScore(BigDecimal score) {
+        requireNonNull(score);
+        return score.compareTo(MIN_SCORE) >= 0 && score.compareTo(MAX_SCORE) <= 0;
     }
 
     /**

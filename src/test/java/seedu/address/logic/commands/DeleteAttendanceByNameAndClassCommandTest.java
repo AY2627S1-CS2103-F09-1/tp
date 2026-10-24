@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -65,7 +66,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
-                "late", ALICE.getName(), DATE);
+                "late", ALICE.getName(), Attendance.formatDate(DATE));
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
@@ -112,11 +113,11 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         DeleteAttendanceByNameAndClassCommand command =
                 new DeleteAttendanceByNameAndClassCommand("Nobody Here", ALICE_CLASS, DATE);
 
-        assertCommandFailure(command, model, DeleteAttendanceByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteAttendanceByNameAndClassCommand deleteAliceDate =
                 new DeleteAttendanceByNameAndClassCommand("Alice", "A1", DATE);
 
@@ -135,7 +136,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteAttendanceByNameAndClassCommand command =
                 new DeleteAttendanceByNameAndClassCommand("Alice", "A1", DATE);
         String expected = DeleteAttendanceByNameAndClassCommand.class.getCanonicalName()

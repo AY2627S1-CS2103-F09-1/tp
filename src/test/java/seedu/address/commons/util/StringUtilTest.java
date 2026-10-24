@@ -91,6 +91,14 @@ public class StringUtilTest {
     }
 
     @Test
+    public void toComparisonKey_fullWidthLetters_sameKeyAsAsciiLetters() {
+        assertEquals("quiz 1", StringUtil.toComparisonKey("\uff31uiz 1")); // full-width Q
+        assertEquals("alex yeoh", StringUtil.toComparisonKey("\uff21\uff2c\uff25\uff38 Yeoh")); // full-width ALEX
+        assertEquals("a1", StringUtil.toComparisonKey("A\uff11")); // full-width digit 1
+        assertEquals("alex yeoh", StringUtil.toComparisonKey("Alex\u00a0Yeoh")); // no-break space
+    }
+
+    @Test
     public void getDetails_exceptionGiven() {
         assertTrue(StringUtil.getDetails(new FileNotFoundException("file not found"))
             .contains("java.io.FileNotFoundException: file not found"));

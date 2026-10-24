@@ -20,6 +20,28 @@ public class GradeTest {
     }
 
     @Test
+    public void isSameAssessment_fullWidthLetters_returnsTrue() {
+        Grade grade = new Grade("Quiz 1", BigDecimal.ONE);
+
+        assertTrue(grade.isSameAssessment(new Grade("\uff31uiz 1", BigDecimal.TEN)));
+        assertTrue(grade.hasAssessmentName("\uff31\uff35\uff29\uff3a 1"));
+    }
+
+    @Test
+    public void isValidScore_boundaryValues_returnsExpected() {
+        assertTrue(Grade.isValidScore(Grade.MIN_SCORE));
+        assertTrue(Grade.isValidScore(Grade.MAX_SCORE));
+        assertTrue(Grade.isValidScore(new BigDecimal("99.999")));
+        assertFalse(Grade.isValidScore(new BigDecimal("-0.001")));
+        assertFalse(Grade.isValidScore(new BigDecimal("100.001")));
+    }
+
+    @Test
+    public void isValidScore_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> Grade.isValidScore(null));
+    }
+
+    @Test
     public void constructor_invalidAssessmentName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new Grade("", BigDecimal.ONE));
         assertThrows(IllegalArgumentException.class, () -> new Grade("Exam,1", BigDecimal.ONE));
@@ -47,7 +69,7 @@ public class GradeTest {
     }
 
     @Test
-    public void equals_assessmentCaseAndScoreScaleInsensitive() {
+    public void equals_differentCaseAndScoreScale_returnsTrue() {
         Grade first = new Grade("Assignment 1", new BigDecimal("97.0"));
         Grade second = new Grade("assignment 1", new BigDecimal("97"));
 

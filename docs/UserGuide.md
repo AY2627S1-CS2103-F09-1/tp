@@ -122,7 +122,7 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
   * The local-part can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain is made up of one or more labels separated by periods, as in `example.com`. Each label can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last label must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. An accented letter typed as one character and the same letter typed as a letter followed by an accent are also treated as the same.
+* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. An accented letter typed as one character and the same letter typed as a letter followed by an accent are also treated as the same, and so is a full-width letter such as `Ａ` and the letter `A`. The same applies to assessment names.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -227,7 +227,7 @@ Format: `delete INDEX` or `delete /name NAME /class CLASS`
   * Both the name and the class must match, because the same name can exist in different classes.
   * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
   * All contacts in ClassMates are searched, even if only some contacts are displayed, for example after a `list` with a keyword.
-  * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `No contact found`.
+  * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * An index cannot be combined with `/name` or `/class` in the same command.
 * On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
 
@@ -240,7 +240,7 @@ A parameter is given more than once | `Each parameter can only be specified once
 No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
 `/name` is missing or has no value | `Command requires a name`
 `/class` is missing or has no value | `Command requires a class`
-No contact has the given name and class | `No contact found`
+No contact has the given name and class | `Contact not found`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 
 If more than one problem applies, only the first one in the table above is reported.
@@ -398,7 +398,7 @@ or
 `grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces. They are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas, such as `Assignment 1`, `Mid-term` or `Quiz #1`. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
@@ -409,7 +409,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/assessment` or `/score` is given, such as `/name` | `Unknown parameter. Use /assessment or /score`
+A parameter other than `/name`, `/class`, `/assessment` or `/score` is given, such as `/email` | `Unknown parameter. Use /name, /class, /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
@@ -417,10 +417,10 @@ The index, or name and class, is missing | `Use either an index, or both /name a
 `/class` is missing when using the name/class format | `Command requires a class`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
-The index is not a positive integer | `Index must be a positive integer.`
 The assessment name contains a parameter such as `/score` that is stuck to the text before it | `The assessment name contains '/score', which looks like a parameter that is missing a space before it`
 The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
+The index is not a positive integer | `Index must be a positive integer.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`
@@ -502,7 +502,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | The assessment name contains a parameter such as `/name` that is stuck to the text before it                                                            | `The assessment name contains '/name', which looks like a parameter that is missing a space before it`                                                                                  |
 | The assessment name is not valid                                                                                                                        | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.` |
 | The index is larger than the number of contacts displayed                                                                                               | `The contact index provided is invalid.`                                                                                                                                                |
-| No contact matches the given name and class                                                                                                             | `No contact found`                                                                                                                                                                      |
+| No contact matches the given name and class                                                                                                             | `Contact not found`                                                                                                                                                                      |
 | The contact has no grade for the given assessment                                                                                                       | `Grade for this assessment not found`                                                                                                                                                   |
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -525,7 +525,7 @@ or
 `attendance /name NAME /class CLASS /date DATE /status STATUS`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces. They are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
@@ -535,16 +535,17 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
+A parameter other than `/name`, `/class`, `/date` or `/status` is given, such as `/email` | `Unknown parameter. Use /name, /class, /date or /status`
+A parameter is given more than once | `Each parameter can only be specified once`
+The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
 `/name` is missing when using the name/class format | `Command requires a name`
 `/class` is missing when using the name/class format | `Command requires a class`
-The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
-A parameter is given more than once | `Each parameter can only be specified once`
-The index is not a positive integer | `Index must be a positive integer.`
 The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. Please use the format DD-MM-YYYY.`
 The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
+The index is not a positive integer | `Index must be a positive integer.`
 The date is in the future | `Attendance date cannot be in the future.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
@@ -629,7 +630,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | `/date` is missing or has nothing after it                                                                                                             | `Missing date. Please provide the date of attendance.`                            |
 | The date is not a real date in the format `DD-MM-YYYY`                                                                                                 | `Invalid date format. Please use the format DD-MM-YYYY.`                          |
 | The index is larger than the number of contacts displayed                                                                                              | `The contact index provided is invalid.`                                          |
-| No contact matches the given name and class                                                                                                            | `No contact found`                                                                |
+| No contact matches the given name and class                                                                                                            | `Contact not found`                                                                |
 | The contact has no attendance entry for the given date                                                                                                 | `Attendance for this date not found`                                              |
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -689,6 +690,7 @@ ClassMates data is saved automatically as a JSON file `[JAR file location]/data/
 If your changes make the data file invalid, ClassMates starts with no contacts at the next run, and tells you so in the result box. Your file is not deleted: ClassMates renames it to `classmates.json.bad-DATE-TIME` in the same folder, such as `classmates.json.bad-20261021-101500-123`, and puts an empty `classmates.json` in its place. To get your contacts back, close ClassMates, fix the renamed file, and give it the name `classmates.json` again, replacing the empty file. If ClassMates cannot rename the file, it says so, and the next command that you run replaces the file. We still recommend backing up the file before editing it.<br>
 Data files from earlier versions of ClassMates, which do not record a class for each contact, are also treated as invalid, and are kept in the same way.<br>
 A data file is also invalid if a contact has two attendance records for the same date, or two grades for the same assessment, ignoring case and extra spaces.<br>
+In the data file, an attendance date is written as `YYYY-MM-DD` with exactly four digits in the year, such as `2026-09-16`. Unlike the `attendance` command, ClassMates does not check that the date is not in the future when it reads the file.<br>
 The file can be saved in UTF-8 with or without a byte order mark, so editors such as Notepad can be used.<br>
 Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.g., if a value entered is outside of the acceptable range). Therefore, edit the data file only if you are confident that you can update it correctly.
 </box>

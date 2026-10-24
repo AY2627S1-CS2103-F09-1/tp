@@ -62,8 +62,20 @@ public class DeleteAttendanceByIndexCommandTest {
         expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
-                "absent", ALICE.getName(), DATE);
+                "absent", ALICE.getName(), Attendance.formatDate(DATE));
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_yearZeroDate_messageShowsYearZero() throws Exception {
+        LocalDate yearZero = LocalDate.of(0, 1, 1);
+        Attendance yearZeroAttendance = new Attendance(yearZero, Attendance.Status.LATE);
+        model.setPerson(aliceWithAttendance, aliceWithAttendance.withAttendance(yearZeroAttendance));
+
+        CommandResult result = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, yearZero).execute(model);
+
+        assertEquals("Attendance of late for " + ALICE.getName() + " on 01-01-0000 has been deleted",
+                result.getFeedbackToUser());
     }
 
     @Test
@@ -101,7 +113,7 @@ public class DeleteAttendanceByIndexCommandTest {
         showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
-                "absent", ALICE.getName(), DATE);
+                "absent", ALICE.getName(), Attendance.formatDate(DATE));
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
@@ -117,7 +129,7 @@ public class DeleteAttendanceByIndexCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteAttendanceByIndexCommand deleteFirstDate =
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
 
@@ -130,7 +142,7 @@ public class DeleteAttendanceByIndexCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteAttendanceByIndexCommand command =
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
         String expected = DeleteAttendanceByIndexCommand.class.getCanonicalName()

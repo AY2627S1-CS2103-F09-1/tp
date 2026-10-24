@@ -194,6 +194,12 @@ public class NameTest {
     }
 
     @Test
+    public void equals_fullWidthLetters_returnsTrue() {
+        assertEquals(new Name("Alex Yeoh"), new Name("\uff21lex Yeoh"));
+        assertTrue(new Name("Alex Yeoh").matches("\uff21\uff2c\uff25\uff38 yeoh"));
+    }
+
+    @Test
     public void equals() {
         Name name = new Name("Valid Name");
 

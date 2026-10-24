@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -145,28 +146,28 @@ public class DeleteGradeByNameAndClassCommandTest {
     public void execute_noMatchingName_throwsCommandException() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Nobody Here", ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, model, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_matchingNameButOtherClass_throwsCommandException() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, "Z9", "Quiz 1");
-        assertCommandFailure(command, model, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Nobody Here", ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, model, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_invalidNameAndClass_throwsCommandExceptionNotFound() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("R@chel", "A1/B2", "Quiz 1");
-        assertCommandFailure(command, model, "No contact found");
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
@@ -174,11 +175,11 @@ public class DeleteGradeByNameAndClassCommandTest {
         Model emptyModel = new ModelManager();
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, emptyModel, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, emptyModel, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteGradeByNameAndClassCommand deleteAliceQuiz =
                 new DeleteGradeByNameAndClassCommand("Alice", "A1", "Quiz 1");
 
@@ -198,7 +199,7 @@ public class DeleteGradeByNameAndClassCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Alice", "A1", "Quiz 1");
         String expected = DeleteGradeByNameAndClassCommand.class.getCanonicalName()

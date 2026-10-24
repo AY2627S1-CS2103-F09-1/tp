@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
@@ -11,10 +12,10 @@ import java.math.BigDecimal;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.commands.GradeByIndexCommand;
+import seedu.address.logic.commands.GradeByNameAndClassCommand;
 import seedu.address.logic.commands.GradeCommand;
-import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Grade;
-import seedu.address.model.person.Name;
 
 public class GradeCommandParserTest {
 
@@ -22,7 +23,7 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_validIndexArguments_success() {
-        GradeCommand expected = new GradeCommand(
+        GradeCommand expected = new GradeByIndexCommand(
                 Index.fromOneBased(5), new Grade("Assignment 1", new BigDecimal("97")));
 
         assertParseSuccess(parser, "5 /assessment Assignment 1 /score 97", expected);
@@ -32,9 +33,9 @@ public class GradeCommandParserTest {
     public void parse_validNameAndClassArguments_success() {
         String userInput = " /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97";
 
-        GradeCommand expectedCommand = new GradeCommand(
-                new Name("Alex Yeoh"),
-                new ClassName("A1"),
+        GradeCommand expectedCommand = new GradeByNameAndClassCommand(
+                "Alex Yeoh",
+                "A1",
                 new Grade("Assignment 1", new BigDecimal("97")));
 
         assertParseSuccess(parser, userInput, expectedCommand);
@@ -45,12 +46,28 @@ public class GradeCommandParserTest {
         String userInput =
                 " /name   alex   yeoh  /class  a1 /assessment Assignment 1 /score 97";
 
-        GradeCommand expectedCommand = new GradeCommand(
-                new Name("alex   yeoh"),
-                new ClassName("a1"),
+        GradeCommand expectedCommand = new GradeByNameAndClassCommand(
+                "alex   yeoh",
+                "a1",
                 new Grade("Assignment 1", new BigDecimal("97")));
 
         assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_nameAndClassThatNoContactCanHave_success() {
+        GradeCommand expectedCommand = new GradeByNameAndClassCommand(
+                "@@@,",
+                "!!!",
+                new Grade("Assignment 1", new BigDecimal("97")));
+
+        assertParseSuccess(parser, " /name @@@, /class !!! /assessment Assignment 1 /score 97", expectedCommand);
+    }
+
+    @Test
+    public void parse_unknownParameterMessage_listsEveryAcceptedParameter() {
+        assertEquals("Unknown parameter. Use /name, /class, /assessment or /score",
+                GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
     }
 
     @Test
@@ -68,7 +85,7 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_prefixesInAnyCase_success() {
-        GradeCommand expected = new GradeCommand(
+        GradeCommand expected = new GradeByIndexCommand(
                 Index.fromOneBased(5), new Grade("Assignment 1", new BigDecimal("97")));
 
         assertParseSuccess(parser, "5 /ASSESSMENT Assignment 1 /Score 97", expected);
@@ -76,7 +93,7 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_decimalScore_success() {
-        GradeCommand expected = new GradeCommand(
+        GradeCommand expected = new GradeByIndexCommand(
                 Index.fromOneBased(2), new Grade("Quiz-1", new BigDecimal("97.5")));
 
         assertParseSuccess(parser, "2 /score 97.5 /assessment Quiz-1", expected);
@@ -85,9 +102,9 @@ public class GradeCommandParserTest {
     @Test
     public void parse_assessmentNameWithSymbolsAndAccents_success() {
         assertParseSuccess(parser, "1 /assessment Quiz #1 (Part A) /score 90",
-                new GradeCommand(Index.fromOneBased(1), new Grade("Quiz #1 (Part A)", new BigDecimal("90"))));
+                new GradeByIndexCommand(Index.fromOneBased(1), new Grade("Quiz #1 (Part A)", new BigDecimal("90"))));
         assertParseSuccess(parser, "1 /assessment Examen Finalé /score 90",
-                new GradeCommand(Index.fromOneBased(1), new Grade("Examen Finalé", new BigDecimal("90"))));
+                new GradeByIndexCommand(Index.fromOneBased(1), new Grade("Examen Finalé", new BigDecimal("90"))));
     }
 
     @Test
