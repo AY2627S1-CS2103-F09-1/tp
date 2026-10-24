@@ -2037,7 +2037,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The status message shows `Attendance for Alex Yeoh on 16-09-2026 recorded as present.`, the same as for `attendance 1 /date 16-09-2026 /status present`.
 
    1. Test case: `va /n Alex Yeoh /c A1`<br>
-      Expected: The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by the record of 16-09-2026.
+      Expected: The status message shows `Here is the attendance for Alex Yeoh from class A1`, followed by the record `16-Sep-2026  present`.
 
    1. Test case: `tag /group Group A /m 1,2`<br>
       Expected: The status message shows `Contacts successfully linked to group Group A: Alex Yeoh (A1), Bernice Yu (A1)`.
