@@ -8,17 +8,17 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_SCORE;
 
+import seedu.address.logic.commands.GradeByIndexCommand;
+import seedu.address.logic.commands.GradeByNameAndClassCommand;
 import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
-import seedu.address.model.person.ClassName;
 import seedu.address.model.person.Grade;
-import seedu.address.model.person.Name;
 
 /** Parses arguments and creates a {@link GradeCommand}. */
 public class GradeCommandParser implements Parser<GradeCommand> {
 
-    public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE;
+    public static final String MESSAGE_UNKNOWN_PARAMETER = "Unknown parameter. Use " + PREFIX_NAME + ", "
+            + PREFIX_CLASS + ", " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE;
     private static final String MESSAGE_MISSING_SCORE = "Score missing";
 
     @Override
@@ -33,13 +33,11 @@ public class GradeCommandParser implements Parser<GradeCommand> {
         Grade grade = parseGrade(argMultimap);
 
         if (isIdentifiedByIndex) {
-            return new GradeCommand(ParserUtil.parseIndex(argMultimap.getPreamble()), grade);
+            return new GradeByIndexCommand(ParserUtil.parseIndex(argMultimap.getPreamble()), grade);
         }
-        Name name = ParserUtil.parseName(
-                ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME));
-        ClassName className = ParserUtil.parseClassName(
-                ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS));
-        return new GradeCommand(name, className, grade);
+        String name = ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
+        String className = ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
+        return new GradeByNameAndClassCommand(name, className, grade);
     }
 
     /**

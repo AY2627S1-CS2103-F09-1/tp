@@ -17,6 +17,7 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -112,7 +113,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         DeleteAttendanceByNameAndClassCommand command =
                 new DeleteAttendanceByNameAndClassCommand("Nobody Here", ALICE_CLASS, DATE);
 
-        assertCommandFailure(command, model, DeleteAttendanceByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test

@@ -144,9 +144,9 @@ How the parsing works:
 * A command word does not always map to a single `Command` class. `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, which acts on the displayed list, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`, which searches the whole address book using `Person#hasNameAndClass(String, String)`. Both extend the abstract `DeleteCommand`, which holds the shared usage and success messages. `DeleteCommandParser` reports problems in this order: unrecognized parameters, repeated parameters, an invalid index or an index combined with `/name` or `/class`, a missing name, then a missing class. A parameter given without a value counts as missing.
 * A parser's argument can be optional. `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty. Otherwise, it returns a `ListCommand` that holds a `PersonMatchesKeyword` predicate built from the whole argument. It accepts any argument, so it never throws a `ParseException`. See [Listing and searching contacts](#listing-and-searching-contacts-feature).
 * `EditCommandParser` parses `edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]` and creates an `EditCommand` that holds an `EditPersonDescriptor` with the details to change. The index is the text before the first parameter, and the parser rejects a command in which no detail is given. An email without a value marks the email as removed. See [Editing a contact](#editing-a-contact-feature).
-* `AttendanceCommandParser` parses the contact, date and status for the `attendance` command (`attendance INDEX /date DD-MM-YYYY /status present|absent|late` or `attendance /name NAME /class CLASS /date DD-MM-YYYY /status present|absent|late`) and creates an `AttendanceCommand`. The contact is identified either by the index, which is the text before the first parameter, or by `/name` and `/class`, but not by both. `ParserUtil#isIdentifiedByIndex(ArgumentMultimap)` checks this for `AttendanceCommandParser` and `GradeCommandParser`, and tells the parser which of the two ways was used. `AttendanceCommand` has a constructor for each of the two ways. The parser reports problems in this order: a parameter that the command does not accept, a repeated parameter, an index together with `/name` or `/class`, neither an index nor a name and class, a missing name, a missing class, a missing date, a missing status, an invalid date, an invalid status, then an invalid index, or an invalid name or class. See [Recording attendance](#recording-attendance-feature).
+* `AttendanceCommandParser` parses the contact, date and status for the `attendance` command (`attendance INDEX /date DD-MM-YYYY /status present|absent|late` or `attendance /name NAME /class CLASS /date DD-MM-YYYY /status present|absent|late`) and creates an `AttendanceByIndexCommand` or an `AttendanceByNameAndClassCommand`, which both extend the abstract `AttendanceCommand`. The contact is identified either by the index, which is the text before the first parameter, or by `/name` and `/class`, but not by both. `ParserUtil#isIdentifiedByIndex(ArgumentMultimap)` checks this for `AttendanceCommandParser` and `GradeCommandParser`, and tells the parser which of the two ways was used. The parser reports problems in this order: a parameter that the command does not accept, a repeated parameter, an index together with `/name` or `/class`, neither an index nor a name and class, a missing name, a missing class, a missing date, a missing status, an invalid date, then an invalid status, then an invalid index. The name and class are not checked against the rules of `Name` and `ClassName`, in the same way as for `viewA`, so a name or class that no contact has is reported when the command runs. See [Recording attendance](#recording-attendance-feature).
 * `ViewAttendanceCommandParser` and `ViewGradeCommandParser` parse the name and class for the `viewA` and `viewG` commands and create a `ViewAttendanceCommand` and a `ViewGradeCommand`. They extend `NameAndClassCommandParser`, which does the parsing that they share, in the same way as `TagCommandParser` and `UntagCommandParser` share the parsing in `GroupMembershipCommandParser`. It reports problems in this order: a parameter that the command does not accept, a repeated parameter, text before the first parameter, a missing name, then a missing class. It does not check the name and class against the rules of `Name` and `ClassName`, so a name or class that no contact has is reported when the command runs. See [Viewing attendance](#viewing-attendance-feature) and [Viewing grades](#viewing-grades-feature).
-* `GradeCommandParser` parses the contact, assessment name and score for the `grade` command (`grade INDEX /assessment ASSESSMENT_NAME /score SCORE` or `grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`) and creates a `GradeCommand`. The contact is identified in the same way as for `attendance`, and `GradeCommand` also has a constructor for each of the two ways. The parser reports problems in this order: a parameter that the command does not accept, a repeated parameter, an index together with `/name` or `/class`, neither an index nor a name and class, a missing name, a missing class, a missing assessment name, a missing score, an assessment name that has a parameter name stuck to the text before it, an invalid assessment name, a score that is not a number from 0 to 100, then an invalid index, or an invalid name or class. The assessment name is checked by `ParserUtil#parseAssessmentName(String)`, which `DeleteGradeCommandParser` also uses, and the score by `ParserUtil#parseScore(String)`.
+* `GradeCommandParser` parses the contact, assessment name and score for the `grade` command (`grade INDEX /assessment ASSESSMENT_NAME /score SCORE` or `grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`) and creates a `GradeByIndexCommand` or a `GradeByNameAndClassCommand`, which both extend the abstract `GradeCommand`. The contact is identified in the same way as for `attendance`. The parser reports problems in this order: a parameter that the command does not accept, a repeated parameter, an index together with `/name` or `/class`, neither an index nor a name and class, a missing name, a missing class, a missing assessment name, a missing score, an assessment name that has a parameter name stuck to the text before it, an invalid assessment name, a score that is not a number from 0 to 100, then an invalid index. The name and class are not checked against the rules of `Name` and `ClassName`. The assessment name is checked by `ParserUtil#parseAssessmentName(String)`, which `DeleteGradeCommandParser` also uses, and the score by `ParserUtil#parseScore(String)`.
 * `DeleteGradeCommandParser` parses the contact and the assessment name for the `deleteG` command (`deleteG INDEX /assessment ASSESSMENT_NAME` or `deleteG /name NAME /class CLASS /assessment ASSESSMENT_NAME`). Like `DeleteCommandParser`, it returns a `DeleteGradeByIndexCommand` or a `DeleteGradeByNameAndClassCommand`, which both extend the abstract `DeleteGradeCommand`. It reports problems in this order: a parameter that the command does not accept, a repeated parameter, then, if `/name` or `/class` is given, text before the first parameter, a missing name and a missing class, or, otherwise, an index that is missing or not a positive integer. Text before the first parameter and a bad index are reported as an invalid command format. The assessment name is checked last by `ParserUtil#parseAssessmentName(String)`, and it can be missing, have a parameter name stuck to the text before it, or be invalid. See [Deleting grades](#deleting-grades-feature).
 * `ImportCommandParser` takes the whole trimmed argument of the `import` command as the file path and creates an `ImportCommand`. It rejects an empty path, and a path that contains a line break. It does not check the file, which `ImportCommand` does when it runs. See [Importing contacts from a file](#importing-contacts-from-a-file-feature).
 * `AttendanceCommandParser`, `GradeCommandParser`, `DeleteGradeCommandParser` and `NameAndClassCommandParser` use `ArgumentTokenizer` to extract their prefixed arguments.
@@ -166,13 +166,13 @@ The `Model` component,
   * `getFilteredPersonList()` and `updateFilteredPersonList(Predicate<Person>)`, which give and change the contacts that are displayed. `Model#PREDICATE_SHOW_ALL_PERSONS` shows every contact, and `PersonMatchesKeyword` shows the contacts that match a keyword (see [Listing and searching contacts](#listing-and-searching-contacts-feature)).
   * `getAddressBook()`, which returns the data as a `ReadOnlyAddressBook`, and `setAddressBook(ReadOnlyAddressBook)`, which replaces all of it.
   * `getUserPrefs()`, `getGuiSettings()` and `setGuiSettings(GuiSettings)` for the user preferences.
-* finds a `Person` by name and class with `Model#findPerson(Name, ClassName)`, which is used by `attendance` and `grade` after the parser has checked the name and class, or with `Model#findPerson(String, String)`, which is used by `viewA`, `viewG`, `deleteA` and `deleteG`. The second method does not require the strings to be a valid name and class, and compares them with `Person#hasNameAndClass(String, String)`, ignoring case and extra whitespace.
+* finds a `Person` by name and class with `Model#findPerson(String, String)`, which `attendance`, `grade`, `viewA`, `viewG`, `deleteA` and `deleteG` use. The strings do not have to be a valid name and class, and are compared with `Person#hasNameAndClass(String, String)`, ignoring case and extra whitespace.
 * identifies a `Person` by its `Name` and `ClassName` (see `Person#isSamePerson(Person)`). Both are compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
 * compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
 * keeps the `Person` objects in the order they are displayed, which is from the most recently added to the oldest (see [Order of contacts](#order-of-contacts-feature)).
 * keeps `Person` immutable. `Person#withTag(Tag)` returns a copy with an extra tag, which is how a contact is added to a group, `Person#withoutTag(Tag)` returns a copy without a tag, which is how a contact is removed from a group, and `Person#hasTag(Tag)` checks whether the contact is in a group.
-* stores each contact's attendance records as a list of `Attendance` objects. Each record contains a date and a status (`PRESENT`, `ABSENT` or `LATE`). `Attendance.Status#toString()` returns the status in lower case, which is the form that the user types and that the messages and the data file use. `Person#withAttendance(Attendance)` returns a copy of the contact with the new record added, and `Person#withoutAttendance(Attendance)` returns a copy without a record.
-* stores each contact's grade records as a list of `Grade` objects, in the order they were recorded. Each record contains an assessment name and a score. The assessment name is 1 to `Grade.MAX_ASSESSMENT_NAME_LENGTH` (80) characters long and can only contain the characters that a `Name` can contain (English letters, accented letters, digits, spaces and the symbols on a standard keyboard, except commas), and the score is a number from `Grade.MIN_SCORE` (0) to `Grade.MAX_SCORE` (100), checked by `Grade.isValidScore(BigDecimal)`. Assessment names are compared ignoring case, so a contact has at most one grade for an assessment. `Person#withGrade(Grade)` returns a copy of the contact with the new record added, and throws an `IllegalArgumentException` if the contact already has a grade for that assessment. `Person#withoutGrade(Grade)` returns a copy without a record.
+* stores each contact's attendance records as a list of `Attendance` objects. Each record contains a date and a status (`PRESENT`, `ABSENT` or `LATE`). `Attendance.Status#toString()` returns the status in lower case, which is the form that the user types and that the messages and the data file use. `Person#withAttendance(Attendance)` returns a copy of the contact with the new record added, and `Person#withoutAttendance(Attendance)` returns a copy without a record. `Person#hasAttendanceOn(LocalDate)` tells whether the contact has a record for a date.
+* stores each contact's grade records as a list of `Grade` objects, in the order they were recorded. Each record contains an assessment name and a score. The assessment name is 1 to `Grade.MAX_ASSESSMENT_NAME_LENGTH` (80) characters long and can only contain the characters that a `Name` can contain (English letters, accented letters, digits, spaces and the symbols on a standard keyboard, except commas), and the score is a number from `Grade.MIN_SCORE` (0) to `Grade.MAX_SCORE` (100), checked by `Grade.isValidScore(BigDecimal)`. Assessment names are compared ignoring case, so a contact has at most one grade for an assessment. `Person#withGrade(Grade)` returns a copy of the contact with the new record added, and throws an `IllegalArgumentException` if the contact already has a grade for that assessment. `Person#withoutGrade(Grade)` returns a copy without a record. `Person#hasGradeFor(Grade)` tells whether the contact has a grade for the same assessment.
 * treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the contact has no email. An `Email` is at most `Email.MAX_LENGTH` (254) characters long. `Email.getConstraintViolation(String)` checks the length before matching the format, because matching the format regex takes time that grows quickly with the length of an invalid input (about 4 seconds for 5,000 characters).
 * stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
 * stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
@@ -279,7 +279,7 @@ The contacts that match a keyword are displayed in the same order as in the whol
 The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand`, which both extend the abstract `DeleteCommand` (see [Logic component](#logic-component)).
 
 * `DeleteByIndexCommand#execute(Model)` rejects an index that is larger than the displayed list, then deletes the contact at that index.
-* `DeleteByNameAndClassCommand#execute(Model)` searches the whole address book, not the displayed list, using `Person#hasNameAndClass(String, String)`. It reports `No contact found` if no contact matches.
+* `DeleteByNameAndClassCommand#execute(Model)` searches the whole address book, not the displayed list, using `Person#hasNameAndClass(String, String)`. It reports `Contact not found` if no contact matches.
 * The name and class given to `DeleteByNameAndClassCommand` are not checked against the rules for `Name` and `ClassName`.
 
 #### Design considerations
@@ -305,7 +305,7 @@ The `delete` command removes one contact, identified either by its index in the 
 **Aspect: Whether the name and class are validated**
 
 * **Alternative 1 (current choice):** They are only compared with the stored contacts, ignoring case and extra spaces.
-  * Pros: The user always gets the same message, `No contact found`, and the rules for `add` can change without affecting `delete`.
+  * Pros: The user always gets the same message, `Contact not found`, and the rules for `add` can change without affecting `delete`.
   * Cons: A name with a typo in a character that is not allowed gets no hint about the allowed format.
 * **Alternative 2:** Validate them with the rules for `add`.
   * Pros: Gives more specific error messages.
@@ -593,7 +593,7 @@ The CSV import uses `FileUtil` rather than the `Storage` component. The CSV file
 
 #### Implementation
 
-The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, `AttendanceCommand`, and the `Attendance` model class.
+The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, the abstract `AttendanceCommand` with its subclasses `AttendanceByIndexCommand` and `AttendanceByNameAndClassCommand`, and the `Attendance` model class.
 
 `AttendanceCommandParser#parse(String)` supports two ways of identifying a contact:
 
@@ -607,20 +607,18 @@ The parser then, in this order:
 * checks that the date and the status are present;
 * validates the date strictly in `DD-MM-YYYY` format, with a four-digit year and no sign, and obtains the Date object (delegated to `ParserUtil#parseDate`, which uses `Attendance#DATE_FORMAT`);
 * converts the status to an `Attendance.Status`;
-* validates the index when the index format is used, or the name and class when the name/class format is used.
+* validates the index when the index format is used, and returns an `AttendanceByIndexCommand`; or, when the name/class format is used, returns an `AttendanceByNameAndClassCommand` with the name and class as plain strings.
 
-`AttendanceCommand#execute(Model)` first rejects a date in the future. It then identifies the contact in one of two ways:
+Both subclasses first reject a date in the future with `AttendanceCommand#requireNotInFuture(LocalDate)`. They then identify the contact in their own way:
 
-* For the index format, it retrieves the contact from `Model#getFilteredPersonList()` using the displayed index.
-* For the name/class format, it searches the full address book for a contact whose name and class match the supplied values. Name and class comparisons ignore capitalization and extra whitespace.
+* `AttendanceByIndexCommand#execute(Model)` retrieves the contact from `Model#getFilteredPersonList()` using the displayed index.
+* `AttendanceByNameAndClassCommand#execute(Model)` searches the full address book with `Model#findPerson(String, String)`, which ignores capitalization and extra whitespace. The name and class are plain strings, as for `delete`, `viewA` and `deleteA`, so a name or class that no contact can have is reported as `Contact not found`.
 
-If no contact matches the supplied name and class, the command throws a `CommandException`.
+If no contact matches, the command throws a `CommandException`.
 
-To record attendance, the command creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`. This returns an updated `Person`; the command replaces the old contact in the model using `Model#setPerson(Person, Person)`.
+`AttendanceCommand#recordAttendance(Model, Person, LocalDate, Attendance.Status)` contains the recording that is shared by both subclasses. It first asks `Person#hasAttendanceOn(LocalDate)` and, if the contact already has an attendance record for that date, throws a `CommandException` that says that the record already exists. Otherwise, it creates a new `Attendance` object and calls `Person#withAttendance(Attendance)`, which returns an updated `Person`, and replaces the old contact in the model using `Model#setPerson(Person, Person)`. `Person#withAttendance(Attendance)` still throws an `IllegalArgumentException` for a duplicate date, but only as a safeguard, so the command does not depend on catching an exception.
 
-If the contact already has an attendance record for that date, `Person#withAttendance(Attendance)` throws an `IllegalArgumentException`. The command catches it and reports that the attendance record already exists.
-
-On success, the command returns a message naming the contact, date, and attendance status.
+On success, the command returns a message naming the contact, date, and attendance status. The date is written with `Attendance#formatDate(LocalDate)`.
 
 #### Design considerations
 
@@ -653,11 +651,27 @@ On success, the command returns a message naming the contact, date, and attendan
 * Is less convenient when recording attendance for several contacts from a displayed list.
 * Requires the user to know the exact contact name and class.
 
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `AttendanceCommand` with one subclass for each way of identifying the contact and a shared recording method.
+  * Pros: Each subclass has one contact-selection responsibility, invalid combinations of identifier fields cannot be represented, and the recording logic and messages are kept in one place. It is the same structure as `deleteA`.
+  * Cons: One command word maps to two command classes, so the parser must decide which class to create.
+* **Alternative 2:** A single command with optional fields for the index, name and class.
+  * Pros: Only one command class is needed.
+  * Cons: The command must branch during execution, and invalid combinations of optional fields can be represented. This was how the command was first written.
+
+**Aspect: How a duplicate record is detected**
+
+* **Alternative 1 (current choice):** Ask the model first with `Person#hasAttendanceOn(LocalDate)`.
+  * Pros: The command states the rule that it enforces, and no other `IllegalArgumentException` can be mistaken for a duplicate.
+* **Alternative 2:** Catch the `IllegalArgumentException` that `Person#withAttendance(Attendance)` throws.
+  * Cons: Uses an exception for an expected case, and the `try` block also covers unrelated code.
+
 ### Recording grades feature
 
 #### Implementation
 
-The `grade` command records one grade for a contact for a specified assessment. It is implemented by `GradeCommandParser`, `GradeCommand`, and the `Grade` model class.
+The `grade` command records one grade for a contact for a specified assessment. It is implemented by `GradeCommandParser`, the abstract `GradeCommand` with its subclasses `GradeByIndexCommand` and `GradeByNameAndClassCommand`, and the `Grade` model class.
 
 `GradeCommandParser#parse(String)` supports two ways of identifying a contact:
 
@@ -672,20 +686,18 @@ The parser then, in this order:
 * validates the assessment name (delegated to `ParserUtil#parseAssessmentName`);
 * validates the score as a number from 0 to 100 (delegated to `ParserUtil#parseScore`);
 * creates a `Grade` object containing the assessment name and score;
-* validates the index when the index format is used, or the name and class when the name/class format is used.
+* validates the index when the index format is used, and returns a `GradeByIndexCommand`; or, when the name/class format is used, returns a `GradeByNameAndClassCommand` with the name and class as plain strings.
 
 The assessment name must be between 1 and 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas, which are the same characters as in a `Name`. The score may contain a decimal part but must be between 0 and 100, inclusive.
 
-`GradeCommand#execute(Model)` identifies the contact in one of two ways:
+Each subclass identifies the contact in its own way:
 
-* For the index format, it retrieves the contact from `Model#getFilteredPersonList()` using the displayed index.
-* For the name/class format, it searches the full address book for a contact whose name and class match the supplied values. Name and class comparisons ignore capitalization and extra whitespace.
+* `GradeByIndexCommand#execute(Model)` retrieves the contact from `Model#getFilteredPersonList()` using the displayed index.
+* `GradeByNameAndClassCommand#execute(Model)` searches the full address book with `Model#findPerson(String, String)`, which ignores capitalization and extra whitespace. The name and class are plain strings, so a name or class that no contact can have is reported as `Contact not found`.
 
-If no contact matches the supplied name and class, the command throws a `CommandException`.
+If no contact matches, the command throws a `CommandException`.
 
-To record the grade, the command calls `Person#withGrade(Grade)`. This returns an updated `Person`; the command replaces the old person in the model using `Model#setPerson(Person, Person)`.
-
-A contact can have only one grade for each assessment. If the contact already has a grade for the assessment, `Person#withGrade(Grade)` throws an `IllegalArgumentException`. The command reports that the grade for the assessment already exists. Assessment names are compared ignoring case and extra spaces.
+`GradeCommand#recordGrade(Model, Person, Grade)` contains the recording that is shared by both subclasses. A contact can have only one grade for each assessment, so it first asks `Person#hasGradeFor(Grade)` and, if the contact already has a grade for the assessment, throws a `CommandException` that says that the grade already exists. Assessment names are compared ignoring case and extra spaces. Otherwise, it calls `Person#withGrade(Grade)`, which returns an updated `Person`, and replaces the old person in the model using `Model#setPerson(Person, Person)`. `Person#withGrade(Grade)` still throws an `IllegalArgumentException` for a duplicate assessment, but only as a safeguard.
 
 On success, the command returns a message containing the score, assessment name, student name and class.
 
@@ -731,6 +743,22 @@ Both formats are supported:
 and:
 
 `grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`
+
+**Aspect: How the command is structured**
+
+* **Alternative 1 (current choice):** An abstract `GradeCommand` with one subclass for each way of identifying the contact and a shared recording method.
+  * Pros: Each subclass has one contact-selection responsibility, invalid combinations of identifier fields cannot be represented, and the recording logic and messages are kept in one place. It is the same structure as `deleteG`.
+  * Cons: One command word maps to two command classes, so the parser must decide which class to create.
+* **Alternative 2:** A single command with optional fields for the index, name and class.
+  * Pros: Only one command class is needed.
+  * Cons: The command must branch during execution, and invalid combinations of optional fields can be represented. This was how the command was first written.
+
+**Aspect: How a duplicate grade is detected**
+
+* **Alternative 1 (current choice):** Ask the model first with `Person#hasGradeFor(Grade)`.
+  * Pros: The command states the rule that it enforces, and no other `IllegalArgumentException` can be mistaken for a duplicate.
+* **Alternative 2:** Catch the `IllegalArgumentException` that `Person#withGrade(Grade)` throws.
+  * Cons: Uses an exception for an expected case, and the `try` block also covers unrelated code.
 
 ### Viewing attendance feature
 
@@ -827,11 +855,11 @@ The `viewG` command displays all grades of a contact. It is implemented by `View
 **Aspect: Whether the name and class are validated**
 
 * **Alternative 1 (current choice):** Compare them as plain strings.
-  * Pros: Behaves in the same way as `delete` and `viewA`, and the user is told that no contact was found, which is the real reason that nothing is shown.
+  * Pros: Behaves in the same way as `delete`, `viewA`, `attendance`, `grade`, `deleteA` and `deleteG`, and the user is told that no contact was found, which is the real reason that nothing is shown. The same mistake gives the same message in every command.
   * Cons: A mistake in the format of a name, such as a comma, is not reported as a format error.
-* **Alternative 2:** Validate them as a `Name` and `ClassName`, as the command did before.
+* **Alternative 2:** Validate them as a `Name` and `ClassName`, as `attendance` and `grade` did before.
   * Pros: A name that can never exist is reported as a format error.
-  * Cons: The three commands that identify a contact by name and class gave different messages for the same mistake.
+  * Cons: The commands that identify a contact by name and class gave different messages for the same mistake.
 
 **Aspect: How grade records are displayed**
 
@@ -1376,7 +1404,7 @@ The use cases describe what the application does now.
 
     Use case resumes at step 1.
 
-* 1c. The user provides a name and class, but either the name or class is missing, too long, or has characters that are not allowed.
+* 1c. The user provides a name and class, but either the name or class is missing.
   * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
@@ -1439,7 +1467,7 @@ The use cases describe what the application does now.
   * 1d1. CM keeps the existing grade and displays an error message.
 
     Use case resumes at step 1.
-* 1e. The user provides a name and class, but either the name or class is missing, too long, or has characters that are not allowed.
+* 1e. The user provides a name and class, but either the name or class is missing.
   * 1e1. CM displays an error message.
 
     Use case resumes at step 1.
@@ -1824,7 +1852,7 @@ testers are expected to do more *exploratory* testing.
       Expected: Bernice Yu is deleted, even though she is not displayed after `list david`. The whole address book is searched.
 
    1. Test case: `delete /name David Li /class B1`<br>
-      Expected: No contact is deleted. The status message shows `No contact found`, because both the name and the class must match, and David Li is in class A2.
+      Expected: No contact is deleted. The status message shows `Contact not found`, because both the name and the class must match, and David Li is in class A2.
 
 1. _{ more test cases … }_
 
@@ -2002,7 +2030,7 @@ testers are expected to do more *exploratory* testing.
       Expected: No attendance entry is deleted. The status message shows `Attendance for this date not found`.
 
    1. Test case: `deleteA /name Alex Yeoh /class B1 /date 01-01-2024`<br>
-      Expected: No attendance entry is deleted. The status message shows `No contact found` because both the name and class must match an existing contact.
+      Expected: No attendance entry is deleted. The status message shows `Contact not found` because both the name and class must match an existing contact.
 
    1. Other incorrect commands to try: `deleteA`, `deleteA 0 /date 01-01-2024`, `deleteA 99 /date 01-01-2024`, `deleteA 1 /date 31-02-2024`, `deleteA 1 /status present`<br>
       Expected: Similar to previous. No attendance entry is deleted and the status message describes the problem.
@@ -2054,7 +2082,7 @@ testers are expected to do more *exploratory* testing.
       Expected: No grade is deleted. The status message shows `Grade for this assessment not found`.
 
    1. Test case: `deleteG /name Alex Yeoh /class B1 /assessment Quiz #1`<br>
-      Expected: No grade is deleted. The status message shows `No contact found`, because both the name and class must match an existing contact.
+      Expected: No grade is deleted. The status message shows `Contact not found`, because both the name and class must match an existing contact.
 
    1. Other incorrect commands to try: `deleteG`, `deleteG 0 /assessment Quiz #1`, `deleteG 99 /assessment Quiz #1`, `deleteG 1 /assessment Quiz,1`, `deleteG 1 /score 80`<br>
       Expected: Similar to previous. No grade is deleted and the status message describes the problem.

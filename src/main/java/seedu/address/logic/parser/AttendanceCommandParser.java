@@ -10,19 +10,19 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_STATUS;
 
 import java.time.LocalDate;
 
+import seedu.address.logic.commands.AttendanceByIndexCommand;
+import seedu.address.logic.commands.AttendanceByNameAndClassCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.person.Attendance;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 
 /**
  * Parses input arguments and creates an AttendanceCommand.
  */
 public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
-    public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_DATE + " or " + PREFIX_STATUS;
+    public static final String MESSAGE_UNKNOWN_PARAMETER = "Unknown parameter. Use " + PREFIX_NAME + ", "
+            + PREFIX_CLASS + ", " + PREFIX_DATE + " or " + PREFIX_STATUS;
     private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
     private static final String MESSAGE_INVALID_STATUS =
             "Invalid status. Please use 'present', 'absent' or 'late'.";
@@ -42,13 +42,11 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
         Attendance.Status status = parseStatus(statusArgument);
 
         if (isIdentifiedByIndex) {
-            return new AttendanceCommand(ParserUtil.parseIndex(argMultimap.getPreamble()), date, status);
+            return new AttendanceByIndexCommand(ParserUtil.parseIndex(argMultimap.getPreamble()), date, status);
         }
-        Name name = ParserUtil.parseName(
-                ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME));
-        ClassName className = ParserUtil.parseClassName(
-                ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS));
-        return new AttendanceCommand(name, className, date, status);
+        String name = ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
+        String className = ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
+        return new AttendanceByNameAndClassCommand(name, className, date, status);
     }
 
     /**

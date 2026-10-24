@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
@@ -11,10 +12,10 @@ import java.time.LocalDate;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.core.index.Index;
+import seedu.address.logic.commands.AttendanceByIndexCommand;
+import seedu.address.logic.commands.AttendanceByNameAndClassCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.model.person.Attendance;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 
 public class AttendanceCommandParserTest {
 
@@ -35,7 +36,7 @@ public class AttendanceCommandParserTest {
 
     @Test
     public void parse_prefixesInAnyCase_success() {
-        AttendanceCommand expectedCommand = new AttendanceCommand(
+        AttendanceCommand expectedCommand = new AttendanceByIndexCommand(
                 Index.fromOneBased(1),
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.ABSENT);
@@ -46,7 +47,7 @@ public class AttendanceCommandParserTest {
     @Test
     public void parse_validIndexArguments_success() {
         String userInput = "1 /date 16-09-2026 /status absent";
-        AttendanceCommand expectedCommand = new AttendanceCommand(
+        AttendanceCommand expectedCommand = new AttendanceByIndexCommand(
                 Index.fromOneBased(1),
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.ABSENT);
@@ -58,9 +59,9 @@ public class AttendanceCommandParserTest {
     public void parse_validNameAndClassArguments_success() {
         String userInput = " /name Alex Yeoh /class A1 /date 16-09-2026 /status absent";
 
-        AttendanceCommand expectedCommand = new AttendanceCommand(
-                new Name("Alex Yeoh"),
-                new ClassName("A1"),
+        AttendanceCommand expectedCommand = new AttendanceByNameAndClassCommand(
+                "Alex Yeoh",
+                "A1",
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.ABSENT);
 
@@ -72,13 +73,30 @@ public class AttendanceCommandParserTest {
         String userInput =
                 " /name   alex   yeoh  /class  a1 /date 16-09-2026 /status LaTe";
 
-        AttendanceCommand expectedCommand = new AttendanceCommand(
-                new Name("alex   yeoh"),
-                new ClassName("a1"),
+        AttendanceCommand expectedCommand = new AttendanceByNameAndClassCommand(
+                "alex   yeoh",
+                "a1",
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.LATE);
 
         assertParseSuccess(parser, userInput, expectedCommand);
+    }
+
+    @Test
+    public void parse_nameAndClassThatNoContactCanHave_success() {
+        AttendanceCommand expectedCommand = new AttendanceByNameAndClassCommand(
+                "@@@,",
+                "!!!",
+                LocalDate.of(2026, 9, 16),
+                Attendance.Status.ABSENT);
+
+        assertParseSuccess(parser, " /name @@@,  /class !!! /date 16-09-2026 /status absent", expectedCommand);
+    }
+
+    @Test
+    public void parse_unknownParameterMessage_listsEveryAcceptedParameter() {
+        assertEquals("Unknown parameter. Use /name, /class, /date or /status",
+                AttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER);
     }
 
     @Test

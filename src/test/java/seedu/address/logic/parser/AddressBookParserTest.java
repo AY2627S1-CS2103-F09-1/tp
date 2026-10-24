@@ -16,6 +16,7 @@ import java.util.List;
 import org.junit.jupiter.api.Test;
 
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AttendanceByIndexCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.DeleteAttendanceByIndexCommand;
@@ -30,6 +31,7 @@ import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.GradeByIndexCommand;
 import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
@@ -237,7 +239,7 @@ public class AddressBookParserTest {
     @Test
     public void parseCommand_attendance() throws Exception {
         LocalDate date = LocalDate.of(2026, 9, 16);
-        AttendanceCommand expected = new AttendanceCommand(
+        AttendanceCommand expected = new AttendanceByIndexCommand(
             INDEX_FIRST_PERSON, date, Attendance.Status.ABSENT);
 
         AttendanceCommand actual = (AttendanceCommand) parser.parseCommand(
@@ -255,7 +257,7 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_grade() throws Exception {
-        GradeCommand expected = new GradeCommand(INDEX_FIRST_PERSON,
+        GradeCommand expected = new GradeByIndexCommand(INDEX_FIRST_PERSON,
                 new Grade("Assignment 1", new BigDecimal("97.5")));
 
         assertEquals(expected, parser.parseCommand("grade 1 /assessment Assignment 1 /score 97.5"));

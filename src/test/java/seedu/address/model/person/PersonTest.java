@@ -381,6 +381,36 @@ public class PersonTest {
     }
 
     @Test
+    public void hasAttendanceOn_variousDates_returnsExpected() {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Person person = new PersonBuilder().build().withAttendance(new Attendance(date, Attendance.Status.LATE));
+
+        assertTrue(person.hasAttendanceOn(date));
+        assertFalse(person.hasAttendanceOn(date.plusDays(1)));
+        assertFalse(new PersonBuilder().build().hasAttendanceOn(date));
+    }
+
+    @Test
+    public void hasAttendanceOn_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().hasAttendanceOn(null));
+    }
+
+    @Test
+    public void hasGradeFor_variousAssessments_returnsExpected() {
+        Person person = new PersonBuilder().build().withGrade(new Grade("Quiz 1", BigDecimal.TEN));
+
+        assertTrue(person.hasGradeFor(new Grade("Quiz 1", BigDecimal.ONE))); // score is not compared
+        assertTrue(person.hasGradeFor(new Grade("  QUIZ   1 ", BigDecimal.ONE))); // case and spaces
+        assertFalse(person.hasGradeFor(new Grade("Quiz 2", BigDecimal.TEN)));
+        assertFalse(new PersonBuilder().build().hasGradeFor(new Grade("Quiz 1", BigDecimal.TEN)));
+    }
+
+    @Test
+    public void hasGradeFor_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().hasGradeFor(null));
+    }
+
+    @Test
     public void withAttendance_newDate_returnsPersonWithRecord() {
         LocalDate date = LocalDate.of(2026, 9, 16);
         Attendance record = new Attendance(date, Attendance.Status.PRESENT);

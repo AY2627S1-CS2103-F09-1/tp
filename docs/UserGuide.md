@@ -227,7 +227,7 @@ Format: `delete INDEX` or `delete /name NAME /class CLASS`
   * Both the name and the class must match, because the same name can exist in different classes.
   * Case and extra spaces are ignored. For example, `john  tan` in class `a1` matches `John Tan` in class `A1`.
   * All contacts in ClassMates are searched, even if only some contacts are displayed, for example after a `list` with a keyword.
-  * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `No contact found`.
+  * The name and class are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * An index cannot be combined with `/name` or `/class` in the same command.
 * On success, ClassMates shows `NAME in class CLASS has been deleted`, for example `Alex Yeoh in class A1 has been deleted`.
 
@@ -240,7 +240,7 @@ A parameter is given more than once | `Each parameter can only be specified once
 No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
 `/name` is missing or has no value | `Command requires a name`
 `/class` is missing or has no value | `Command requires a class`
-No contact has the given name and class | `No contact found`
+No contact has the given name and class | `Contact not found`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 
 If more than one problem applies, only the first one in the table above is reported.
@@ -398,7 +398,7 @@ or
 `grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces. They are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas, such as `Assignment 1`, `Mid-term` or `Quiz #1`. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
@@ -409,7 +409,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name`, `/class`, `/assessment` or `/score` is given, such as `/email` | `Unknown parameter. Use /assessment or /score`
+A parameter other than `/name`, `/class`, `/assessment` or `/score` is given, such as `/email` | `Unknown parameter. Use /name, /class, /assessment or /score`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
@@ -421,10 +421,6 @@ The assessment name contains a parameter such as `/score` that is stuck to the t
 The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
 The index is not a positive integer | `Index must be a positive integer.`
-The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
-The name is too long or has characters that are not allowed | `Name is too long` or a description of the allowed characters
-The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
-The class is too long or has characters that are not allowed | `Class name is too long` or a description of the allowed characters
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
 The contact already has a grade for the assessment | `Grade for this assessment already exists`
@@ -506,7 +502,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | The assessment name contains a parameter such as `/name` that is stuck to the text before it                                                            | `The assessment name contains '/name', which looks like a parameter that is missing a space before it`                                                                                  |
 | The assessment name is not valid                                                                                                                        | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.` |
 | The index is larger than the number of contacts displayed                                                                                               | `The contact index provided is invalid.`                                                                                                                                                |
-| No contact matches the given name and class                                                                                                             | `No contact found`                                                                                                                                                                      |
+| No contact matches the given name and class                                                                                                             | `Contact not found`                                                                                                                                                                      |
 | The contact has no grade for the given assessment                                                                                                       | `Grade for this assessment not found`                                                                                                                                                   |
 
 If more than one problem applies, only the first one in the table above is reported.<br>
@@ -529,7 +525,7 @@ or
 `attendance /name NAME /class CLASS /date DATE /status STATUS`
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
-* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces.
+* `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces. They are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
@@ -539,7 +535,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name`, `/class`, `/date` or `/status` is given, such as `/email` | `Unknown parameter. Use /date or /status`
+A parameter other than `/name`, `/class`, `/date` or `/status` is given, such as `/email` | `Unknown parameter. Use /name, /class, /date or /status`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
@@ -550,10 +546,6 @@ The index, or name and class, is missing | `Use either an index, or both /name a
 The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. Please use the format DD-MM-YYYY.`
 The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
 The index is not a positive integer | `Index must be a positive integer.`
-The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
-The name is too long or has characters that are not allowed | `Name is too long` or a description of the allowed characters
-The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
-The class is too long or has characters that are not allowed | `Class name is too long` or a description of the allowed characters
 The date is in the future | `Attendance date cannot be in the future.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
@@ -638,7 +630,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | `/date` is missing or has nothing after it                                                                                                             | `Missing date. Please provide the date of attendance.`                            |
 | The date is not a real date in the format `DD-MM-YYYY`                                                                                                 | `Invalid date format. Please use the format DD-MM-YYYY.`                          |
 | The index is larger than the number of contacts displayed                                                                                              | `The contact index provided is invalid.`                                          |
-| No contact matches the given name and class                                                                                                            | `No contact found`                                                                |
+| No contact matches the given name and class                                                                                                            | `Contact not found`                                                                |
 | The contact has no attendance entry for the given date                                                                                                 | `Attendance for this date not found`                                              |
 
 If more than one problem applies, only the first one in the table above is reported.<br>

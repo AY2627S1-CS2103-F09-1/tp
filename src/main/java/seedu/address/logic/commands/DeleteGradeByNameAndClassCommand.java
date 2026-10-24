@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -13,8 +14,6 @@ import seedu.address.model.person.Person;
  * Deletes a grade from the person identified by name and class.
  */
 public class DeleteGradeByNameAndClassCommand extends DeleteGradeCommand {
-
-    public static final String MESSAGE_NOT_FOUND = "No contact found";
 
     private final String name;
     private final String className;
@@ -37,7 +36,7 @@ public class DeleteGradeByNameAndClassCommand extends DeleteGradeCommand {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         Person person = model.findPerson(name, className)
-                .orElseThrow(() -> new CommandException(MESSAGE_NOT_FOUND));
+                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
         return deleteGrade(model, person, assessmentName);
     }
 

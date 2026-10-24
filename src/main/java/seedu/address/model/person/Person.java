@@ -4,6 +4,7 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.AppUtil.checkArgument;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
@@ -164,6 +165,23 @@ public class Person {
     }
 
     /**
+     * Returns true if this person has an attendance record for {@code date}.
+     */
+    public boolean hasAttendanceOn(LocalDate date) {
+        requireNonNull(date);
+        return attendanceRecords.stream().anyMatch(record -> record.getDate().equals(date));
+    }
+
+    /**
+     * Returns true if this person has a grade for the same assessment as {@code grade}, ignoring case and
+     * extra whitespace in the assessment name.
+     */
+    public boolean hasGradeFor(Grade grade) {
+        requireNonNull(grade);
+        return gradeRecords.stream().anyMatch(record -> record.isSameAssessment(grade));
+    }
+
+    /**
      * Returns a new Person with the given attendance record added.
      *
      * @param attendance Attendance record to add.
@@ -172,9 +190,7 @@ public class Person {
      */
     public Person withAttendance(Attendance attendance) {
         requireNonNull(attendance);
-        boolean alreadyRecorded = attendanceRecords.stream()
-                .anyMatch(record -> record.getDate().equals(attendance.getDate()));
-        if (alreadyRecorded) {
+        if (hasAttendanceOn(attendance.getDate())) {
             throw new IllegalArgumentException("Attendance record already exists");
         }
         List<Attendance> newAttendanceRecords = new ArrayList<>(attendanceRecords);
@@ -208,9 +224,7 @@ public class Person {
      */
     public Person withGrade(Grade grade) {
         requireNonNull(grade);
-        boolean alreadyRecorded = gradeRecords.stream()
-                .anyMatch(record -> record.isSameAssessment(grade));
-        if (alreadyRecorded) {
+        if (hasGradeFor(grade)) {
             throw new IllegalArgumentException("Grade record already exists");
         }
         List<Grade> newGradeRecords = new ArrayList<>(gradeRecords);
