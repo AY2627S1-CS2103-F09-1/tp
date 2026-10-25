@@ -88,7 +88,7 @@ The `UI` component,
 **How the UI handles a command**
 
 1. `MainWindow` passes its `executeCommand` method to `CommandBox` as a `CommandBox.CommandExecutor`. When the user presses Enter on a non-empty command, `CommandBox` calls it.
-2. `MainWindow#executeCommand(String)` calls `Logic#execute(String)` and shows the feedback of the returned `CommandResult` in `ResultDisplay`. `CommandBox` then clears its text.
+2. `MainWindow#executeCommand(String)` calls `Logic#execute(String)` and shows the feedback of the returned `CommandResult` in `ResultDisplay`, unless the command word is `viewA` or `viewG`, in which case `MainWindow#showHistoryPopup(String, String)` shows the feedback in a pop-up window instead. `CommandBox` then clears its text.
 3. If `Logic` throws a `ParseException` or a `CommandException`, `MainWindow` shows the message of the exception in `ResultDisplay`, and `CommandBox` keeps the text and takes the `error` style class until the user changes the text.
 4. If the `CommandResult` asks for help, `MainWindow#handleHelp()` opens the `HelpWindow`, or focuses it if it is already open. If it asks to exit, `MainWindow#handleExit()` saves the size and position of the window with `Logic#setGuiSettings(GuiSettings)` and hides the window.
 
@@ -96,7 +96,8 @@ The `UI` component,
 
 * `ResultDisplay` shows the feedback or the error message of the last command.
 * `StatusBarFooter` shows the location of the data file.
-* `HelpWindow` shows how to find the User Guide.
+* `HelpWindow` shows a summary of the format of every command, and a button that copies the link to the User Guide.
+* A separate pop-up window, which `MainWindow` creates for each `viewA` or `viewG` command (see [Viewing attendance](#viewing-attendance-feature) and [Viewing grades](#viewing-grades-feature)), shows the history of a contact. It is not a `UiPart`, since it is built in code from a `Stage` with a heading, a read-only text area and a `Close` button.
 * `UiManager` shows an error dialog and then exits the app if the window fails to start.
 * Each `PersonCard` shows the displayed index, the name, the class and the tags of a contact. The email is only shown if the contact has one, and the space for it is removed otherwise. The tags are in alphabetical order, ignoring case, with the casing the tag was created with (see `PersonCard#getSortedTags(Person)`).
 * A `PersonCard` also shows at most 3 recent attendance records, newest date first, and at most 3 recent grades, last recorded first. If there are more, it adds a line such as `+2 older record(s)` or `+2 older grade(s)`. If there are none, it shows `Recent attendance: none` or `Recent grades: none` (see `PersonCard#formatRecentAttendance(Person)` and `PersonCard#formatRecentGrades(Person)`).
@@ -347,7 +348,7 @@ A name, a class name and an assessment name are validated when they are created,
 * `Name#getConstraintViolation(String)` returns the first problem of a name: it is blank, longer than `Name#MAX_LENGTH` characters, or has a character that is not allowed. `Name#VALIDATION_REGEX` allows a Latin letter followed by any accents, a printable ASCII character other than a comma, and the typographic apostrophes `‘` and `’`. This allows digits and symbols such as `(`, `#` and `/`, and rejects control characters, invisible characters, and letters of other scripts such as Chinese or Cyrillic. The alternatives of the regex do not overlap and its quantifiers are possessive, so a long invalid name is rejected without backtracking.
 * `StringUtil#toNormalizedForm(String)` converts text to Unicode normalization form C. `Name` normalizes the text before it validates and stores it, and `StringUtil#toComparisonKey(String)` normalizes it to form KC before it compares, which also turns a full-width letter such as `Ａ` into `A`, so that two texts that look the same do not become two names or two assessments. An accented letter is also the same whether it was typed as one character or as a letter followed by an accent, so `Name#equals(Object)`, duplicate detection, `delete`, `viewA` and `list` do not treat the two forms as different.
 * `ClassName#VALIDATION_REGEX` allows letters, digits, spaces and `- . _ / ( )`, and the first character must be a letter or a digit. A class name is ASCII only, as class codes are.
-* `Grade#getAssessmentNameConstraintViolation(String)` applies `Name#VALIDATION_REGEX` to an assessment name after normalizing it, so that the two fields accept the same characters.
+* `Grade#getAssessmentNameConstraintViolation(String)` applies the same rule as `Name#VALIDATION_REGEX` to an assessment name after normalizing it, except that it also allows a comma. A comma is only kept out of a name because it separates the values of a CSV file, and an assessment name is never written to one.
 * `ParserUtil#requireNoEmbeddedPrefix(String, String)` rejects a value that contains a prefix, such as `/class`, that is followed by a space or the end of the value. `ArgumentTokenizer` only reads a prefix that has a space before it, so for `edit 1 /name John/class B` the `/class` is not a parameter, and it would become part of the name without any error. The method is called by `ParserUtil#parseName(String)` and `ParserUtil#parseClassName(String)`, and by `ParserUtil#parseAssessmentName(String)` for the assessment name, which `GradeCommandParser` and `DeleteGradeCommandParser` call. The prefixes to look for are taken from `CliSyntax#ALL_PREFIXES`, and are matched ignoring case. `ParserUtil#requireNoStuckPrefixes(String)` makes the same check for a whole command, by looking for a prefix that comes right after a character that is not a whitespace, such as the `/status` in `attendance 1 /date 16-09-2026/status late`. Without it, the status would be reported as missing, although the user typed it. The text of the error says that it is the command that contains the prefix, since the prefix is not part of any value.
 * The check is in `ParserUtil` and not in `Name` or `ClassName`, as the model must not depend on the command syntax. The values that are read from the data file are therefore only checked by the model rules. `ImportCommand` reads the values of a CSV file with `ParserUtil`, so they are also checked for a missing space.
 * A comma is not allowed in a name, as a comma separates the values of a CSV file. `CsvParser` can read a quoted value that contains a comma, but the name is then rejected, with `Invalid contact data on row N`.
@@ -1047,7 +1048,6 @@ The following activity diagram summarizes what happens when a user executes a ne
   * Pros: Will use less memory (e.g. for `delete`, just save the contact being deleted).
   * Cons: We must ensure that the implementation of each individual command is correct.
 
-_{more aspects and alternatives to be added}_
 
 --------------------------------------------------------------------------------------------------------------------
 
@@ -1143,7 +1143,7 @@ The code defends itself against bad input and against its own mistakes in four w
 
 **Target user profile**: Teaching assistants in universities who prefer desktop apps over other types of applications. They can type fast, prefer typing to mouse interactions, and are reasonably comfortable using CLI apps.
 
-**Value proposition**: TAs that handle multiple courses and multiple tutorial groups will have many students to manage at the same time, which can make organisation of information difficult. The product can provide fast and organised contact retrieval for TAs.
+**Value proposition**: TAs that handle multiple courses and multiple tutorial groups will have many students to manage at the same time, which can make organization of information difficult. The product can provide fast and organized contact retrieval for TAs.
 
 
 ### User stories
@@ -1158,7 +1158,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* * *`  | TA                                         | remove contacts easily       | keep my contact list from being cluttered                              |
 | `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
 | `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
-| `* * *`  | TA                                         | view all grades tagged to a student | keep track of the progress of my students                       |
+| `* * *`  | TA                                         | view all grades recorded for a student | keep track of the progress of my students                       |
 | `* * *`  | TA                                         | view a list of all my contacts | see everyone at a glance                                              |
 | `* * *`  | TA                                         | record grades for a specific student | monitor their progress                                          |
 | `* * *`  | TA                                         | view a student's attendance  | review their attendance history                                        |
@@ -1174,7 +1174,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
 | `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
 | `* *`    | TA                                         | sort students consistently   | scan through them quickly                                              |
-| `* *`    | TA                                         | favourite certain contacts   | quickly access my most frequent contacts                               |
+| `* *`    | TA                                         | favorite certain contacts   | quickly access my most frequent contacts                               |
 | `*`      | TA                                         | distinguish between students of similar names | not use the wrong student's information                |
 | `*`      | TA                                         | view total number of students across my classes | understand my workload                               |
 | `*`      | TA (managing high volume of active contacts) | highlight frequently contacted people | retrieve their details faster                             |
@@ -1186,7 +1186,6 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `*`      | TA                                         | export selected students' records | use the required information                                     |
 | `*`      | TA                                         | archive students from previous semesters and restore them | old records do not clutter my contacts and I can reuse them if I want to |
 
-*{More to be added}*
 
 ### Use cases
 
@@ -1246,7 +1245,7 @@ The use cases describe what the application does now.
   * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1d. The assessment name is invalid, e.g. it is empty, longer than 80 characters, has a comma or a letter of another language, or contains a parameter such as `/name` stuck to the text before it.
+* 1d. The assessment name is invalid, e.g. it is empty, longer than 80 characters, has a letter of another language, or contains a parameter such as `/name` stuck to the text before it.
   * 1d1. CM displays an error message.
 
     Use case resumes at step 1.
@@ -1459,7 +1458,7 @@ The use cases describe what the application does now.
   * 1b1. CM displays an error message.
 
     Use case resumes at step 1.
-* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters, has a comma or a letter of another language, or contains a parameter such as `/score` stuck to the text before it, or the score is not a number from 0 to 100.
+* 1c. The assessment name is invalid, e.g. it is empty, longer than 80 characters, has a letter of another language, or contains a parameter such as `/score` stuck to the text before it, or the score is not a number from 0 to 100.
   * 1c1. CM displays an error message.
 
     Use case resumes at step 1.
@@ -1733,12 +1732,12 @@ The use cases describe what the application does now.
 * **Module**: Refers to an NUS course (e.g. "CS2103"), not a software module. Disambiguated from the architectural sense of "module" also used elsewhere in this guide
 * **Class**: The tutorial or section group a student belongs to within a module (e.g. A1), as entered in a student's class field — distinct from Module, which refers to the course itself (e.g. CS2103)
 * **Tag**: Any label attached to a student contact used for grouping except class. Tags are compared ignoring case and extra whitespace
-* **Group**: The student contacts that have the same tag, such as the members of a team for an assignment. A group is not stored or modelled as an object of its own, so it exists only as long as at least one contact has the tag. A student can be in several groups, and a group is identified by its tag name, ignoring case. A student is added to groups with the `tag` command, and is removed from groups with the `untag` command
+* **Group**: The student contacts that have the same tag, such as the members of a team for an assignment. A group is not stored or modeled as an object of its own, so it exists only as long as at least one contact has the tag. A student can be in several groups, and a group is identified by its tag name, ignoring case. A student is added to groups with the `tag` command, and is removed from groups with the `untag` command
 * **Bulk Import**: Loading multiple student contacts at once from a file, typically when setting up a new class
 * **Attendance Record**: A single entry marking a student as present/absent/late on a given date
 * **Attendance History**: The collection of a student's or class' attendance records over time
 * **Assessment**: A named piece of work (e.g. "Assignment 1", "Midterm") that a grade is recorded against for a student
-* **Grade**: A single number between 0 to 100 inclusive representing the percentage
+* **Grade**: A single number from 0 to 100 inclusive representing the percentage
 * **Grade Entry**: A single recorded grade attached to a student contact
 * **Grade History**: The collection of a student's grade entries over time
 

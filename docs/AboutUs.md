@@ -23,8 +23,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/linux735.png" width="200px">
 
-[[github](http://github.com/Linux735)]
-[[portfolio](team/johndoe.md)]
+[[github](https://github.com/Linux735)]
 
 * Role: Documentation
 * Responsibilities: UI
@@ -33,7 +32,7 @@ You can reach us at the email `seer[at]comp.nus.edu.sg`
 
 <img src="images/cacklycrackle.png" width="200px">
 
-[[github](http://github.com/cacklycrackle)] [[portfolio](team/johndoe.md)]
+[[github](https://github.com/cacklycrackle)]
 
 * Role: Team Lead
 * Responsibilities: Data
