@@ -155,7 +155,7 @@ public class PersonMatchesKeywordTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousPredicates_returnsExpected() {
         PersonMatchesKeyword firstPredicate = new PersonMatchesKeyword("first");
         PersonMatchesKeyword secondPredicate = new PersonMatchesKeyword("second");
 
@@ -185,7 +185,7 @@ public class PersonMatchesKeywordTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_predicate_returnsExpectedFormat() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("First  Second");
         String expected = new ToStringBuilder(predicate).add("keyword", "first second").toString();
         assertEquals(expected, predicate.toString());

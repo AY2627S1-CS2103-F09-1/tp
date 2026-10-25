@@ -18,13 +18,15 @@ import seedu.address.model.person.Grade;
 public class GradeCommandParser implements Parser<GradeCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER = "Unknown parameter. Use " + PREFIX_NAME + ", "
-            + PREFIX_CLASS + ", " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE;
+            + PREFIX_CLASS + ", " + PREFIX_ASSESSMENT + " or " + PREFIX_SCORE
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
     private static final String MESSAGE_MISSING_SCORE = "Score missing";
 
     @Override
     public GradeCommand parse(String args) throws ParseException {
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT, PREFIX_SCORE);
+        ParserUtil.requireNoStuckPrefixes(args);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT, PREFIX_SCORE);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT, PREFIX_SCORE);

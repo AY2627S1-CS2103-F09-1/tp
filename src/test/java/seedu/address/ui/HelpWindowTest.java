@@ -85,7 +85,7 @@ public class HelpWindowTest {
     }
 
     @Test
-    public void userGuideUrl_isTeamUserGuide() {
+    public void userGuideUrl_constant_isTeamUserGuide() {
         assertEquals("https://ay2627s1-cs2103-f09-1.github.io/tp/UserGuide.html", HelpWindow.USERGUIDE_URL);
     }
 }

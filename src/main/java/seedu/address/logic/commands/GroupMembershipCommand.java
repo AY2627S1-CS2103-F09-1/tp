@@ -28,7 +28,7 @@ public abstract class GroupMembershipCommand extends Command {
     public static final String MESSAGE_INDEX_NOT_FOUND = "Contact index not found: %1$s";
 
     /** Added after the first {@link #MAX_INDICES_SHOWN} indices, if there are more, in the message above. */
-    public static final String MESSAGE_MORE_INDICES = " and %1$d more";
+    public static final String MESSAGE_MORE_INDICES = " and %1$s more";
 
     /** The most indices that are named in {@link #MESSAGE_INDEX_NOT_FOUND}, to keep the message short. */
     public static final int MAX_INDICES_SHOWN = 10;

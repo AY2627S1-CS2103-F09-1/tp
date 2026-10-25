@@ -17,7 +17,7 @@ import seedu.address.testutil.EditPersonDescriptorBuilder;
 public class EditPersonDescriptorTest {
 
     @Test
-    public void equals() {
+    public void equals_variousDescriptors_returnsExpected() {
         // same values -> returns true
         EditPersonDescriptor descriptorWithSameValues = new EditPersonDescriptor(DESC_AMY);
         assertTrue(DESC_AMY.equals(descriptorWithSameValues));
@@ -77,7 +77,7 @@ public class EditPersonDescriptorTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_descriptor_returnsExpectedFormat() {
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
         String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
                 + editPersonDescriptor.getName().orElse(null) + ", className="

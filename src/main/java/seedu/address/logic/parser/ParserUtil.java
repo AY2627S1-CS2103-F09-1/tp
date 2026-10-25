@@ -37,6 +37,10 @@ public class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
     public static final String MESSAGE_INVALID_DATE = "Invalid date format. Please use the format DD-MM-YYYY.";
+    public static final String MESSAGE_NONEXISTENT_DATE =
+            "The date %1$s does not exist. Please check the day and the month.";
+    public static final String MESSAGE_SLASH_WORD_HINT = ". A word that starts with / is always read as a "
+            + "parameter.";
     public static final String MESSAGE_INVALID_GROUP_NAME = "Invalid group name. Group names must be 1 to "
             + Tag.MAX_LENGTH + " characters long and can only contain letters, digits, spaces, hyphens, "
             + "and underscores";
@@ -54,11 +58,22 @@ public class ParserUtil {
     /** Matches a score such as {@code 97}, {@code 97.5} or {@code .5}, without a sign or an exponent. */
     private static final Pattern SCORE_PATTERN = Pattern.compile("[0-9]+(?:\\.[0-9]+)?|\\.[0-9]+");
 
+    /** Matches a date that has the shape DD-MM-YYYY with a day of 01-31 and a month of 01-12. */
+    private static final Pattern DATE_SHAPE_PATTERN = Pattern.compile(
+            "(?:0[1-9]|[12][0-9]|3[01])-(?:0[1-9]|1[0-2])-[0-9]{4}");
+
     /** Matches any prefix, in any case, that ends the value it is in, such as the "/class" in "A1/class B". */
     private static final Pattern EMBEDDED_PREFIX_PATTERN = Pattern.compile(
             CliSyntax.ALL_PREFIXES.stream()
                     .map(prefix -> Pattern.quote(prefix.getPrefix()))
                     .collect(Collectors.joining("|", "(?:", ")(?!\\S)")),
+            Pattern.CASE_INSENSITIVE);
+
+    /** Matches any prefix, in any case, that comes right after a character that is not a whitespace. */
+    private static final Pattern STUCK_PREFIX_PATTERN = Pattern.compile(
+            CliSyntax.ALL_PREFIXES.stream()
+                    .map(prefix -> Pattern.quote(prefix.getPrefix()))
+                    .collect(Collectors.joining("|", "(?<=\\S)(?:", ")(?!\\S)")),
             Pattern.CASE_INSENSITIVE);
 
     /** Passed to {@code String#split} so that empty entries at the end, such as in "1,3,", are kept. */
@@ -80,14 +95,19 @@ public class ParserUtil {
     /**
      * Parses {@code date} into a {@code LocalDate}. Leading and trailing whitespaces will be trimmed.
      *
-     * @throws ParseException If {@code date} is not a valid date in {@code DD-MM-YYYY} format.
+     * @throws ParseException If {@code date} is not in {@code DD-MM-YYYY} format, or is a date that does not
+     *         exist, such as 31-02-2026.
      */
     public static LocalDate parseDate(String date) throws ParseException {
         requireNonNull(date);
+        String trimmedDate = date.trim();
+        if (!DATE_SHAPE_PATTERN.matcher(trimmedDate).matches()) {
+            throw new ParseException(MESSAGE_INVALID_DATE);
+        }
         try {
-            return LocalDate.parse(date.trim(), Attendance.DATE_FORMAT);
+            return LocalDate.parse(trimmedDate, Attendance.DATE_FORMAT);
         } catch (DateTimeParseException e) {
-            throw new ParseException(MESSAGE_INVALID_DATE, e);
+            throw new ParseException(String.format(MESSAGE_NONEXISTENT_DATE, trimmedDate), e);
         }
     }
 
@@ -96,7 +116,8 @@ public class ParserUtil {
      * {@link Grade#MAX_SCORE}. Leading and trailing whitespaces will be trimmed. A sign, an exponent and any
      * other characters are not accepted.
      *
-     * @throws ParseException If {@code score} is not a number from 0 to 100.
+     * @throws ParseException If {@code score} is not a number from 0 to 100, or has more than
+     *         {@link Grade#MAX_SCORE_DECIMAL_PLACES} decimal places.
      */
     public static BigDecimal parseScore(String score) throws ParseException {
         requireNonNull(score);
@@ -107,6 +128,9 @@ public class ParserUtil {
         BigDecimal parsedScore = new BigDecimal(trimmedScore);
         if (!Grade.isValidScore(parsedScore)) {
             throw new ParseException(Grade.MESSAGE_INVALID_SCORE);
+        }
+        if (parsedScore.stripTrailingZeros().scale() > Grade.MAX_SCORE_DECIMAL_PLACES) {
+            throw new ParseException(Grade.MESSAGE_TOO_MANY_DECIMAL_PLACES);
         }
         return parsedScore;
     }
@@ -172,6 +196,21 @@ public class ParserUtil {
         requireNonNull(errorMessage);
         if (!ArgumentTokenizer.findUnrecognizedPrefixes(args, knownPrefixes).isEmpty()) {
             throw new ParseException(errorMessage);
+        }
+    }
+
+    /**
+     * Checks that {@code args} has no known prefix that is stuck to the text before it, such as the
+     * {@code /status} in {@code /date 16-09-2026/status late}. Such a prefix is not recognized as a parameter,
+     * so the parameter would be reported as missing, or its text would silently become part of another value.
+     *
+     * @throws ParseException if {@code args} contains such a prefix.
+     */
+    public static void requireNoStuckPrefixes(String args) throws ParseException {
+        requireNonNull(args);
+        Matcher matcher = STUCK_PREFIX_PATTERN.matcher(args);
+        if (matcher.find()) {
+            throw new ParseException(String.format(MESSAGE_PREFIX_WITHOUT_SPACE, "command", matcher.group()));
         }
     }
 

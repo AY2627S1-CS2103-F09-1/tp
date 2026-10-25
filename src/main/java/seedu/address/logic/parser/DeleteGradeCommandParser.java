@@ -20,7 +20,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_ASSESSMENT;
+            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_ASSESSMENT
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteGradeCommand.MESSAGE_USAGE);
@@ -29,6 +30,7 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
     public DeleteGradeCommand parse(String args) throws ParseException {
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT);
@@ -48,15 +50,14 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
     /**
      * Returns a command that deletes a grade from the person at the index in {@code argMultimap}.
      *
-     * @throws ParseException If the index or assessment name is invalid or missing.
+     * @throws ParseException If the index is missing or not a positive integer, or the
+     *         assessment name is invalid or missing.
      */
     private static DeleteGradeByIndexCommand parseByIndex(ArgumentMultimap argMultimap) throws ParseException {
-        Index index;
-        try {
-            index = ParserUtil.parseIndex(argMultimap.getPreamble());
-        } catch (ParseException pe) {
-            throw new ParseException(INVALID_FORMAT_MESSAGE, pe);
+        if (argMultimap.getPreamble().isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
         }
+        Index index = ParserUtil.parseIndex(argMultimap.getPreamble());
         return new DeleteGradeByIndexCommand(index, parseAssessmentName(argMultimap));
     }
 

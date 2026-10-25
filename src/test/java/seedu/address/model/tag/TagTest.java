@@ -124,7 +124,7 @@ public class TagTest {
     }
 
     @Test
-    public void toString_keepsOriginalCasing() {
+    public void toString_mixedCase_keepsOriginalCasing() {
         assertEquals("[GroupA]", new Tag("GroupA").toString());
         assertEquals("[groupa]", new Tag("groupa").toString());
     }

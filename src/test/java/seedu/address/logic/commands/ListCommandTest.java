@@ -150,7 +150,7 @@ public class ListCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         ListCommand listAllCommand = new ListCommand();
         ListCommand listMeierCommand = new ListCommand(new PersonMatchesKeyword("meier"));
         ListCommand listFriendCommand = new ListCommand(new PersonMatchesKeyword("friend"));
@@ -187,7 +187,7 @@ public class ListCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_command_returnsExpectedFormat() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("meier");
         ListCommand listCommand = new ListCommand(predicate);
         String expected = ListCommand.class.getCanonicalName() + "{predicate=" + predicate + "}";

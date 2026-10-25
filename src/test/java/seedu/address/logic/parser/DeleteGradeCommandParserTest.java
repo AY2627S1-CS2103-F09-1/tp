@@ -1,10 +1,10 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_ASSESSMENT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.DeleteGradeCommandParser.MESSAGE_UNKNOWN_PARAMETER;
@@ -60,24 +60,42 @@ public class DeleteGradeCommandParserTest {
 
     @Test
     public void parse_invalidIndexOrMixedForms_failure() {
-        assertParseFailure(parser, "0 /assessment Quiz 1", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "1 /name John Tan /class A1 /assessment Quiz 1", MESSAGE_INVALID_FORMAT);
     }
 
     @Test
+    public void parse_indexNotPositiveInteger_failure() {
+        assertParseFailure(parser, "0 /assessment Quiz 1", ParserUtil.MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "abc /assessment Quiz 1", ParserUtil.MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "99999999999 /assessment Quiz 1", ParserUtil.MESSAGE_INVALID_INDEX);
+    }
+
+    @Test
+    public void parse_missingIndexAndName_failure() {
+        assertParseFailure(parser, " /assessment Quiz 1", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_invalidAssessment_failure() {
-        assertParseFailure(parser, "1 /assessment Quiz,1", Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
+        assertParseFailure(parser, "1 /assessment Quiz \u671f\u672b", Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
+    }
+
+    @Test
+    public void parse_assessmentNameWithComma_success() {
+        assertParseSuccess(parser, "1 /assessment Test 1, Part A",
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Test 1, Part A"));
     }
 
     @Test
     public void parse_prefixWithoutSpaceInAssessmentName_failure() {
         assertParseFailure(parser, "1 /assessment Quiz/name John",
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "assessment name", "/name"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/name"));
     }
 
     @Test
     public void parse_duplicateOrUnknownParameter_failure() {
-        assertParseFailure(parser, "1 /assessment Quiz /assessment Exam", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, "1 /assessment Quiz /assessment Exam",
+                getErrorMessageForDuplicatePrefixes("/assessment"));
         assertParseFailure(parser, "1 /assessment Quiz /score 90", MESSAGE_UNKNOWN_PARAMETER);
     }
 }

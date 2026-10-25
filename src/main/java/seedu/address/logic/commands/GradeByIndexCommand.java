@@ -35,7 +35,7 @@ public class GradeByIndexCommand extends GradeCommand {
         requireNonNull(model);
         List<Person> displayedPeople = model.getFilteredPersonList();
         if (targetIndex.getZeroBased() >= displayedPeople.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(Messages.getInvalidDisplayedIndexMessage(displayedPeople.size()));
         }
         return recordGrade(model, displayedPeople.get(targetIndex.getZeroBased()), grade);
     }

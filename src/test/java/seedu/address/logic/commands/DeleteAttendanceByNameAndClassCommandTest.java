@@ -10,9 +10,12 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
-
-import java.time.LocalDate;
+import static seedu.address.testutil.TypicalRecords.ALICE_WITH_ATTENDANCE;
+import static seedu.address.testutil.TypicalRecords.ATTENDANCE;
+import static seedu.address.testutil.TypicalRecords.DATE;
+import static seedu.address.testutil.TypicalRecords.OTHER_ATTENDANCE;
+import static seedu.address.testutil.TypicalRecords.OTHER_DATE;
+import static seedu.address.testutil.TypicalRecords.getModelWithAliceAttendance;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -32,19 +35,12 @@ public class DeleteAttendanceByNameAndClassCommandTest {
 
     private static final String ALICE_NAME = ALICE.getName().toString();
     private static final String ALICE_CLASS = ALICE.getClassName().toString();
-    private static final LocalDate DATE = LocalDate.of(2026, 9, 16);
-    private static final LocalDate OTHER_DATE = LocalDate.of(2026, 9, 17);
-    private static final Attendance ATTENDANCE = new Attendance(DATE, Attendance.Status.LATE);
-    private static final Attendance OTHER_ATTENDANCE = new Attendance(OTHER_DATE, Attendance.Status.PRESENT);
 
     private Model model;
-    private Person aliceWithAttendance;
 
     @BeforeEach
     public void setUp() {
-        model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        aliceWithAttendance = ALICE.withAttendance(ATTENDANCE).withAttendance(OTHER_ATTENDANCE);
-        model.setPerson(ALICE, aliceWithAttendance);
+        model = getModelWithAliceAttendance();
     }
 
     @Test
@@ -63,10 +59,10 @@ public class DeleteAttendanceByNameAndClassCommandTest {
                 new DeleteAttendanceByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, DATE);
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
+        expectedModel.setPerson(ALICE_WITH_ATTENDANCE, ALICE.withAttendance(OTHER_ATTENDANCE));
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
-                "late", ALICE.getName(), Attendance.formatDate(DATE));
+                "absent", ALICE.getName(), Attendance.formatDate(DATE));
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
@@ -76,10 +72,10 @@ public class DeleteAttendanceByNameAndClassCommandTest {
                 new DeleteAttendanceByNameAndClassCommand("  aLiCe   Pauline ", "a1", DATE);
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
+        expectedModel.setPerson(ALICE_WITH_ATTENDANCE, ALICE.withAttendance(OTHER_ATTENDANCE));
 
         assertCommandSuccess(command, model,
-                "Attendance of late for Alice Pauline on 16-09-2026 has been deleted", expectedModel);
+                "Attendance of absent for Alice Pauline on 16-09-2026 has been deleted", expectedModel);
     }
 
     @Test
@@ -97,7 +93,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
 
         assertCommandSuccess(command, model,
-                "Attendance of late for Benson Meier on 16-09-2026 has been deleted", expectedModel);
+                "Attendance of absent for Benson Meier on 16-09-2026 has been deleted", expectedModel);
     }
 
     @Test

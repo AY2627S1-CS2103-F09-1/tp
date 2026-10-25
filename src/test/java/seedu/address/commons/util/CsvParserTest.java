@@ -14,7 +14,7 @@ import org.junit.jupiter.api.Test;
 public class CsvParserTest {
 
     @Test
-    public void constructor_isPrivate() throws ReflectiveOperationException {
+    public void constructor_utilityClass_isPrivate() throws ReflectiveOperationException {
         Constructor<CsvParser> constructor = CsvParser.class.getDeclaredConstructor();
 
         assertTrue(Modifier.isPrivate(constructor.getModifiers()));

@@ -44,7 +44,7 @@ public class GradeTest {
     @Test
     public void constructor_invalidAssessmentName_throwsIllegalArgumentException() {
         assertThrows(IllegalArgumentException.class, () -> new Grade("", BigDecimal.ONE));
-        assertThrows(IllegalArgumentException.class, () -> new Grade("Exam,1", BigDecimal.ONE));
+        assertThrows(IllegalArgumentException.class, () -> new Grade("Exam\n1", BigDecimal.ONE));
         assertThrows(IllegalArgumentException.class, () -> new Grade("a".repeat(81), BigDecimal.ONE));
     }
 
@@ -53,6 +53,7 @@ public class GradeTest {
         assertEquals("Quiz #1 (Part A)", new Grade("Quiz #1 (Part A)", BigDecimal.ONE).getAssessmentName());
         assertEquals("Lab 1/2 - Mid-term", new Grade("Lab 1/2 - Mid-term", BigDecimal.ONE).getAssessmentName());
         assertEquals("Exam_1", new Grade("Exam_1", BigDecimal.ONE).getAssessmentName());
+        assertEquals("Test 1, Part A", new Grade("Test 1, Part A", BigDecimal.ONE).getAssessmentName());
         assertEquals("Examen Finé", new Grade("Examen Fine\u0301", BigDecimal.ONE).getAssessmentName());
     }
 

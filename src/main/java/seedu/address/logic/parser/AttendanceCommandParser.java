@@ -22,7 +22,8 @@ import seedu.address.model.person.Attendance;
 public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER = "Unknown parameter. Use " + PREFIX_NAME + ", "
-            + PREFIX_CLASS + ", " + PREFIX_DATE + " or " + PREFIX_STATUS;
+            + PREFIX_CLASS + ", " + PREFIX_DATE + " or " + PREFIX_STATUS
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
     private static final String MESSAGE_MISSING_STATUS = "Missing status. Please provide the attendance status.";
     private static final String MESSAGE_INVALID_STATUS =
             "Invalid status. Please use 'present', 'absent' or 'late'.";
@@ -31,6 +32,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
     public AttendanceCommand parse(String args) throws ParseException {
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);
+        ParserUtil.requireNoStuckPrefixes(args);
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);

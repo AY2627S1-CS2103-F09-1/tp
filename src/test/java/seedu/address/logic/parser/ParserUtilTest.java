@@ -16,6 +16,8 @@ import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_GROUP_NAME;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_MEMBER_INDEX;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_MISSING_CONTACT_IDENTIFIER;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_NONEXISTENT_DATE;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
@@ -75,8 +77,28 @@ public class ParserUtilTest {
 
     @Test
     public void parseDate_invalidInput_throwsParseException() {
-        assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate("31-02-2026"));
         assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate("2026-09-16"));
+        assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate("1-9-2026"));
+    }
+
+    @Test
+    public void parseDate_dayOrMonthOutOfRange_throwsParseExceptionForFormat() {
+        for (String invalidDate : List.of("00-01-2026", "32-01-2026", "16-00-2026", "16-13-2026")) {
+            assertThrows(ParseException.class, MESSAGE_INVALID_DATE, () -> ParserUtil.parseDate(invalidDate));
+        }
+    }
+
+    @Test
+    public void parseDate_nonexistentDate_throwsParseExceptionNamingTheDate() {
+        for (String nonexistentDate : List.of("31-02-2026", "29-02-2025", "31-04-2026", "30-02-2024")) {
+            assertThrows(ParseException.class, String.format(MESSAGE_NONEXISTENT_DATE, nonexistentDate), ()
+                    -> ParserUtil.parseDate(nonexistentDate));
+        }
+    }
+
+    @Test
+    public void parseDate_leapDay_success() throws Exception {
+        assertEquals(LocalDate.of(2024, 2, 29), ParserUtil.parseDate("29-02-2024"));
     }
 
     @Test
@@ -123,6 +145,26 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void parseScore_decimalPlaces_acceptedUpToTheLimit() throws Exception {
+        assertEquals(new BigDecimal("97.1234"), ParserUtil.parseScore("97.1234"));
+        assertEquals(new BigDecimal("97.12340"), ParserUtil.parseScore("97.12340"));
+        assertEquals(new BigDecimal("100.0000000"), ParserUtil.parseScore("100.0000000"));
+    }
+
+    @Test
+    public void parseScore_tooManyDecimalPlaces_throwsParseException() {
+        for (String invalidScore : List.of("97.12345", "0.00001", "0.0000000000000000000001")) {
+            assertThrows(ParseException.class, Grade.MESSAGE_TOO_MANY_DECIMAL_PLACES, ()
+                    -> ParserUtil.parseScore(invalidScore));
+        }
+    }
+
+    @Test
+    public void parseScore_outOfRangeWithTooManyDecimalPlaces_reportsTheRange() {
+        assertThrows(ParseException.class, Grade.MESSAGE_INVALID_SCORE, () -> ParserUtil.parseScore("100.00001"));
+    }
+
+    @Test
     public void parseAssessmentName_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> ParserUtil.parseAssessmentName(null));
     }
@@ -130,16 +172,34 @@ public class ParserUtilTest {
     @Test
     public void parseAssessmentName_validInput_returnsTrimmedName() throws Exception {
         assertEquals("Quiz #1", ParserUtil.parseAssessmentName("  Quiz #1  "));
+        assertEquals("Test 1, Part A", ParserUtil.parseAssessmentName("Test 1, Part A"));
         assertEquals("a".repeat(Grade.MAX_ASSESSMENT_NAME_LENGTH),
                 ParserUtil.parseAssessmentName("a".repeat(Grade.MAX_ASSESSMENT_NAME_LENGTH)));
     }
 
     @Test
     public void parseAssessmentName_invalidInput_throwsParseException() {
-        for (String invalidName : List.of("", "Quiz,1", "a".repeat(Grade.MAX_ASSESSMENT_NAME_LENGTH + 1))) {
+        for (String invalidName : List.of("", "Quiz \u671f\u672b", "a".repeat(Grade.MAX_ASSESSMENT_NAME_LENGTH + 1))) {
             assertThrows(ParseException.class, Grade.MESSAGE_INVALID_ASSESSMENT_NAME, ()
                     -> ParserUtil.parseAssessmentName(invalidName));
         }
+    }
+
+    @Test
+    public void requireNoStuckPrefixes_noStuckPrefix_doesNotThrow() throws Exception {
+        ParserUtil.requireNoStuckPrefixes("");
+        ParserUtil.requireNoStuckPrefixes(" 1 /date 16-09-2026 /status late");
+        ParserUtil.requireNoStuckPrefixes(" /NAME Ravi s/o Kumar /class T11/A");
+    }
+
+    @Test
+    public void requireNoStuckPrefixes_stuckPrefix_throwsParseException() {
+        assertThrows(ParseException.class, String.format(MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/status"), ()
+                -> ParserUtil.requireNoStuckPrefixes(" 1 /date 16-09-2026/status late"));
+        assertThrows(ParseException.class, String.format(MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/date"), ()
+                -> ParserUtil.requireNoStuckPrefixes(" 1/date 16-09-2026"));
+        assertThrows(ParseException.class, String.format(MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/CLASS"), ()
+                -> ParserUtil.requireNoStuckPrefixes(" /name Alex/CLASS A1"));
     }
 
     @Test

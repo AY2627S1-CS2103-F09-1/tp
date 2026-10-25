@@ -27,7 +27,7 @@ public class ClassNameTest {
     }
 
     @Test
-    public void isValidClassName() {
+    public void isValidClassName_variousInputs_returnsExpected() {
         // null class name
         assertThrows(NullPointerException.class, () -> ClassName.isValidClassName(null));
 
@@ -104,7 +104,7 @@ public class ClassNameTest {
     }
 
     @Test
-    public void matches() {
+    public void matches_variousTexts_returnsExpected() {
         ClassName className = new ClassName("Sec 3-2");
 
         // same text -> returns true
@@ -132,13 +132,13 @@ public class ClassNameTest {
     }
 
     @Test
-    public void toString_keepsTextAsGiven() {
+    public void toString_extraSpaces_keepsTextAsGiven() {
         assertEquals("sec   3-2", new ClassName("sec   3-2").toString());
         assertEquals("sec   3-2", new ClassName("sec   3-2").value);
     }
 
     @Test
-    public void equals() {
+    public void equals_variousClassNames_returnsExpected() {
         ClassName className = new ClassName("Sec 3-2");
 
         // same values -> returns true

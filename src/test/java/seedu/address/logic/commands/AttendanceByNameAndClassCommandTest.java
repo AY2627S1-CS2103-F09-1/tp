@@ -125,7 +125,8 @@ public class AttendanceByNameAndClassCommandTest {
         AttendanceByNameAndClassCommand command = new AttendanceByNameAndClassCommand(
                 person.getName().toString(), person.getClassName().toString(), DATE, Attendance.Status.ABSENT);
 
-        assertCommandFailure(command, model, AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE);
+        assertCommandFailure(command, model, String.format(AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE,
+                person.getName(), "16-09-2026", Attendance.Status.PRESENT));
     }
 
     @Test

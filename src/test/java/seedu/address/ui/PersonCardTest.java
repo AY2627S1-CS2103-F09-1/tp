@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Locale;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,31 @@ import seedu.address.model.tag.Tag;
 import seedu.address.testutil.PersonBuilder;
 
 public class PersonCardTest {
+
+    private static final String NL = "\n";
+
+    @Test
+    public void formatRecentAttendance_localeWithOtherDigits_olderCountUsesDigitsZeroToNine() {
+        Locale originalLocale = Locale.getDefault(Locale.Category.FORMAT);
+        Locale.setDefault(Locale.Category.FORMAT, Locale.forLanguageTag("th-TH-u-nu-thai"));
+        try {
+            Person person = new PersonBuilder().build();
+            for (int day = 1; day <= 5; day++) {
+                person = person.withAttendance(new Attendance(
+                        LocalDate.of(2026, 9, day), Attendance.Status.PRESENT));
+            }
+
+            assertEquals(
+                    "Recent attendance:" + NL
+                            + "05-Sep-2026  present" + NL
+                            + "04-Sep-2026  present" + NL
+                            + "03-Sep-2026  present" + NL
+                            + "+2 older record(s)",
+                    PersonCard.formatRecentAttendance(person));
+        } finally {
+            Locale.setDefault(Locale.Category.FORMAT, originalLocale);
+        }
+    }
 
     @Test
     public void formatRecentAttendance_noRecords_showsNone() {
@@ -63,10 +89,19 @@ public class PersonCardTest {
     }
 
     @Test
-    public void getSortedTags_sortsIgnoringCase() {
+    public void getSortedTags_numbersInTagNames_comparedByValue() {
+        Person person = new PersonBuilder().withTags("Team 10", "Team 2", "team 1", "Group-A", "Group B").build();
+
+        assertEquals(List.of(new Tag("Group-A"), new Tag("Group B"), new Tag("team 1"), new Tag("Team 2"),
+                new Tag("Team 10")), PersonCard.getSortedTags(person));
+    }
+
+    @Test
+    public void getSortedTags_mixedCase_sortsIgnoringCase() {
         Person person = new PersonBuilder().withTags("beta", "Alpha", "gamma").build();
 
-        assertEquals(List.of(new Tag("Alpha"), new Tag("beta"), new Tag("gamma")), PersonCard.getSortedTags(person));
+        assertEquals(List.of(new Tag("Alpha"), new Tag("beta"), new Tag("gamma")),
+                PersonCard.getSortedTags(person));
     }
 
     @Test

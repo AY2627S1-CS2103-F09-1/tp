@@ -168,8 +168,16 @@ public class Person {
      * Returns true if this person has an attendance record for {@code date}.
      */
     public boolean hasAttendanceOn(LocalDate date) {
+        return getAttendanceOn(date).isPresent();
+    }
+
+    /**
+     * Returns the attendance record of this person for {@code date}, or an empty {@code Optional} if there is
+     * none.
+     */
+    public Optional<Attendance> getAttendanceOn(LocalDate date) {
         requireNonNull(date);
-        return attendanceRecords.stream().anyMatch(record -> record.getDate().equals(date));
+        return attendanceRecords.stream().filter(record -> record.getDate().equals(date)).findFirst();
     }
 
     /**
@@ -177,8 +185,16 @@ public class Person {
      * extra whitespace in the assessment name.
      */
     public boolean hasGradeFor(Grade grade) {
+        return getGradeFor(grade).isPresent();
+    }
+
+    /**
+     * Returns the grade of this person for the same assessment as {@code grade}, ignoring case and extra
+     * whitespace in the assessment name, or an empty {@code Optional} if there is none.
+     */
+    public Optional<Grade> getGradeFor(Grade grade) {
         requireNonNull(grade);
-        return gradeRecords.stream().anyMatch(record -> record.isSameAssessment(grade));
+        return gradeRecords.stream().filter(record -> record.isSameAssessment(grade)).findFirst();
     }
 
     /**
