@@ -1,0 +1,44 @@
+@startuml
+skin rose
+skinparam ActivityFontSize 15
+skinparam ArrowFontSize 12
+
+start
+:Resolve the path;
+
+switch ()
+case ([not a readable .csv file,\nor over the size limit])
+    :Report an error;
+    stop
+case ([else])
+endswitch
+
+:Read the file and parse the CSV;
+
+switch ()
+case ([invalid syntax or header,\nor too many rows])
+    :Report an error;
+    stop
+case ([else])
+endswitch
+
+repeat
+    :Take the next non-blank row;
+    switch ()
+    case ([invalid row, or duplicate of an\nexisting contact or an earlier row])
+        :Report an error\nwith the row number;
+        stop
+    case ([else])
+    endswitch
+repeat while () is ([more rows]) not ([no more rows])
+
+:Add the contacts, from the last row\nto the first;
+:Report how many contacts were imported;
+stop
+
+legend right
+    An error stops the import. No contact
+    is added in that case. A file without
+    any contact row is also an error.
+end legend
+@enduml

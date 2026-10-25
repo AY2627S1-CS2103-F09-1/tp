@@ -549,7 +549,9 @@ The `edit` command (`edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`) c
 
 #### Implementation
 
-The `import` command adds multiple contacts from a CSV file. It is implemented by `ImportCommandParser`, `ImportCommand` and `CsvParser`.
+The `import` command adds multiple contacts from a CSV file. It is implemented by `ImportCommandParser`, `ImportCommand` and `CsvParser`. The activity diagram below shows what happens when the command is executed, and the steps are described in more detail after it.
+
+<puml src="diagrams/ImportActivityDiagram.puml" width="350" alt="What happens when an import command is executed" />
 
 * `ImportCommandParser#parse(String)` removes leading and trailing whitespace from the path while preserving spaces within it. It rejects empty paths and paths containing line breaks.
 * `ImportCommand#resolvePath(String)` normalizes the supplied path. An absolute path is used directly. A relative path is resolved from the project working directory. If the application is packaged and run as a JAR file, it is resolved from the folder containing the JAR file.
@@ -557,8 +559,7 @@ The `import` command adds multiple contacts from a CSV file. It is implemented b
 * `CsvParser#parse(String)` parses the CSV syntax and validates the header. Its state-based parser supports comma-separated fields, quoted fields, escaped double quotes, embedded line endings, `LF` and `CRLF` record endings, and a UTF-8 byte-order mark at the start of the file.
 * The header is converted into a `CsvHeader`, which records the index of each column. Column names are compared without case sensitivity and can appear in any order. The `name` and `class` columns are mandatory, while `email` is optional. Unknown and repeated columns are rejected.
 * Each data row is represented by a `CsvRecord`, which retains its row number for error reporting. Blank rows are ignored. `ImportCommand#parsePerson(CsvRecord, CsvHeader)` checks the number of fields and uses the same `ParserUtil` methods as `add` command to validate the name, class and optional email.
-* `ImportCommand#parsePersons(ParsedCsv, Model)` validates every contact before modifying the model. It checks for duplicates against both the existing address book and contacts parsed from earlier rows. Validation stops at the first invalid row.
-* Only after every non-blank row has been successfully converted does `ImportCommand#execute(Model)` add the contacts. This makes the operation atomic, i.e. if any error occurs, no contact from the file is added.
+* `ImportCommand#parsePersons(ParsedCsv, Model)` validates every row before the model is changed, so `ImportCommand#execute(Model)` adds the contacts only if all rows are valid. This makes the operation atomic, i.e. if any error occurs, no contact from the file is added.
 * Since `Model#addPerson(Person)` inserts a contact at the top of the list, the validated contacts are added from the last row to the first. The imported contacts therefore appear at the top in the same order as in the CSV file.
 * CSV syntax and I/O failures are reported as a general import failure, while header, field-count, contact-validation and duplicate errors receive more specific messages.
 
