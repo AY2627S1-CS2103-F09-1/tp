@@ -236,7 +236,7 @@ public class PersonTest {
     }
 
     @Test
-    public void isSamePerson() {
+    public void isSamePerson_variousPersons_returnsExpected() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));
 
@@ -329,7 +329,7 @@ public class PersonTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousPersons_returnsExpected() {
         // same values -> returns true
         Person aliceCopy = new PersonBuilder(ALICE).build();
         assertTrue(ALICE.equals(aliceCopy));
@@ -373,7 +373,7 @@ public class PersonTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_person_returnsExpectedFormat() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", className="
                 + ALICE.getClassName() + ", email=" + ALICE.getEmail().get() + ", tags=" + ALICE.getTags()
                 + ", attendanceRecords=" + ALICE.getAttendanceRecords() + ", gradeRecords="

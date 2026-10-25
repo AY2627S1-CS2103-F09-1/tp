@@ -24,7 +24,7 @@ public class MessagesTest {
     }
 
     @Test
-    public void getErrorMessageForDuplicatePrefixes_namesTheRepeatedPrefixes() {
+    public void getErrorMessageForDuplicatePrefixes_repeatedPrefixes_namesThem() {
         assertEquals("Each parameter can only be specified once. Repeated: /date",
                 Messages.getErrorMessageForDuplicatePrefixes("/date"));
         assertEquals("Each parameter can only be specified once. Repeated: /date, /status",

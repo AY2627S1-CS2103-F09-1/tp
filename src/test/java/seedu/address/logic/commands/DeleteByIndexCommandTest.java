@@ -104,7 +104,7 @@ public class DeleteByIndexCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         DeleteByIndexCommand deleteFirstCommand = new DeleteByIndexCommand(INDEX_FIRST_PERSON);
         DeleteByIndexCommand deleteSecondCommand = new DeleteByIndexCommand(INDEX_SECOND_PERSON);
 
@@ -126,7 +126,7 @@ public class DeleteByIndexCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_command_returnsExpectedFormat() {
         Index targetIndex = Index.fromOneBased(1);
         DeleteByIndexCommand deleteCommand = new DeleteByIndexCommand(targetIndex);
         String expected = DeleteByIndexCommand.class.getCanonicalName() + "{targetIndex=" + targetIndex + "}";

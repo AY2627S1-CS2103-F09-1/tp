@@ -97,7 +97,7 @@ public class PersonCardTest {
     }
 
     @Test
-    public void getSortedTags_sortsIgnoringCase() {
+    public void getSortedTags_mixedCase_sortsIgnoringCase() {
         Person person = new PersonBuilder().withTags("beta", "Alpha", "gamma").build();
 
         assertEquals(List.of(new Tag("Alpha"), new Tag("beta"), new Tag("gamma")),

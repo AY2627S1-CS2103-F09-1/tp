@@ -332,7 +332,7 @@ public class EditCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         final EditCommand standardCommand = new EditCommand(INDEX_FIRST_PERSON, DESC_AMY);
 
         // same values -> returns true
@@ -357,7 +357,7 @@ public class EditCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_command_returnsExpectedFormat() {
         Index index = Index.fromOneBased(1);
         EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor(DESC_AMY);
         EditCommand editCommand = new EditCommand(index, editPersonDescriptor);

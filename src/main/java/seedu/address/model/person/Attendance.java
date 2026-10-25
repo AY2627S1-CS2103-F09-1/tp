@@ -21,7 +21,7 @@ public class Attendance {
         PRESENT, ABSENT, LATE;
 
         /**
-         * Parses a status ignoring capitalisation and leading/trailing whitespace.
+         * Parses a status ignoring capitalization and leading/trailing whitespace.
          *
          * @throws IllegalArgumentException if the value is not a supported status.
          */

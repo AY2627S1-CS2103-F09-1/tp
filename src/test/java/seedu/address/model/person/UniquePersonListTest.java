@@ -180,7 +180,7 @@ public class UniquePersonListTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_list_matchesTheUnderlyingList() {
         assertEquals(uniquePersonList.asUnmodifiableObservableList().toString(), uniquePersonList.toString());
     }
 }

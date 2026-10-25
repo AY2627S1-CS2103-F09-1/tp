@@ -17,7 +17,7 @@ public class StringUtilTest {
     //---------------- Tests for isNonZeroUnsignedInteger --------------------------------------
 
     @Test
-    public void isNonZeroUnsignedInteger() {
+    public void isNonZeroUnsignedInteger_variousInputs_returnsExpected() {
 
         // EP: empty strings
         assertFalse(StringUtil.isNonZeroUnsignedInteger("")); // Boundary value
@@ -129,7 +129,7 @@ public class StringUtilTest {
     }
 
     @Test
-    public void compareNaturally_sortsLikeAPersonWould() {
+    public void compareNaturally_mixedLabels_sortsAsAPersonWould() {
         List<String> labels = new ArrayList<>(List.of("Team 10", "Group_A", "Team 2", "team 1", "Group B",
                 "Group-A", "Group A", "Week 9", "Week 11"));
 
@@ -146,7 +146,7 @@ public class StringUtilTest {
     }
 
     @Test
-    public void getDetails_exceptionGiven() {
+    public void getDetails_exceptionGiven_containsExceptionAndMessage() {
         assertTrue(StringUtil.getDetails(new FileNotFoundException("file not found"))
             .contains("java.io.FileNotFoundException: file not found"));
     }
