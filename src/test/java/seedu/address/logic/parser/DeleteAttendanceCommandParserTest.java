@@ -1,10 +1,10 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_DATE;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.DeleteAttendanceCommandParser.MESSAGE_UNKNOWN_PARAMETER;
@@ -91,13 +91,15 @@ public class DeleteAttendanceCommandParserTest {
 
     @Test
     public void parse_invalidDate_failure() {
-        assertParseFailure(parser, "1 /date 31-02-2026", String.format(MESSAGE_NONEXISTENT_DATE, "31-02-2026"));
+        assertParseFailure(parser, "1 /date 31-02-2026",
+                String.format(MESSAGE_NONEXISTENT_DATE, "31-02-2026"));
         assertParseFailure(parser, "1 /date 2026-09-16", MESSAGE_INVALID_DATE);
     }
 
     @Test
     public void parse_duplicateOrUnknownParameter_failure() {
-        assertParseFailure(parser, "1 /date 16-09-2026 /date 17-09-2026", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, "1 /date 16-09-2026 /date 17-09-2026",
+                getErrorMessageForDuplicatePrefixes("/date"));
         assertParseFailure(parser, "1 /date 16-09-2026 /status present", MESSAGE_UNKNOWN_PARAMETER);
     }
 }

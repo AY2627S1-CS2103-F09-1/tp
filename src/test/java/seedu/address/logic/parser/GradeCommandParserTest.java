@@ -1,9 +1,9 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -61,7 +61,8 @@ public class GradeCommandParserTest {
                 "!!!",
                 new Grade("Assignment 1", new BigDecimal("97")));
 
-        assertParseSuccess(parser, " /name @@@, /class !!! /assessment Assignment 1 /score 97", expectedCommand);
+        assertParseSuccess(parser, " /name @@@, /class !!! /assessment Assignment 1 /score 97",
+                expectedCommand);
     }
 
     @Test
@@ -103,9 +104,11 @@ public class GradeCommandParserTest {
     @Test
     public void parse_assessmentNameWithSymbolsAndAccents_success() {
         assertParseSuccess(parser, "1 /assessment Quiz #1 (Part A) /score 90",
-                new GradeByIndexCommand(Index.fromOneBased(1), new Grade("Quiz #1 (Part A)", new BigDecimal("90"))));
+                new GradeByIndexCommand(Index.fromOneBased(1),
+                        new Grade("Quiz #1 (Part A)", new BigDecimal("90"))));
         assertParseSuccess(parser, "1 /assessment Examen Finalé /score 90",
-                new GradeByIndexCommand(Index.fromOneBased(1), new Grade("Examen Finalé", new BigDecimal("90"))));
+                new GradeByIndexCommand(Index.fromOneBased(1),
+                        new Grade("Examen Finalé", new BigDecimal("90"))));
     }
 
     @Test
@@ -147,7 +150,8 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_missingClass_failure() {
-        assertParseFailure(parser, " /name Alex Yeoh /assessment Assignment 1 /score 97", MESSAGE_MISSING_CLASS);
+        assertParseFailure(parser, " /name Alex Yeoh /assessment Assignment 1 /score 97",
+                MESSAGE_MISSING_CLASS);
     }
 
     @Test
@@ -184,7 +188,8 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_scoreWithTooManyDecimalPlaces_failure() {
-        assertParseFailure(parser, "1 /assessment Quiz /score 90.12345", Grade.MESSAGE_TOO_MANY_DECIMAL_PLACES);
+        assertParseFailure(parser, "1 /assessment Quiz /score 90.12345",
+                Grade.MESSAGE_TOO_MANY_DECIMAL_PLACES);
         assertParseSuccess(parser, "1 /assessment Quiz /score 90.1234",
                 new GradeByIndexCommand(Index.fromOneBased(1), new Grade("Quiz", new BigDecimal("90.1234"))));
     }
@@ -197,15 +202,15 @@ public class GradeCommandParserTest {
     @Test
     public void parse_duplicatePrefix_failure() {
         assertParseFailure(parser, "1 /assessment Quiz /assessment Exam /score 90",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/assessment"));
         assertParseFailure(parser, "1 /assessment Quiz /score 90 /score 91",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/score"));
     }
 
     @Test
     public void parse_duplicateAssessmentAndScorePrefixes_failure() {
         assertParseFailure(parser, "1 /assessment Quiz /assessment Exam " + "/score 90 /score 95",
-            MESSAGE_DUPLICATE_PARAMETERS);
+            getErrorMessageForDuplicatePrefixes("/assessment", "/score"));
     }
 
 }

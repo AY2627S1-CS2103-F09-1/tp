@@ -94,7 +94,8 @@ public class DeleteGradeByIndexCommandTest {
         DeleteGradeByIndexCommand command =
                 new DeleteGradeByIndexCommand(outOfBoundsIndex, "Quiz 1");
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -120,7 +121,8 @@ public class DeleteGradeByIndexCommandTest {
         DeleteGradeByIndexCommand command =
                 new DeleteGradeByIndexCommand(INDEX_SECOND_PERSON, "Quiz 1");
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test

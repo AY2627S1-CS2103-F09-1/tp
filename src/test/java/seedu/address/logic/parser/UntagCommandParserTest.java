@@ -1,8 +1,8 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.GroupMembershipCommandParser.MESSAGE_MISSING_GROUP;
@@ -102,8 +102,10 @@ public class UntagCommandParserTest {
 
     @Test
     public void parse_repeatedParameter_failure() {
-        assertParseFailure(parser, " /group Group B" + GROUP_DESC + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, GROUP_DESC + " /members 2" + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, " /group Group B" + GROUP_DESC + MEMBERS_DESC,
+                getErrorMessageForDuplicatePrefixes("/group"));
+        assertParseFailure(parser, GROUP_DESC + " /members 2" + MEMBERS_DESC,
+                getErrorMessageForDuplicatePrefixes("/members"));
     }
 
     @Test

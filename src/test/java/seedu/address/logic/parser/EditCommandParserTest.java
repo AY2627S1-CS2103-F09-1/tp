@@ -1,7 +1,7 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.commands.CommandTestUtil.CLASS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_BOB;
@@ -137,7 +137,8 @@ public class EditCommandParserTest {
     public void parse_multipleInvalidValues_reportsFirstInOrder() {
         // name, then class, then email
         assertParseFailure(parser, "1" + INVALID_EMAIL_DESC + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS);
-        assertParseFailure(parser, "1" + INVALID_EMAIL_DESC + INVALID_CLASS_DESC, ClassName.MESSAGE_CONSTRAINTS);
+        assertParseFailure(parser, "1" + INVALID_EMAIL_DESC + INVALID_CLASS_DESC,
+                ClassName.MESSAGE_CONSTRAINTS);
         assertParseFailure(parser, "1" + INVALID_CLASS_DESC + INVALID_NAME_DESC, Name.MESSAGE_CONSTRAINTS);
     }
 
@@ -198,7 +199,8 @@ public class EditCommandParserTest {
         EditCommand expectedCommand = new EditCommand(targetIndex, new EditPersonDescriptorBuilder()
                 .withName(VALID_NAME_AMY).withoutEmail().build());
 
-        assertParseSuccess(parser, targetIndex.getOneBased() + " " + PREFIX_EMAIL + NAME_DESC_AMY, expectedCommand);
+        assertParseSuccess(parser, targetIndex.getOneBased() + " " + PREFIX_EMAIL + NAME_DESC_AMY,
+                expectedCommand);
     }
 
     @Test
@@ -207,19 +209,20 @@ public class EditCommandParserTest {
 
         // valid followed by invalid
         String userInput = targetIndex.getOneBased() + INVALID_EMAIL_DESC + EMAIL_DESC_BOB;
-        assertParseFailure(parser, userInput, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, userInput, getErrorMessageForDuplicatePrefixes("/email"));
 
         // invalid followed by valid
         userInput = targetIndex.getOneBased() + EMAIL_DESC_BOB + INVALID_EMAIL_DESC;
-        assertParseFailure(parser, userInput, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, userInput, getErrorMessageForDuplicatePrefixes("/email"));
 
         // every parameter can only be given once
         assertParseFailure(parser, targetIndex.getOneBased() + NAME_DESC_AMY + NAME_DESC_AMY,
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/name"));
         assertParseFailure(parser, targetIndex.getOneBased() + CLASS_DESC_AMY + CLASS_DESC_AMY,
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/class"));
 
         // repeated parameters are reported before an invalid index
-        assertParseFailure(parser, "x" + NAME_DESC_AMY + NAME_DESC_AMY, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, "x" + NAME_DESC_AMY + NAME_DESC_AMY,
+                getErrorMessageForDuplicatePrefixes("/name"));
     }
 }

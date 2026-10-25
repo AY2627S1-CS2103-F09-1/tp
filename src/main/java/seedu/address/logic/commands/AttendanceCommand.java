@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
+import java.util.Locale;
 import java.util.Optional;
 
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -27,7 +28,7 @@ public abstract class AttendanceCommand extends Command {
     public static final String MESSAGE_FUTURE_DATE = "Attendance date cannot be in the future.";
     public static final String MESSAGE_DUPLICATE_ATTENDANCE =
             "%1$s already has attendance on %2$s recorded as %3$s. Use deleteA to remove it first.";
-    public static final String MESSAGE_UNUSUAL_YEAR = " Warning: the year %1$04d is before %2$d. If the date is "
+    public static final String MESSAGE_UNUSUAL_YEAR = " Warning: the year %1$s is before %2$s. If the date is "
             + "a typo, use deleteA to remove the record and enter it again.";
 
     /**
@@ -69,7 +70,8 @@ public abstract class AttendanceCommand extends Command {
         if (date.getYear() >= Attendance.EARLIEST_EXPECTED_YEAR) {
             return "";
         }
-        return String.format(MESSAGE_UNUSUAL_YEAR, date.getYear(), Attendance.EARLIEST_EXPECTED_YEAR);
+        String paddedYear = String.format(Locale.ROOT, "%04d", date.getYear());
+        return String.format(MESSAGE_UNUSUAL_YEAR, paddedYear, Attendance.EARLIEST_EXPECTED_YEAR);
     }
 
 }

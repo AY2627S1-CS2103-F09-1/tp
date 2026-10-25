@@ -19,6 +19,7 @@ import seedu.address.logic.commands.AddCommand;
 import seedu.address.logic.commands.AttendanceByIndexCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
+import seedu.address.logic.commands.Command;
 import seedu.address.logic.commands.DeleteAttendanceByIndexCommand;
 import seedu.address.logic.commands.DeleteAttendanceByNameAndClassCommand;
 import seedu.address.logic.commands.DeleteAttendanceCommand;
@@ -146,6 +147,25 @@ public class AddressBookParserTest {
                 ImportCommand.COMMAND_WORD + " students.csv");
 
         assertEquals(new ImportCommand("students.csv"), command);
+    }
+
+    @Test
+    public void parseCommand_tabsAndUnusualSpaces_treatedAsSpaces() throws Exception {
+        Command expected = parser.parseCommand("attendance 1 /date 16-09-2026 /status late");
+
+        assertEquals(expected, parser.parseCommand("attendance\t1\t/date 16-09-2026\t/status late"));
+        assertEquals(expected, parser.parseCommand(
+                "attendance\u00A01\u00A0/date\u00A016-09-2026\u00A0/status\u00A0late"));
+        assertEquals(expected, parser.parseCommand(
+                "\u3000attendance\u30001\u3000/date 16-09-2026 /status late\u3000"));
+        assertEquals(new ListCommand(new PersonMatchesKeyword("Alice Pauline")),
+                parser.parseCommand("list\u00A0Alice\u00A0Pauline"));
+    }
+
+    @Test
+    public void parseCommand_importPathWithUnusualSpace_keepsThePath() throws Exception {
+        assertEquals(new ImportCommand("data/my\u00A0folder/students.csv"),
+                parser.parseCommand("import\u00A0data/my\u00A0folder/students.csv"));
     }
 
     @Test

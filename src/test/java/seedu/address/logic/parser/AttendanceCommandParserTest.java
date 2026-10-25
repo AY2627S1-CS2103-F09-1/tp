@@ -1,9 +1,9 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 
@@ -90,7 +90,8 @@ public class AttendanceCommandParserTest {
                 LocalDate.of(2026, 9, 16),
                 Attendance.Status.ABSENT);
 
-        assertParseSuccess(parser, " /name @@@,  /class !!! /date 16-09-2026 /status absent", expectedCommand);
+        assertParseSuccess(parser, " /name @@@,  /class !!! /date 16-09-2026 /status absent",
+                expectedCommand);
     }
 
     @Test
@@ -193,28 +194,28 @@ public class AttendanceCommandParserTest {
     public void parse_repeatedDatePrefix_failure() {
         assertParseFailure(parser,
                 "1 /date 16-09-2026 /date 17-09-2026 /status absent",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/date"));
     }
 
     @Test
     public void parse_repeatedStatusPrefix_failure() {
         assertParseFailure(parser,
                 "1 /date 16-09-2026 /status absent /status present",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/status"));
     }
 
     @Test
     public void parse_repeatedNamePrefix_failure() {
         assertParseFailure(parser,
                 " /name Alex Yeoh /name John Tan /class A1 " + "/date 16-09-2026 /status absent",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/name"));
     }
 
     @Test
     public void parse_repeatedClassPrefix_failure() {
         assertParseFailure(parser,
                 "/name Alex Yeoh /class A1 /class A2 " + "/date 16-09-2026 /status absent",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/class"));
     }
 
 }

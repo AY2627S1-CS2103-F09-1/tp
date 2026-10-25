@@ -39,7 +39,7 @@ public class AttendanceByIndexCommand extends AttendanceCommand {
         requireNotInFuture(date);
         List<Person> displayedPeople = model.getFilteredPersonList();
         if (targetIndex.getZeroBased() >= displayedPeople.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(Messages.getInvalidDisplayedIndexMessage(displayedPeople.size()));
         }
         return recordAttendance(model, displayedPeople.get(targetIndex.getZeroBased()), date, status);
     }

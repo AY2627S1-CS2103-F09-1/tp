@@ -47,7 +47,8 @@ public class AttendanceByIndexCommandTest {
     public void execute_validIndexUnfilteredList_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(person, person.withAttendance(new Attendance(DATE, Attendance.Status.ABSENT)));
+        expectedModel.setPerson(person,
+                person.withAttendance(new Attendance(DATE, Attendance.Status.ABSENT)));
 
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE, Attendance.Status.ABSENT);
@@ -76,7 +77,8 @@ public class AttendanceByIndexCommandTest {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
         LocalDate today = LocalDate.now();
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(person, person.withAttendance(new Attendance(today, Attendance.Status.PRESENT)));
+        expectedModel.setPerson(person,
+                person.withAttendance(new Attendance(today, Attendance.Status.PRESENT)));
 
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, today, Attendance.Status.PRESENT);
@@ -96,7 +98,8 @@ public class AttendanceByIndexCommandTest {
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.LATE);
         String expectedMessage = "Attendance for " + person.getName() + " on 01-01-0000 recorded as late."
-                + String.format(AttendanceCommand.MESSAGE_UNUSUAL_YEAR, 0, Attendance.EARLIEST_EXPECTED_YEAR);
+                + String.format(AttendanceCommand.MESSAGE_UNUSUAL_YEAR, "0000",
+                        Attendance.EARLIEST_EXPECTED_YEAR);
 
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
@@ -137,7 +140,8 @@ public class AttendanceByIndexCommandTest {
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(outOfBoundIndex, DATE, Attendance.Status.PRESENT);
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -148,7 +152,8 @@ public class AttendanceByIndexCommandTest {
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(INDEX_SECOND_PERSON, DATE, Attendance.Status.PRESENT);
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -194,7 +199,8 @@ public class AttendanceByIndexCommandTest {
         assertFalse(command.equals(
                 new AttendanceByIndexCommand(INDEX_SECOND_PERSON, DATE, Attendance.Status.PRESENT)));
         assertFalse(command.equals(
-                new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE.plusDays(1), Attendance.Status.PRESENT)));
+                new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE.plusDays(1),
+                        Attendance.Status.PRESENT)));
         assertFalse(command.equals(
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE, Attendance.Status.ABSENT)));
     }

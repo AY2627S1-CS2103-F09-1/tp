@@ -72,7 +72,8 @@ public class DeleteAttendanceByIndexCommandTest {
         Attendance yearZeroAttendance = new Attendance(yearZero, Attendance.Status.LATE);
         model.setPerson(aliceWithAttendance, aliceWithAttendance.withAttendance(yearZeroAttendance));
 
-        CommandResult result = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, yearZero).execute(model);
+        CommandResult result = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON,
+                yearZero).execute(model);
 
         assertEquals("Attendance of late for " + ALICE.getName() + " on 01-01-0000 has been deleted",
                 result.getFeedbackToUser());
@@ -99,7 +100,8 @@ public class DeleteAttendanceByIndexCommandTest {
         Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
         DeleteAttendanceByIndexCommand command = new DeleteAttendanceByIndexCommand(outOfBoundsIndex, DATE);
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -125,7 +127,8 @@ public class DeleteAttendanceByIndexCommandTest {
         DeleteAttendanceByIndexCommand command =
                 new DeleteAttendanceByIndexCommand(INDEX_SECOND_PERSON, DATE);
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test

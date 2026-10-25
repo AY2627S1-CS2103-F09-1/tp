@@ -1,10 +1,10 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_ASSESSMENT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.DeleteGradeCommandParser.MESSAGE_UNKNOWN_PARAMETER;
@@ -94,7 +94,8 @@ public class DeleteGradeCommandParserTest {
 
     @Test
     public void parse_duplicateOrUnknownParameter_failure() {
-        assertParseFailure(parser, "1 /assessment Quiz /assessment Exam", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, "1 /assessment Quiz /assessment Exam",
+                getErrorMessageForDuplicatePrefixes("/assessment"));
         assertParseFailure(parser, "1 /assessment Quiz /score 90", MESSAGE_UNKNOWN_PARAMETER);
     }
 }

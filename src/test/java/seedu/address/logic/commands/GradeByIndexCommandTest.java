@@ -85,7 +85,7 @@ public class GradeByIndexCommandTest {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
 
         assertCommandFailure(new GradeByIndexCommand(outOfBoundIndex, GRADE), model,
-                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class GradeByIndexCommandTest {
         assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
 
         assertCommandFailure(new GradeByIndexCommand(INDEX_SECOND_PERSON, GRADE), model,
-                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test

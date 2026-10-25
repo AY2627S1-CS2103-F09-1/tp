@@ -1,9 +1,9 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.commands.CommandTestUtil.CLASS_DESC_AMY;
 import static seedu.address.logic.commands.CommandTestUtil.CLASS_DESC_BOB;
 import static seedu.address.logic.commands.CommandTestUtil.EMAIL_DESC_AMY;
@@ -73,7 +73,8 @@ public class AddCommandParserTest {
 
     @Test
     public void parse_sameParameterInDifferentCases_failure() {
-        assertParseFailure(parser, NAME_DESC_BOB + " /NAME Amy Bee" + CLASS_DESC_BOB, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, NAME_DESC_BOB + " /NAME Amy Bee" + CLASS_DESC_BOB,
+                getErrorMessageForDuplicatePrefixes("/name"));
     }
 
     @Test
@@ -169,24 +170,33 @@ public class AddCommandParserTest {
         String validString = NAME_DESC_BOB + CLASS_DESC_BOB + EMAIL_DESC_BOB;
 
         // multiple names
-        assertParseFailure(parser, NAME_DESC_AMY + validString, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, NAME_DESC_AMY + validString, getErrorMessageForDuplicatePrefixes("/name"));
 
         // multiple classes
-        assertParseFailure(parser, CLASS_DESC_AMY + validString, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, CLASS_DESC_AMY + validString,
+                getErrorMessageForDuplicatePrefixes("/class"));
 
         // multiple emails
-        assertParseFailure(parser, EMAIL_DESC_AMY + validString, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, EMAIL_DESC_AMY + validString,
+                getErrorMessageForDuplicatePrefixes("/email"));
 
         // multiple fields repeated
-        assertParseFailure(parser, validString + validString, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, validString + validString,
+                getErrorMessageForDuplicatePrefixes("/name", "/class", "/email"));
 
         // invalid value followed by valid value, or the other way round
-        assertParseFailure(parser, INVALID_NAME_DESC + validString, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, validString + INVALID_NAME_DESC, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, INVALID_CLASS_DESC + validString, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, validString + INVALID_CLASS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, INVALID_EMAIL_DESC + validString, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, validString + INVALID_EMAIL_DESC, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, INVALID_NAME_DESC + validString,
+                getErrorMessageForDuplicatePrefixes("/name"));
+        assertParseFailure(parser, validString + INVALID_NAME_DESC,
+                getErrorMessageForDuplicatePrefixes("/name"));
+        assertParseFailure(parser, INVALID_CLASS_DESC + validString,
+                getErrorMessageForDuplicatePrefixes("/class"));
+        assertParseFailure(parser, validString + INVALID_CLASS_DESC,
+                getErrorMessageForDuplicatePrefixes("/class"));
+        assertParseFailure(parser, INVALID_EMAIL_DESC + validString,
+                getErrorMessageForDuplicatePrefixes("/email"));
+        assertParseFailure(parser, validString + INVALID_EMAIL_DESC,
+                getErrorMessageForDuplicatePrefixes("/email"));
     }
 
     @Test
@@ -253,7 +263,7 @@ public class AddCommandParserTest {
 
         // repeated parameter comes before text before the first parameter
         assertParseFailure(parser, PREAMBLE_NON_EMPTY + NAME_DESC_BOB + NAME_DESC_AMY,
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/name"));
 
         // text before the first parameter comes before a missing parameter
         assertParseFailure(parser, PREAMBLE_NON_EMPTY + NAME_DESC_BOB, MESSAGE_INVALID_FORMAT);
