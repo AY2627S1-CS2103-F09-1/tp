@@ -103,7 +103,7 @@ public class GradeByIndexCommandTest {
         model.setPerson(person, person.withGrade(new Grade("Assignment 1", BigDecimal.TEN)));
 
         assertCommandFailure(new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE), model,
-                GradeCommand.MESSAGE_DUPLICATE_GRADE);
+                String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
     @Test
@@ -114,7 +114,8 @@ public class GradeByIndexCommandTest {
         GradeByIndexCommand command = new GradeByIndexCommand(INDEX_FIRST_PERSON,
                 new Grade("  ASSIGNMENT   1 ", BigDecimal.ONE));
 
-        assertCommandFailure(command, model, GradeCommand.MESSAGE_DUPLICATE_GRADE);
+        assertCommandFailure(command, model,
+                String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
     @Test

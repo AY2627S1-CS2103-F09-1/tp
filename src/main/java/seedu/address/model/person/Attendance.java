@@ -58,6 +58,9 @@ public class Attendance {
             .toFormatter(Locale.ROOT)
             .withResolverStyle(ResolverStyle.STRICT);
 
+    /** Dates before this year are most likely typos, so recording one shows a warning. */
+    public static final int EARLIEST_EXPECTED_YEAR = 2000;
+
     private static final DateTimeFormatter DISPLAY_DATE_FORMAT =
             DateTimeFormatter.ofPattern("dd-MMM-uuuu", Locale.ENGLISH);
 

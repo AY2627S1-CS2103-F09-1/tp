@@ -41,7 +41,7 @@ public class EditCommandParserTest {
     @Test
     public void parse_missingParts_failure() {
         // no index specified
-        assertParseFailure(parser, VALID_NAME_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, VALID_NAME_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
         assertParseFailure(parser, NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
 
         // no field specified
@@ -54,19 +54,19 @@ public class EditCommandParserTest {
     @Test
     public void parse_invalidPreamble_failure() {
         // negative index
-        assertParseFailure(parser, "-5" + NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "-5" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
 
         // zero index
-        assertParseFailure(parser, "0" + NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "0" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
 
         // invalid arguments being parsed as preamble
-        assertParseFailure(parser, "1 some random string", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 some random string", ParserUtil.MESSAGE_INVALID_INDEX);
 
         // invalid prefix being parsed as preamble
-        assertParseFailure(parser, "1 i/ string", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 i/ string", ParserUtil.MESSAGE_INVALID_INDEX);
 
         // text before the index
-        assertParseFailure(parser, "text 1" + NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "text 1" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
     }
 
     @Test
@@ -86,7 +86,8 @@ public class EditCommandParserTest {
 
     @Test
     public void parse_unknownParameterMessage_listsAllParameters() {
-        String expected = "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
+        String expected = "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL
+                + ". A word that starts with / is always read as a parameter.";
         assertParseFailure(parser, "1 /phone 91234567", expected);
     }
 

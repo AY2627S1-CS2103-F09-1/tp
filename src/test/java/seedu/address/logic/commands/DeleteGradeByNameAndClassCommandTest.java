@@ -59,7 +59,7 @@ public class DeleteGradeByNameAndClassCommandTest {
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
-                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz,1"));
+                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz 期末"));
         assertThrows(AssertionError.class, () ->
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "   "));
     }

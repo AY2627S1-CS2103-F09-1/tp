@@ -19,7 +19,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class EditCommandParser implements Parser<EditCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
+            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, EditCommand.MESSAGE_USAGE);
@@ -54,14 +55,14 @@ public class EditCommandParser implements Parser<EditCommand> {
 
     /**
      * Returns the index in {@code preamble}.
-     * @throws ParseException with the invalid command format message if {@code preamble} is not a valid index
+     * @throws ParseException if {@code preamble} is empty, with the invalid command format message, or is
+     *         not a positive integer
      */
     private static Index parseIndex(String preamble) throws ParseException {
-        try {
-            return ParserUtil.parseIndex(preamble);
-        } catch (ParseException pe) {
-            throw new ParseException(INVALID_FORMAT_MESSAGE, pe);
+        if (preamble.isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
         }
+        return ParserUtil.parseIndex(preamble);
     }
 
     /**

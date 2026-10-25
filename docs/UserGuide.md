@@ -73,6 +73,9 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
   For example, `/name John Doe` is valid, but `/nameJohn Doe` is not.<br>
   Prefixes are not case-sensitive. For example, `/NAME John Doe` and `/Name John Doe` are the same as `/name John Doe`.
 
+* A word that starts with `/` after a space is always read as a parameter, so it cannot be used inside a value.<br>
+  For example, `Paper 1 / Paper 2` cannot be used as an assessment name, but a slash inside a word, such as in `CA1/CA2` or `Ravi s/o Kumar`, is fine.
+
 * Command words are not case-sensitive.<br>
   For example, `list`, `LIST` and `List` are the same command, and `viewA` can also be typed as `viewa` or `VIEWA`.
 
@@ -130,7 +133,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` | `Unknown parameter. Use /name, /class or /email`
+A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` | `Unknown parameter. Use /name, /class or /email. A word that starts with / is always read as a parameter.`
 A parameter is given more than once | `Each parameter can only be specified once`
 There is text before the first parameter, such as `add John /class A1` | `Invalid command format!` followed by the usage of `add`
 `/name` is missing | `Command requires a name`
@@ -170,9 +173,10 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` or `/tag` | `Unknown parameter. Use /name, /class or /email`
+A parameter other than `/name`, `/class` or `/email` is given, such as `/phone` or `/tag` | `Unknown parameter. Use /name, /class or /email. A word that starts with / is always read as a parameter.`
 A parameter is given more than once | `Each parameter can only be specified once`
-The index is missing, is not a positive integer, or has other text with it, such as `edit John /name Jo` | `Invalid command format!` followed by the usage of `edit`
+The index is missing, such as `edit /name Jo` | `Invalid command format!` followed by the usage of `edit`
+The index is not a positive integer, or has other text with it, such as `edit John /name Jo` | `Index must be a positive integer.`
 The name contains a parameter such as `/class` that is stuck to the text before it | `The name contains '/class', which looks like a parameter that is missing a space before it`
 The name is empty, too long or has characters that are not allowed | `Name cannot be empty`, `Name is too long` or a description of the allowed characters
 The class contains a parameter such as `/name` that is stuck to the text before it | `The class contains '/name', which looks like a parameter that is missing a space before it`
@@ -235,9 +239,10 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name` or `/class` is given, such as `/phone` | `Unknown parameter. Use /name or /class`
+A parameter other than `/name` or `/class` is given, such as `/phone` | `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.`
 A parameter is given more than once | `Each parameter can only be specified once`
-No index or parameters are given, the index is not a positive integer, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
+No index or parameters are given, or an index is combined with parameters | `Invalid command format!` followed by the usage of `delete`
+The index is not a positive integer, or has other text with it, such as `delete 1 2` | `Index must be a positive integer.`
 `/name` is missing or has no value | `Command requires a name`
 `/class` is missing or has no value | `Command requires a class`
 No contact has the given name and class | `Contact not found`
@@ -271,7 +276,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/group` or `/members` is given, such as `/name` | `Unknown parameter. Use /group or /members`
+A parameter other than `/group` or `/members` is given, such as `/name` | `Unknown parameter. Use /group or /members. A word that starts with / is always read as a parameter.`
 A parameter is given more than once | `Each parameter can only be specified once`
 There is text before the first parameter, such as `tag GroupA 1 3` | `Invalid command format!` followed by the usage of `tag`
 `/group` is missing or has nothing after it | `Missing group name`
@@ -311,7 +316,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/group` or `/members` is given, such as `/name` | `Unknown parameter. Use /group or /members`
+A parameter other than `/group` or `/members` is given, such as `/name` | `Unknown parameter. Use /group or /members. A word that starts with / is always read as a parameter.`
 A parameter is given more than once | `Each parameter can only be specified once`
 There is text before the first parameter, such as `untag GroupA 1 3` | `Invalid command format!` followed by the usage of `untag`
 `/group` is missing or has nothing after it | `Missing group name`
@@ -399,9 +404,9 @@ or
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
 * `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces. They are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
-* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas, such as `Assignment 1`, `Mid-term` or `Quiz #1`. Spaces at the start and end are ignored.
-* `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part, such as `97.5`, but not a sign, a percent symbol or any other characters.
-* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, but grades for different assessments are separate.
+* `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, such as `Assignment 1`, `Mid-term`, `Quiz #1` or `Test 1, Part A`. Unlike in a name, commas are allowed. Spaces at the start and end are ignored.
+* `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part of at most 4 digits, such as `97.5`, but not a sign, a percent symbol or any other characters.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, so to change a score, delete the grade with [`deleteG`](#deleting-grades-deleteg) and record it again. Grades for different assessments are separate. Names that differ in more than case and spaces, such as `Quiz 1` and `Quiz1`, are different assessments.
 * Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
 * `/assessment` and `/score` can each be given at most once.
 
@@ -409,7 +414,8 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name`, `/class`, `/assessment` or `/score` is given, such as `/email` | `Unknown parameter. Use /name, /class, /assessment or /score`
+A parameter other than `/name`, `/class`, `/assessment` or `/score` is given, such as `/email` | `Unknown parameter. Use /name, /class, /assessment or /score. A word that starts with / is always read as a parameter.`
+A parameter is stuck to the text before it, such as the `/score` in `/assessment Quiz/score 90` | `The command contains '/score', which looks like a parameter that is missing a space before it`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
@@ -417,13 +423,13 @@ The index, or name and class, is missing | `Use either an index, or both /name a
 `/class` is missing when using the name/class format | `Command requires a class`
 `/assessment` is missing or has nothing after it | `Assessment name missing`
 `/score` is missing or has nothing after it | `Score missing`
-The assessment name contains a parameter such as `/score` that is stuck to the text before it | `The assessment name contains '/score', which looks like a parameter that is missing a space before it`
-The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.`
+The assessment name is not valid | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard.`
 The score is not a number from 0 to 100 | `Score must be a numerical value (0-100).`
+The score has more than 4 decimal places | `Score can have at most 4 decimal places.`
 The index is not a positive integer | `Index must be a positive integer.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
-The contact already has a grade for the assessment | `Grade for this assessment already exists`
+The contact already has a grade for the assessment | `NAME already has a grade of SCORE for ASSESSMENT_NAME. Use deleteG to remove it first.`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
 On success, ClassMates shows `Grade of SCORE recorded for ASSESSMENT_NAME for student NAME in class CLASS.`, for example `Grade of 97.5 recorded for Assignment 1 for student Alex Yeoh in class A1.` Zeros at the end of a decimal score are not shown, so `97.50` appears as `97.5`.
@@ -450,7 +456,8 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 | Problem                                                                  | Message                                                    |
 |--------------------------------------------------------------------------|------------------------------------------------------------|
-| A parameter other than `/name` or `/class` is given, such as `/email`    | `Unknown parameter. Use /name or /class`                   |
+| A parameter other than `/name` or `/class` is given, such as `/email`    | `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.`                   |
+| A parameter is stuck to the text before it, such as the `/class` in `/name John Tan/class A1` | `The command contains '/class', which looks like a parameter that is missing a space before it` |
 | A parameter is given more than once                                      | `Each parameter can only be specified once`                |
 | There is text before the first parameter, such as `viewG John /class A1` | `Invalid command format!` followed by the usage of `viewG` |
 | `/name` is missing or has nothing after it                               | `Command requires a name`                                  |
@@ -493,14 +500,15 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 | Problem                                                                                                                                                 | Message                                                                                                                                                                                 |
 |---------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| A parameter other than `/name`, `/class` or `/assessment` is given, such as `/score`                                                                    | `Unknown parameter. Use /name, /class or /assessment`                                                                                                                                   |
+| A parameter other than `/name`, `/class` or `/assessment` is given, such as `/score`                                                                    | `Unknown parameter. Use /name, /class or /assessment. A word that starts with / is always read as a parameter.`                                                                                                                                   |
+| A parameter is stuck to the text before it, such as the `/assessment` in `1/assessment Quiz 1` | `The command contains '/assessment', which looks like a parameter that is missing a space before it` |
 | A parameter is given more than once                                                                                                                     | `Each parameter can only be specified once`                                                                                                                                             |
-| The command does not match either format, the index is not a positive integer, or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteG`                                                                                                                            |
+| The index and name-and-class are both missing, or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteG` |
+| The index is not a positive integer | `Index must be a positive integer.` |
 | `/name` is missing or has nothing after it in the name-and-class format                                                                                 | `Command requires a name`                                                                                                                                                               |
 | `/class` is missing or has nothing after it in the name-and-class format                                                                                | `Command requires a class`                                                                                                                                                              |
 | `/assessment` is missing or has nothing after it                                                                                                        | `Assessment name missing`                                                                                                                                                               |
-| The assessment name contains a parameter such as `/name` that is stuck to the text before it                                                            | `The assessment name contains '/name', which looks like a parameter that is missing a space before it`                                                                                  |
-| The assessment name is not valid                                                                                                                        | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, except commas.` |
+| The assessment name is not valid                                                                                                                        | `Assessment name must be 1 to 80 characters and can only contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard.` |
 | The index is larger than the number of contacts displayed                                                                                               | `The contact index provided is invalid.`                                                                                                                                                |
 | No contact matches the given name and class                                                                                                             | `Contact not found`                                                                                                                                                                      |
 | The contact has no grade for the given assessment                                                                                                       | `Grade for this assessment not found`                                                                                                                                                   |
@@ -526,16 +534,17 @@ or
 
 * `INDEX` refers to the index number shown in the displayed contact list, so after a command such as `list Betsy`, it refers to the contacts in the results. The index **must be a positive integer** 1, 2, 3, ...
 * `NAME` and `CLASS` identify a contact directly. Both `/name` and `/class` must be provided. Names and classes are compared ignoring capitalisation and extra spaces. They are not checked against the rules for adding a contact. If nothing matches, ClassMates shows `Contact not found`.
-* `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future.
+* `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future. A date before the year 2000 is recorded, but ClassMates adds a warning to the confirmation because it is most likely a typo.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
-* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, but records for different dates are separate.
+* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, so to change a status, delete the record with [`deleteA`](#deleting-attendance-deletea) and record it again. Records for different dates are separate.
 * `/name`, `/class`, `/date` and `/status` can each be given at most once.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name`, `/class`, `/date` or `/status` is given, such as `/email` | `Unknown parameter. Use /name, /class, /date or /status`
+A parameter other than `/name`, `/class`, `/date` or `/status` is given, such as `/email` | `Unknown parameter. Use /name, /class, /date or /status. A word that starts with / is always read as a parameter.`
+A parameter is stuck to the text before it, such as the `/status` in `/date 16-09-2026/status late` | `The command contains '/status', which looks like a parameter that is missing a space before it`
 A parameter is given more than once | `Each parameter can only be specified once`
 The index and name/class pair are both provided | `Use either an index or name and class, not both.`
 The index, or name and class, is missing | `Use either an index, or both /name and /class.`
@@ -543,16 +552,17 @@ The index, or name and class, is missing | `Use either an index, or both /name a
 `/class` is missing when using the name/class format | `Command requires a class`
 `/date` is missing or has nothing after it | `Missing date. Please provide the date of attendance.`
 `/status` is missing or has nothing after it | `Missing status. Please provide the attendance status.`
-The date is not a real date in the format `DD-MM-YYYY` | `Invalid date format. Please use the format DD-MM-YYYY.`
+The date is not in the format `DD-MM-YYYY`, or its day or month is out of range, such as `16-13-2026` | `Invalid date format. Please use the format DD-MM-YYYY.`
+The date has the right format but does not exist, such as `31-02-2026` | `The date 31-02-2026 does not exist. Please check the day and the month.`
 The status is not `present`, `absent` or `late` | `Invalid status. Please use 'present', 'absent' or 'late'.`
 The index is not a positive integer | `Index must be a positive integer.`
 The date is in the future | `Attendance date cannot be in the future.`
 The index is larger than the number of contacts displayed | `The contact index provided is invalid.`
 The name and class do not match any contact | `Contact not found`
-The contact already has a record for the date | `Attendance record already exists`
+The contact already has a record for the date | `NAME already has attendance on DATE recorded as STATUS. Use deleteA to remove it first.`
 
 If more than one problem applies, only the first one in the table above is reported.<br>
-On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, for example `Attendance for Alex Yeoh on 16-09-2026 recorded as absent.`
+On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, for example `Attendance for Alex Yeoh on 16-09-2026 recorded as absent.` If the year is before 2000, a warning follows, such as `Warning: the year 0226 is before 2000. If the date is a typo, use deleteA to remove the record and enter it again.`
 
 Examples:
 * `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
@@ -577,7 +587,8 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 Problem | Message
 --------|--------
-A parameter other than `/name` or `/class` is given, such as `/email` | `Unknown parameter. Use /name or /class`
+A parameter other than `/name` or `/class` is given, such as `/email` | `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.`
+A parameter is stuck to the text before it, such as the `/class` in `/name John Tan/class A1` | `The command contains '/class', which looks like a parameter that is missing a space before it`
 A parameter is given more than once | `Each parameter can only be specified once`
 There is text before the first parameter, such as `viewA John /class A1` | `Invalid command format!` followed by the usage of `viewA`
 `/name` is missing or has nothing after it | `Command requires a name`
@@ -622,13 +633,16 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 
 | Problem                                                                                                                                                | Message                                                                           |
 |--------------------------------------------------------------------------------------------------------------------------------------------------------|-----------------------------------------------------------------------------------|
-| A parameter other than `/name`, `/class` or `/date` is given, such as `/status`                                                                        | `Unknown parameter. Use /name, /class or /date`                                   |
+| A parameter other than `/name`, `/class` or `/date` is given, such as `/status`                                                                        | `Unknown parameter. Use /name, /class or /date. A word that starts with / is always read as a parameter.`                                   |
+| A parameter is stuck to the text before it, such as the `/date` in `1/date 16-09-2026` | `The command contains '/date', which looks like a parameter that is missing a space before it` |
 | A parameter is given more than once                                                                                                                    | `Each parameter can only be specified once`                                       |
-| The command does not match either format, the index is not a positive integer or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteA`                      |
+| The index and name-and-class are both missing, or text is given before the first parameter in the name-and-class format | `Invalid command format!` followed by the usage of `deleteA` |
+| The index is not a positive integer | `Index must be a positive integer.` |
 | `/name` is missing or has nothing after it in the name-and-class format                                                                                | `Command requires a name`                                                         |
 | `/class` is missing or has nothing after it in the name-and-class format                                                                               | `Command requires a class`                                                        |
 | `/date` is missing or has nothing after it                                                                                                             | `Missing date. Please provide the date of attendance.`                            |
-| The date is not a real date in the format `DD-MM-YYYY`                                                                                                 | `Invalid date format. Please use the format DD-MM-YYYY.`                          |
+| The date is not in the format `DD-MM-YYYY`, or its day or month is out of range, such as `16-13-2026` | `Invalid date format. Please use the format DD-MM-YYYY.` |
+| The date has the right format but does not exist, such as `31-02-2026` | `The date 31-02-2026 does not exist. Please check the day and the month.` |
 | The index is larger than the number of contacts displayed                                                                                              | `The contact index provided is invalid.`                                          |
 | No contact matches the given name and class                                                                                                            | `Contact not found`                                                                |
 | The contact has no attendance entry for the given date                                                                                                 | `Attendance for this date not found`                                              |

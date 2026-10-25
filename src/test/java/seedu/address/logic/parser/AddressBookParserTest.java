@@ -225,8 +225,9 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_commandWordWithDifferentCase_stillReportsProblemsOfItsArguments() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE);
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand("DELETE x"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () -> parser.parseCommand("DELETE x"));
+        assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                DeleteCommand.MESSAGE_USAGE), () -> parser.parseCommand("DELETE"));
     }
 
     @Test

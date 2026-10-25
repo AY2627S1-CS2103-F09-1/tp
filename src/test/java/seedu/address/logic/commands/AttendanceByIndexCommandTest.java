@@ -95,7 +95,38 @@ public class AttendanceByIndexCommandTest {
 
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.LATE);
-        String expectedMessage = "Attendance for " + person.getName() + " on 01-01-0000 recorded as late.";
+        String expectedMessage = "Attendance for " + person.getName() + " on 01-01-0000 recorded as late."
+                + String.format(AttendanceCommand.MESSAGE_UNUSUAL_YEAR, 0, Attendance.EARLIEST_EXPECTED_YEAR);
+
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_yearBeforeEarliestExpectedYear_recordsAttendanceWithWarning() {
+        Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        LocalDate date = LocalDate.of(Attendance.EARLIEST_EXPECTED_YEAR - 1, 12, 31);
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.setPerson(person, person.withAttendance(new Attendance(date, Attendance.Status.LATE)));
+
+        AttendanceByIndexCommand command =
+                new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.LATE);
+        String expectedMessage = "Attendance for " + person.getName() + " on 31-12-1999 recorded as late."
+                + " Warning: the year 1999 is before 2000. If the date is a typo, use deleteA to remove the "
+                + "record and enter it again.";
+
+        assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_earliestExpectedYear_recordsAttendanceWithoutWarning() {
+        Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        LocalDate date = LocalDate.of(Attendance.EARLIEST_EXPECTED_YEAR, 1, 1);
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.setPerson(person, person.withAttendance(new Attendance(date, Attendance.Status.LATE)));
+
+        AttendanceByIndexCommand command =
+                new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.LATE);
+        String expectedMessage = "Attendance for " + person.getName() + " on 01-01-2000 recorded as late.";
 
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
@@ -145,7 +176,8 @@ public class AttendanceByIndexCommandTest {
         AttendanceByIndexCommand command =
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE, Attendance.Status.ABSENT);
 
-        assertCommandFailure(command, model, AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE);
+        assertCommandFailure(command, model, String.format(AttendanceCommand.MESSAGE_DUPLICATE_ATTENDANCE,
+                person.getName(), "16-09-2026", Attendance.Status.PRESENT));
     }
 
     @Test

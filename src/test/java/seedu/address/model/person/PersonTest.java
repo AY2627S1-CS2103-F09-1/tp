@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -393,6 +394,38 @@ public class PersonTest {
     @Test
     public void hasAttendanceOn_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new PersonBuilder().build().hasAttendanceOn(null));
+    }
+
+    @Test
+    public void getAttendanceOn_variousDates_returnsExpected() {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Attendance record = new Attendance(date, Attendance.Status.LATE);
+        Person person = new PersonBuilder().build().withAttendance(record);
+
+        assertEquals(Optional.of(record), person.getAttendanceOn(date));
+        assertEquals(Optional.empty(), person.getAttendanceOn(date.plusDays(1)));
+        assertEquals(Optional.empty(), new PersonBuilder().build().getAttendanceOn(date));
+    }
+
+    @Test
+    public void getAttendanceOn_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().getAttendanceOn(null));
+    }
+
+    @Test
+    public void getGradeFor_variousAssessments_returnsTheStoredGrade() {
+        Grade stored = new Grade("Quiz 1", BigDecimal.TEN);
+        Person person = new PersonBuilder().build().withGrade(stored);
+
+        assertEquals(Optional.of(stored), person.getGradeFor(new Grade("Quiz 1", BigDecimal.ONE)));
+        assertEquals(Optional.of(stored), person.getGradeFor(new Grade("  QUIZ   1 ", BigDecimal.ONE)));
+        assertEquals(Optional.empty(), person.getGradeFor(new Grade("Quiz 2", BigDecimal.TEN)));
+        assertEquals(Optional.empty(), new PersonBuilder().build().getGradeFor(new Grade("Quiz 1", BigDecimal.TEN)));
+    }
+
+    @Test
+    public void getGradeFor_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().getGradeFor(null));
     }
 
     @Test

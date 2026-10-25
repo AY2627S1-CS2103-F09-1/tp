@@ -66,7 +66,8 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_unknownParameterMessage_listsEveryAcceptedParameter() {
-        assertEquals("Unknown parameter. Use /name, /class, /assessment or /score",
+        assertEquals("Unknown parameter. Use /name, /class, /assessment or /score."
+                        + " A word that starts with / is always read as a parameter.",
                 GradeCommandParser.MESSAGE_UNKNOWN_PARAMETER);
     }
 
@@ -110,7 +111,22 @@ public class GradeCommandParserTest {
     @Test
     public void parse_prefixWithoutSpaceInAssessmentName_failure() {
         assertParseFailure(parser, "1 /assessment Quiz/score 90 /score 80",
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "assessment name", "/score"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/score"));
+    }
+
+    @Test
+    public void parse_prefixWithoutSpace_reportsThePrefix() {
+        // After the assessment name, so that the score looks missing
+        assertParseFailure(parser, "1 /assessment Quiz/score 90",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/score"));
+
+        // After the score
+        assertParseFailure(parser, "1 /assessment Quiz /score 90/assessment Exam",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/assessment"));
+
+        // After the index
+        assertParseFailure(parser, "1/assessment Quiz /score 90",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/assessment"));
     }
 
     @Test
@@ -155,8 +171,22 @@ public class GradeCommandParserTest {
 
     @Test
     public void parse_invalidAssessmentName_failure() {
-        assertParseFailure(parser, "1 /assessment Exam,1 /score 90",
+        assertParseFailure(parser, "1 /assessment Exam \u671f\u672b /score 90",
                 Grade.MESSAGE_INVALID_ASSESSMENT_NAME);
+    }
+
+    @Test
+    public void parse_assessmentNameWithComma_success() {
+        assertParseSuccess(parser, "1 /assessment Test 1, Part A /score 90",
+                new GradeByIndexCommand(Index.fromOneBased(1),
+                        new Grade("Test 1, Part A", new BigDecimal("90"))));
+    }
+
+    @Test
+    public void parse_scoreWithTooManyDecimalPlaces_failure() {
+        assertParseFailure(parser, "1 /assessment Quiz /score 90.12345", Grade.MESSAGE_TOO_MANY_DECIMAL_PLACES);
+        assertParseSuccess(parser, "1 /assessment Quiz /score 90.1234",
+                new GradeByIndexCommand(Index.fromOneBased(1), new Grade("Quiz", new BigDecimal("90.1234"))));
     }
 
     @Test

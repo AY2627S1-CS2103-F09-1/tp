@@ -54,7 +54,7 @@ public class DeleteGradeByIndexCommandTest {
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
-                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz,1"));
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 期末"));
         assertThrows(AssertionError.class, () ->
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "   "));
     }

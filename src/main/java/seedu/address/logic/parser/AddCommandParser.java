@@ -24,7 +24,8 @@ import seedu.address.model.person.Person;
 public class AddCommandParser implements Parser<AddCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL;
+            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
