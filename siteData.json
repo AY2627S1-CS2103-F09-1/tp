@@ -169,14 +169,6 @@
         "classmates": "ClassMates"
       },
       "headingKeywords": {}
-    },
-    {
-      "src": "team/johndoe.md",
-      "title": "John Doe's Project Portfolio Page",
-      "headings": {
-        "project-classmates": "Project: ClassMates"
-      },
-      "headingKeywords": {}
     }
   ]
 }
