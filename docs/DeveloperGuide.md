@@ -127,6 +127,10 @@ How the `Logic` component works:
 1. After the command has been executed, `LogicManager` saves the whole address book with `Storage#saveAddressBook(ReadOnlyAddressBook)`, whether or not the command changed it. If the file cannot be saved, or if parsing or executing the command throws a `RuntimeException` (which is a bug, not a mistake of the user), `LogicManager` sets the data of the `Model` back to the copy that it made before the command, and throws a `CommandException` with a message that says that the change was undone. See [Saving and loading data](#saving-and-loading-data) and [Unexpected errors](#unexpected-errors).
 1. The result of the command execution is encapsulated as a `CommandResult` object which is returned from `Logic`.
 
+The command classes are organized as shown below. An abstract `XYZCommand` holds what its two subclasses share, such as the usage and success messages and the operation that changes the contact. `XYZByIndexCommand` finds the contact in the displayed list, and `XYZByNameAndClassCommand` searches the whole address book.
+
+<puml src="diagrams/CommandClasses.puml" width="700" alt="The command classes" />
+
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
 <puml src="diagrams/ParserClasses.puml" width="600"/>
@@ -136,7 +140,7 @@ How the parsing works:
 * All `XYZCommandParser` classes implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing. `ExitCommand` and `HelpCommand` take no arguments, so their entries in the map are lambda expressions that ignore the arguments and create the command. `ClearCommand` has a `ClearCommandParser`, because `clear` deletes all contacts and therefore does not ignore extra text (see [Clearing all contacts](#clearing-all-contacts)).
 * Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input, whatever the case of its letters, and stores the values in an `ArgumentMultimap`, which names every repeated prefix in its error message. `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)` rejects a word that looks like a prefix that the command does not accept, and `ParserUtil#requireNoStuckPrefixes(String)` rejects a prefix that is stuck to the text before it (see [Validation of names, classes and assessment names](#validation-of-names-classes-and-assessment-names-feature)). `ListCommandParser` and `ImportCommandParser` do neither, because they take the whole argument as one text, which is a keyword or a file path.
 * A parser reports the first problem that it finds. Unrecognized and repeated parameters are always checked first.
-* `delete`, `attendance`, `grade`, `deleteA` and `deleteG` identify the contact either by an index or by `/name` and `/class`. A command word therefore does not always map to a single `Command` class: for example, `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`. Both extend the abstract `DeleteCommand`, which holds the shared messages and operations. `AttendanceCommand`, `GradeCommand`, `DeleteAttendanceCommand` and `DeleteGradeCommand` are structured in the same way. For `attendance` and `grade`, `ParserUtil#isIdentifiedByIndex(ArgumentMultimap)` tells the parser which way was used. The two ways are not allowed together.
+* `delete`, `attendance`, `grade`, `deleteA` and `deleteG` identify the contact either by an index or by `/name` and `/class`, so a command word does not always map to a single `Command` class (see the command classes above). For example, `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`. For `attendance` and `grade`, `ParserUtil#isIdentifiedByIndex(ArgumentMultimap)` tells the parser which way was used. The two ways are not allowed together.
 * `viewA` and `viewG` identify the contact by `/name` and `/class` only. `ViewAttendanceCommandParser` and `ViewGradeCommandParser` extend `NameAndClassCommandParser`, which does the parsing that they share. `tag` and `untag` take the same arguments, so `TagCommandParser` and `UntagCommandParser` extend `GroupMembershipCommandParser`, which does the parsing, and a subclass only passes its usage message and creates its command.
 * `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty, and otherwise a `ListCommand` that holds a `PersonMatchesKeyword` predicate. `EditCommandParser` creates an `EditCommand` that holds an `EditPersonDescriptor` with the details to change. `ImportCommandParser` takes the whole trimmed argument as the file path, and `ImportCommand` checks the file when it runs.
 * The name and class that `viewA`, `viewG`, `delete`, `attendance`, `grade`, `deleteA` and `deleteG` receive in the name-and-class form are plain strings that are not checked against the rules of `Name` and `ClassName`, so a name or class that no contact has is reported when the command runs.
@@ -289,7 +293,7 @@ The contacts that match a keyword are displayed in the same order as in the whol
 
 #### Implementation
 
-The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand`, which both extend the abstract `DeleteCommand` (see [Logic component](#logic-component), which also explains why the command is structured in this way).
+The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand` (see the command classes in the [Logic component](#logic-component), which also explains why the command is structured in this way).
 
 * `DeleteByIndexCommand#execute(Model)` rejects an index that is larger than the displayed list, then deletes the contact at that index.
 * `DeleteByNameAndClassCommand#execute(Model)` searches the whole address book, not the displayed list, using `Person#hasNameAndClass(String, String)`. It reports `Contact not found` if no contact matches.
@@ -507,14 +511,16 @@ The `edit` command (`edit INDEX [/name NAME] [/class CLASS] [/email [EMAIL]]`) c
 
 #### Implementation
 
-The `import` command adds multiple contacts from a CSV file. It is implemented by `ImportCommandParser`, `ImportCommand` and `CsvParser`.
+The `import` command adds multiple contacts from a CSV file. It is implemented by `ImportCommandParser`, `ImportCommand` and `CsvParser`. The activity diagram below shows what happens when the command is executed, and the steps are described in more detail after it.
+
+<puml src="diagrams/ImportActivityDiagram.puml" width="350" alt="What happens when an import command is executed" />
 
 * `ImportCommandParser#parse(String)` removes leading and trailing whitespace from the path while preserving spaces within it. It rejects empty paths and paths containing line breaks.
 * `ImportCommand#resolvePath(String)` uses an absolute path directly, and resolves a relative path from the working directory, or, if the application is run as a JAR file, from the folder containing the JAR file. `ImportCommand#validatePath(Path)` then checks that the path refers to an existing, readable regular file with the `.csv` extension, and reports the first check that fails. `FileUtil#readFromFile(Path)` reads the complete file as UTF-8 text.
 * `CsvParser#parse(String)` parses the CSV syntax (comma-separated fields, quoted fields, escaped double quotes, embedded line endings, `LF` and `CRLF` record endings, and a UTF-8 byte-order mark) and validates the header. The header is converted into a `CsvHeader`, which records the index of each column. Column names are compared ignoring case and can appear in any order. The `name` and `class` columns are mandatory, while `email` is optional. Unknown and repeated columns are rejected.
 * Each data row is represented by a `CsvRecord`, which keeps its row number for error reporting. Blank rows are ignored. `ImportCommand#parsePerson(CsvRecord, CsvHeader)` checks the number of fields and uses the same `ParserUtil` methods as the `add` command to validate the name, class and optional email.
-* `ImportCommand#parsePersons(ParsedCsv, Model)` validates every contact before modifying the model. It checks for duplicates against both the existing address book and the contacts of earlier rows, and stops at the first invalid row.
-* Only after every non-blank row has been successfully converted does `ImportCommand#execute(Model)` add the contacts, which makes the operation atomic. Since `Model#addPerson(Person)` inserts a contact at the top of the list, the contacts are added from the last row to the first, so that they appear at the top in the same order as in the CSV file.
+* `ImportCommand#parsePersons(ParsedCsv, Model)` validates every row before the model is changed, checking for duplicates against both the existing address book and the contacts of earlier rows, and stops at the first invalid row. `ImportCommand#execute(Model)` adds the contacts only if all rows are valid, which makes the operation atomic.
+* Since `Model#addPerson(Person)` inserts a contact at the top of the list, the contacts are added from the last row to the first, so that they appear at the top in the same order as in the CSV file.
 * CSV syntax and I/O failures are reported as a general import failure, while header, field-count, contact-validation and duplicate errors receive more specific messages.
 
 #### Design considerations
@@ -550,7 +556,7 @@ The `import` command adds multiple contacts from a CSV file. It is implemented b
 
 #### Implementation
 
-The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, the abstract `AttendanceCommand` with its subclasses `AttendanceByIndexCommand` and `AttendanceByNameAndClassCommand`, and the `Attendance` model class.
+The `attendance` command records one attendance entry for a contact on a specified date. It is implemented by `AttendanceCommandParser`, `AttendanceCommand` (see the command classes in the [Logic component](#logic-component)) and the `Attendance` model class.
 
 * `AttendanceCommandParser#parse(String)` supports `attendance INDEX /date DD-MM-YYYY /status STATUS` and `attendance /name NAME /class CLASS /date DD-MM-YYYY /status STATUS`. It verifies that the user provides either an index or both a name and class, but not both, and that the date and the status are present.
 * The date is parsed strictly in `DD-MM-YYYY` format, with a four-digit year and no sign, by `ParserUtil#parseDate(String)` (which uses `Attendance#DATE_FORMAT`). A text that is not of the shape DD-MM-YYYY, or whose day is not 01-31 or whose month is not 01-12, is reported with `ParserUtil#MESSAGE_INVALID_DATE`, but a text of that shape that is not a real date, such as 31-02-2026, is reported with `ParserUtil#MESSAGE_NONEXISTENT_DATE`, which names the date.
@@ -571,7 +577,7 @@ The `attendance` command records one attendance entry for a contact on a specifi
 
 #### Implementation
 
-The `grade` command records one grade for a contact for a specified assessment. It is implemented by `GradeCommandParser`, the abstract `GradeCommand` with its subclasses `GradeByIndexCommand` and `GradeByNameAndClassCommand`, and the `Grade` model class. It is structured and parsed in the same way as `attendance`.
+The `grade` command records one grade for a contact for a specified assessment. It is implemented by `GradeCommandParser`, `GradeCommand` (see the command classes in the [Logic component](#logic-component)) and the `Grade` model class. It is structured and parsed in the same way as `attendance`.
 
 * `GradeCommandParser#parse(String)` supports `grade INDEX /assessment ASSESSMENT_NAME /score SCORE` and `grade /name NAME /class CLASS /assessment ASSESSMENT_NAME /score SCORE`. It verifies that the user provides either an index or both a name and class, but not both, and that the assessment name and the score are present.
 * The assessment name is validated by `ParserUtil#parseAssessmentName(String)` (see [Validation of names, classes and assessment names](#validation-of-names-classes-and-assessment-names-feature)). The score is validated by `ParserUtil#parseScore(String)` as a number from 0 to 100 with at most `Grade.MAX_SCORE_DECIMAL_PLACES` (4) decimal places. The limit on the decimal places is not checked by `Grade` itself, so that a data file with a longer score still loads.
@@ -603,7 +609,7 @@ The `viewA` command displays all attendance records for a contact. It is impleme
 
 #### Implementation
 
-The `deleteA` command removes one attendance record, identified by its date, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteAttendanceCommandParser` returns a `DeleteAttendanceByIndexCommand` or a `DeleteAttendanceByNameAndClassCommand` which both extend the abstract `DeleteAttendanceCommand`.
+The `deleteA` command removes one attendance record, identified by its date, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteAttendanceCommandParser` returns a `DeleteAttendanceByIndexCommand` or a `DeleteAttendanceByNameAndClassCommand` (see the command classes in the [Logic component](#logic-component)).
 
 * `DeleteAttendanceCommandParser#parse(String)` first rejects unrecognized parameters, a parameter that is stuck to the text before it, and repeated parameters. If neither `/name` nor `/class` is present, it reads the contact index from the text before the first parameter and creates a `DeleteAttendanceByIndexCommand`. If either is present, it rejects any text before the first parameter, requires both parameters and creates a `DeleteAttendanceByNameAndClassCommand`.
 * The required `/date` value is parsed by `ParserUtil#parseDate(String)`, as for `attendance`. The success messages of `attendance` and `deleteA` write the date with `Attendance#formatDate(LocalDate)`, which uses the same format, so that the date in the message is the date that was typed.
@@ -637,7 +643,7 @@ The `viewG` command displays all grades of a contact. It is implemented by `View
 
 #### Implementation
 
-The `deleteG` command removes one grade, identified by its assessment name, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteGradeCommandParser` returns a `DeleteGradeByIndexCommand` or a `DeleteGradeByNameAndClassCommand` which both extend the abstract `DeleteGradeCommand`. It works in the same way as `deleteA` (see [Deleting attendance](#deleting-attendance-feature)).
+The `deleteG` command removes one grade, identified by its assessment name, from a contact. The contact can be identified either by an index in the displayed list or by a name and class. `DeleteGradeCommandParser` returns a `DeleteGradeByIndexCommand` or a `DeleteGradeByNameAndClassCommand` (see the command classes in the [Logic component](#logic-component)). It works in the same way as `deleteA` (see [Deleting attendance](#deleting-attendance-feature)).
 
 * `DeleteGradeCommandParser#parse(String)` first rejects unrecognized and repeated parameters, and then identifies the contact in the same way as `DeleteAttendanceCommandParser`.
 * The parser validates the assessment name with `ParserUtil#parseAssessmentName(String)`, which uses `Grade#getAssessmentNameConstraintViolation(String)` and does not construct a `Grade`, since deleting a grade does not require a score. The method also uses `ParserUtil#requireNoEmbeddedPrefix(String, String)` to detect a parameter that may be missing a space before it.
