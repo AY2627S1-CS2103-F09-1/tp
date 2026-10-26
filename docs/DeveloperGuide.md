@@ -792,57 +792,19 @@ The code defends itself against bad input and against its own mistakes in four w
 * **Assertions** (`assert`) are for conditions that can only be false because of a bug in the code, never because of user input. Gradle enables them when the tests run and when the app is started with `gradle run`, so they catch such bugs during development. They are not enabled when the packaged jar is started with `java -jar`, so they cannot be the only protection of the user (see [Unexpected errors](#unexpected-errors)).
 * **Logging** records what happened for the developers. Each command logs at `INFO` level when it changes the data or rejects a change, and `LogicManager` already logs every command that the user enters.
 
-#### Adding a contact
+#### Repeating the guarantees of the parser
 
-* `AddCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. All other problems in the input are reported as a `ParseException`, in the order described in its Javadoc.
-* `Email` is limited to `Email.MAX_LENGTH` characters, like `Name` and `ClassName`. The length is checked before the format, so a very long input is rejected at once. The `Email` constructor, `ParserUtil#parseEmail(String)` and `JsonAdaptedPerson#toModelEmail()` all report the message of the constraint that is violated, so a user sees `Email is too long` and not the description of the format, whether the email comes from a command or from the data file. Without the limit, checking the format of a 5,000-character invalid email froze the app for about 4 seconds.
-* `AddCommand#execute(Model)` logs both a rejected duplicate and a successful addition. After `Model#addPerson(Person)` it asserts that `Model#hasPerson(Person)` is true for the new contact, which would fail if a model silently dropped the contact.
-* `ModelManager#addPerson(Person)` rejects a `null` contact with `requireNonNull`, as `ModelManager#hasPerson(Person)` already did.
-
-#### Deleting a contact
-
-* `DeleteCommand#deletePerson(Model, Person)` is the one place where both kinds of delete remove a contact. It asserts that the contact is in the model before the removal and is no longer in it afterwards, and it logs the deleted contact. The first assertion would fail if a caller passed a contact that is not in the model, which `ModelManager#deletePerson(Person)` would otherwise report with a `PersonNotFoundException` that no command catches.
-* `DeleteByIndexCommand` rejects a `null` index with `requireNonNull`, so the mistake is found when the command is created and not when it runs. An index that is outside the displayed list is the user's mistake, so it is reported as a `CommandException` and logged.
-* `DeleteByNameAndClassCommand` logs when no contact is found, together with the name and class that were given.
-* `ModelManager#deletePerson(Person)` rejects a `null` contact with `requireNonNull`.
-* An index that is too large to be an `int`, such as a 1,000-digit number, is rejected by `ParserUtil#parseIndex(String)` with a `ParseException`, because `StringUtil#isNonZeroUnsignedInteger(String)` catches the `NumberFormatException`.
-
-#### Listing and searching contacts
-
-* `ListCommand#execute(Model)` asserts, after it changes the filter, that the displayed contacts are exactly the contacts of the address book that the predicate accepts (`ListCommand#isShowingExactlyMatchingPersons(Model)`). It would fail if a model hid a matching contact or showed one that does not match. The command also logs how many contacts are displayed out of the total, together with the keyword if one was given.
-* `ListCommandParser#parse(String)` rejects a `null` argument string with `requireNonNull`. It never throws a `ParseException`, because every text is a valid keyword.
-* `PersonMatchesKeyword#test(Person)` rejects a `null` contact with `requireNonNull`.
-* A keyword is not limited in length. This is safe because the matching is a plain substring test, which stops at once when the keyword is longer than the field it is compared with, and `StringUtil#toComparisonKey(String)` uses a regex that takes time proportional to the length. Unlike the email format regex, there is no input for which it takes much longer.
-* A blank keyword is not rejected by `PersonMatchesKeyword`, which keeps the documented behavior that it matches every contact. The only caller, `ListCommandParser`, never creates one.
-
-#### Linking contacts to a group and removing them from a group
-
-`tag` and `untag` share their checks, because the work is done in `GroupMembershipCommand` and `GroupMembershipCommandParser`.
-
-* The `GroupMembershipCommand` constructor rejects an empty list of indices, and a list in which an index is repeated, with an `IllegalArgumentException` (`AppUtil#checkArgument`). The parser already guarantees both, but the constructor is public through `TagCommand` and `UntagCommand`, and an assertion would not run when the app is started without assertions enabled. A repeated index would then make the second replacement of the same contact fail with an unchecked `PersonNotFoundException`, and an empty list would report success without changing anything.
-* `GroupMembershipCommand#execute(Model)` names at most `GroupMembershipCommand.MAX_INDICES_SHOWN` (10) of the indices that are not in the displayed list, followed by how many more there are. Without the limit, a command with 100,000 indices that do not exist would show a message that names all of them.
-* `GroupMembershipCommand#execute(Model)` asserts, after it replaces the contacts, that every changed contact is in the address book. It checks the address book and not the displayed list, because a changed contact can leave the displayed list when a search for its old groups is shown. This would fail if `changeMembership(Person, Tag)` or the model lost a contact.
-* `GroupMembershipCommand#requireNoMemberMatching(List, Predicate, String)` rejects `null` arguments, because it is called by the subclasses.
-* The command logs the number of contacts it changed and the group. It also logs, at the point where it throws a `CommandException`, how many indices were outside the displayed list or how many contacts could not be changed. The names of those contacts are only in the message shown to the user.
-* An index that is too large for an `int` is reported by `ParserUtil#parseMemberIndices(String)` as an invalid index, and a very long group name is rejected by `Tag#isValidTagName(String)` in time proportional to its length.
-
-#### Editing a contact
-
-* The `EditCommand` constructor rejects an `EditPersonDescriptor` with no detail to edit, with an `IllegalArgumentException`. `EditCommandParser#parse(String)` already reports this to the user with a `ParseException`, but the constructor is public, and without the check `execute(Model)` would report that a contact was edited when nothing changed.
-* `EditCommand#execute(Model)` asserts, after `Model#setPerson(Person, Person)`, that the edited contact is in the address book. `EditCommand#createEditedPerson(Person, EditPersonDescriptor)` asserts that the edited contact has the same tags, attendance records and grade records as the contact before the edit, which is the guarantee described in [Editing a contact](#editing-a-contact-feature). It also rejects `null` arguments with `requireNonNull`, which replaces an assertion that only ran when assertions were enabled.
-* The command logs a successful edit, with the name and class before and after, an index that is outside the displayed list, and an edit that would duplicate another contact.
+* A public constructor that the parser already protects still rejects a wrong argument with an `IllegalArgumentException` (`AppUtil#checkArgument`), and not with an assertion, because the assertion would not run in the packaged jar. `GroupMembershipCommand` rejects an empty list of indices and a repeated index, which would otherwise make the second replacement of a contact fail with an unchecked `PersonNotFoundException`, or report success without a change. `EditCommand` rejects an `EditPersonDescriptor` with no detail to edit, which would otherwise report that a contact was edited when nothing changed. `CommandResult` rejects a result that both shows help and exits, as the UI would open the help window and then close the app.
+* The commands that change the data (`add`, `edit`, `delete`, `deleteA`, `deleteG`, `tag`, `untag` and `clear`), and `list`, assert after they change the model that the change took effect, for example that a new contact is in the address book. The assertion would fail if a model silently lost or dropped a contact.
 
 #### Clearing all contacts
 
-* `clear` is the only command without arguments that does not ignore extra text, because it deletes all contacts. `ClearCommandParser#parse(String)` throws a `ParseException` with the usage of `clear` (`ClearCommand#MESSAGE_USAGE`) if the arguments are not blank, so a user who types `clear 3`, perhaps expecting to delete one contact, deletes nothing. `AddressBookParser` still creates `HelpCommand` and `ExitCommand` itself and ignores what follows them, as described in the User Guide.
-* `ClearCommand#execute(Model)` asserts that the address book is empty after `Model#setAddressBook(ReadOnlyAddressBook)`, and logs how many contacts were removed, as this is the only command that destroys data.
-* The `CommandResult` constructor rejects a result that both shows help and exits, with an `IllegalArgumentException`. No command produces one, and the UI would otherwise open the help window and then close the app.
-* A `clear` whose save fails is undone like any other command (see [Saving and loading data](#saving-and-loading-data)), so the contacts come back.
+* `clear` is the only command without arguments that does not ignore extra text, because it deletes all contacts. `ClearCommandParser#parse(String)` throws a `ParseException` with the usage of `clear` if the arguments are not blank, so a user who types `clear 3`, perhaps expecting to delete one contact, deletes nothing. `AddressBookParser` still creates `HelpCommand` and `ExitCommand` itself and ignores what follows them, as described in the User Guide.
 
 #### Saving and loading data
 
 * `LogicManager#execute(String)` copies the address book before it executes a command. If the address book cannot be saved afterwards, `LogicManager` sets the data of the `Model` back to that copy and throws a `CommandException` that says that the change was undone (`LogicManager#MESSAGE_CHANGE_UNDONE`). Without this, the user would be told that the command failed while the contact was changed on the screen, and the next command that saves would store the change anyway. Only the data is restored. The filter of the displayed list is kept as the command left it.
-* `Person` does not accept two attendance records with the same date, or two grade records for the same assessment (compared ignoring case and extra spaces, as `Grade#isSameAssessment(Grade)` does). `Person#withAttendance(Attendance)` and `Person#withGrade(Grade)` already refused a second record, but the constructors did not, so a data file that was edited by hand, or damaged, could create a contact that the commands cannot produce. The constructors now throw an `IllegalArgumentException`, and `JsonAdaptedPerson#toModelType()` catches that `IllegalArgumentException` and reports its message as an `IllegalValueException`, which makes the data file invalid like any other broken rule. The adapter does not repeat the check itself, so the rule is in one place.
+* `Person` does not accept two attendance records with the same date, or two grade records for the same assessment (compared ignoring case and extra spaces). The commands already refused a second record, but the constructors did not, so a data file that was edited by hand, or damaged, could create a contact that the commands cannot produce. `JsonAdaptedPerson#toModelType()` reports the `IllegalArgumentException` of the constructor as an `IllegalValueException`, which makes the data file invalid like any other broken rule, so that the rule is written in one place.
 
 #### Unexpected errors
 
@@ -850,15 +812,17 @@ The code defends itself against bad input and against its own mistakes in four w
 
 #### Limits on the size of the input
 
-* `AddressBookParser#parseCommand(String)` rejects a command with more than `AddressBookParser.MAX_INPUT_LENGTH` (5,000) characters with a `ParseException`, before it does anything else. The longest real commands, such as one that adds a contact or links a class of 300 students to a group, have well under 5,000 characters. Without the limit, a text that was pasted into the command box, even one of several megabytes, would be matched and tokenized.
-* `LogicManager#execute(String)` writes at most `LogicManager.MAX_LOGGED_COMMAND_LENGTH` (500) characters of a command to the log, followed by how many were left out, so that a very long command does not flood the log. It also rejects a `null` command with `requireNonNull`.
-* `ImportCommand` rejects a file with more than `ImportCommand.MAX_FILE_SIZE_BYTES` (5 MiB, which is 5 * 1024 * 1024 bytes), before it reads the file, because the whole file is read into memory. It also rejects a file with more than `ImportCommand.MAX_ROWS` (5,000) rows, before it checks any row, because each contact is compared with all contacts before it, so the time to import grows with the square of the number of rows. Both are reported as a `CommandException`, and nothing is imported.
+An input without a limit lets one pasted text or file freeze the app, so the following inputs have one.
+
+* `AddressBookParser#parseCommand(String)` rejects a command with more than `AddressBookParser.MAX_INPUT_LENGTH` (5,000) characters with a `ParseException`, before it does anything else. The longest real commands, such as one that links a class of 300 students to a group, have well under 5,000 characters. `LogicManager#execute(String)` writes at most `LogicManager.MAX_LOGGED_COMMAND_LENGTH` (500) characters of a command to the log, so that a long command does not flood it.
+* `Email` is limited to `Email.MAX_LENGTH` (254) characters, and the length is checked before the format. Matching the format regex takes time that grows quickly with the length of an invalid input (about 4 seconds for 5,000 characters), so without the limit a pasted text froze the app.
+* `ImportCommand` rejects a file with more than `ImportCommand.MAX_FILE_SIZE_BYTES` (5 MiB) before it reads the file, because the whole file is read into memory. It also rejects a file with more than `ImportCommand.MAX_ROWS` (5,000) rows before it checks any row, because each contact is compared with all contacts before it, so the time to import grows with the square of the number of rows. Nothing is imported in either case.
+* `GroupMembershipCommand#execute(Model)` names at most `GroupMembershipCommand.MAX_INDICES_SHOWN` (10) of the indices that are not in the displayed list, followed by how many more there are, so that a command with 100,000 missing indices does not produce a message that names all of them.
 
 #### Fuzz tests
 
-* `CommandFuzzTest` generates 10,000 random commands and 10,000 commands that have the form of a real one with values that may be wrong, such as an index that is too large, a name with a byte order mark or a repeated parameter. It parses each one and executes it on a new model, and checks that the only exceptions that come out are `ParseException` and `CommandException`. It also fails when an assertion fails, so it checks the assertions of the commands. The commands that read a file are not generated.
-* `DataFileFuzzTest` damages a valid data file in 500 random ways, such as cutting it short or replacing a value with `null`, and checks that the file is either loaded or rejected with a `DataLoadingException`. A file that is loaded must also be saved and read back as the same data.
-* Both tests use a fixed seed, so they run the same each time and a failure can be repeated. The failure message lists the first input that caused each different problem.
+* `CommandFuzzTest` parses and executes 10,000 random commands and 10,000 commands that have the form of a real one with values that may be wrong, such as an index that is too large or a repeated parameter, each on a new model. It checks that the only exceptions that come out are `ParseException` and `CommandException`, and it fails when an assertion fails. `DataFileFuzzTest` damages a valid data file in 500 random ways, such as cutting it short or replacing a value with `null`, and checks that the file is either loaded or rejected with a `DataLoadingException`.
+* Both tests use a fixed seed, so a failure can be repeated.
 
 --------------------------------------------------------------------------------------------------------------------
 
