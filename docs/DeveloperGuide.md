@@ -839,41 +839,39 @@ An input without a limit lets one pasted text or file freeze the app, so the fol
 
 Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unlikely to have) - `*`
 
-| Priority | As a …                                    | I want to …                 | So that I can…                                                        |
-|----------|--------------------------------------------|------------------------------|------------------------------------------------------------------------|
-| `* * *`  | TA                                         | add new student contacts with name, email, class | keep track of who is in each of my classes                |
-| `* * *`  | TA                                         | search for contacts by different keywords (e.g. name/class) | quickly find the information I need         |
-| `* * *`  | TA setting up a new class                  | import my initial students from a file | don't have to manually enter every student                     |
-| `* * *`  | TA                                         | remove contacts easily       | keep my contact list from being cluttered                              |
-| `* * *`  | TA coordinating group assignments          | link students belonging to the same group activity together | handle team-based queries faster            |
-| `* * *`  | TA                                         | record a student's attendance status | keep track of students who attended a tutorial                 |
-| `* * *`  | TA                                         | view all grades recorded for a student | keep track of the progress of my students                       |
-| `* * *`  | TA                                         | view a list of all my contacts | see everyone at a glance                                              |
-| `* * *`  | TA                                         | record grades for a specific student | monitor their progress                                          |
-| `* * *`  | TA                                         | view a student's attendance  | review their attendance history                                        |
-| `* * *`  | TA                                         | delete an attendance record that I entered by mistake | correct a student's attendance history                |
-| `* * *`  | TA                                         | delete a grade that I entered by mistake | correct a student's grades                                 |
-| `* *`    | new user                                   | view a help screen           | learn about the app without going to an external website               |
-| `* *`    | TA working with other TAs                  | store colleagues' contacts but clearly distinguished | keep my "work" contacts all in one place but not mix them up |
-| `* *`    | TA                                         | edit the information under any contact | keep my information up to date                                |
-| `* *`    | TA coordinating group assignments          | remove students from a group | keep each group correct when the teams change                          |
-| `* *`    | TA who might make mistakes                 | receive a clear error message | correct my command                                                    |
-| `* *`    | experienced user                           | recall my earlier commands   | run or correct a command again without typing it out again             |
-| `* *`    | TA (tracking student support)               | attach and edit notes to student profiles | review past consultation details                          |
-| `* *`    | experienced user                           | delete contacts in bulk based on tags | clean up my contacts quickly                                  |
-| `* *`    | TA                                         | undo an accidental deletion  | restore a contact I removed by mistake                                 |
-| `* *`    | TA                                         | sort students consistently   | scan through them quickly                                              |
-| `* *`    | TA                                         | favorite certain contacts   | quickly access my most frequent contacts                               |
-| `*`      | TA                                         | distinguish between students of similar names | not use the wrong student's information                |
-| `*`      | TA                                         | view total number of students across my classes | understand my workload                               |
-| `*`      | TA (managing high volume of active contacts) | highlight frequently contacted people | retrieve their details faster                             |
-| `*`      | TA                                         | search through archived contact records separately | quickly recall info relating to past students     |
-| `*`      | TA                                         | generate a breakdown of current students | balance my time commitments                              |
-| `*`      | TA with partner TAs                        | export student records based on tags | maintain student contacts in sync with my partner              |
-| `*`      | TA                                         | identify records with incomplete info | know which record needs attention                             |
-| `*`      | New user                                   | remove sample or experimental data | start with a clean contact list                                  |
-| `*`      | TA                                         | export selected students' records | use the required information                                     |
-| `*`      | TA                                         | archive students from previous semesters and restore them | old records do not clutter my contacts and I can reuse them if I want to |
+| Priority | As a …                            | I want to …                                                         | So that I can…                                                           |
+|----------|-----------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
+| `* * *`  | TA                                | add new student contacts with name, class and email                 | keep track of who is in each of my classes                               |
+| `* * *`  | TA                                | search for contacts by keyword (e.g. name, class or group)          | find the information I need quickly                                      |
+| `* * *`  | TA setting up a new class         | import my initial students from a CSV file                          | avoid entering every student manually                                    |
+| `* * *`  | TA                                | delete contacts easily                                              | keep my contact list from being cluttered                                |
+| `* * *`  | TA coordinating group assignments | link students belonging to the same group activity together         | answer team-based queries faster                                         |
+| `* * *`  | TA                                | record a student's attendance status for a date                     | keep track of who attended each tutorial                                 |
+| `* * *`  | TA                                | view a student's attendance                                         | review their attendance history                                          |
+| `* * *`  | TA                                | delete an attendance record that I entered by mistake               | correct a student's attendance history                                   |
+| `* * *`  | TA                                | record a student's grade for an assessment                          | keep a record of each student's results                                  |
+| `* * *`  | TA                                | view all grades recorded for a student                              | review the progress of the student                                       |
+| `* * *`  | TA                                | delete a grade that I entered by mistake                            | correct a student's grades                                               |
+| `* * *`  | TA                                | view a list of all my contacts                                      | see everyone at a glance                                                 |
+| `* *`    | new user                          | view a help screen                                                  | learn how to use the app without going to an external website            |
+| `* *`    | TA                                | edit the information under any contact                              | keep my information up to date                                           |
+| `* *`    | TA coordinating group assignments | remove students from a group                                        | keep each group correct when the teams change                            |
+| `* *`    | TA who might make mistakes        | receive a clear error message                                       | correct my command                                                       |
+| `* *`    | experienced user                  | recall my earlier commands                                          | run or correct a command again without typing it out again               |
+| `* *`    | TA                                | have a data file that cannot be read kept as a backup               | recover my contacts instead of losing them                               |
+| `* *`    | TA                                | see each student's recent attendance and grades on the contact list | spot who needs attention without opening each record                     |
+| `* *`    | TA starting a new semester        | clear all contacts                                                  | start with a clean contact list                                          |
+| `* *`    | TA working with other TAs         | store colleagues' contacts but clearly distinguished                | keep my "work" contacts all in one place without mixing them up          |
+| `* *`    | TA tracking student support       | attach and edit notes to student profiles                           | review past consultation details                                         |
+| `* *`    | experienced user                  | delete contacts in bulk based on groups                             | clean up my contacts quickly                                             |
+| `* *`    | TA                                | undo an accidental deletion                                         | restore a contact that I removed by mistake                              |
+| `* *`    | TA                                | sort students by name or class                                      | scan through them quickly                                                |
+| `* *`    | TA                                | favorite certain contacts                                           | quickly access my most frequent contacts                                 |
+| `*`      | TA                                | tell apart students who have similar names                          | avoid using the wrong student's information                              |
+| `*`      | TA                                | view the total number of students across my classes                 | understand my workload                                                   |
+| `*`      | TA                                | identify records with incomplete information                        | know which record needs attention                                        |
+| `*`      | TA with partner TAs               | export student records based on groups                              | keep student contacts in sync with my partner                            |
+| `*`      | TA                                | archive students from previous semesters and restore them           | keep old records from cluttering my contacts and reuse them if I want to |
 
 
 ### Use cases
