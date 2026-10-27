@@ -866,6 +866,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | `* *`    | TA coordinating group assignments | remove students from a group                                        | keep each group correct when the teams change                            |
 | `* *`    | TA who might make mistakes        | receive a clear error message                                       | correct my command                                                       |
 | `* *`    | experienced user                  | recall my earlier commands                                          | run or correct a command again without typing it out again               |
+| `* *`    | experienced user                  | use shorter forms of the commands and parameters I use most         | run them with fewer keystrokes                                           |
 | `* *`    | TA                                | have a data file that cannot be read kept as a backup               | recover my contacts instead of losing them                               |
 | `* *`    | TA                                | see each student's recent attendance and grades on the contact list | spot who needs attention without opening each record                     |
 | `* *`    | TA starting a new semester        | clear all contacts                                                  | start with a clean contact list                                          |
@@ -1638,7 +1639,7 @@ testers are expected to do more *exploratory* testing.
       Expected: The status message shows `Contacts successfully linked to group Group A: Alex Yeoh (A1), Bernice Yu (A1)`.
 
    1. Test case: `delete /name Alex Yeoh /n Alex Yeoh /class A1`<br>
-      Expected: No contact is deleted. The status message shows `Each parameter can only be specified once`, because `/name` and `/n` are the same parameter.
+      Expected: No contact is deleted. The status message shows `Each parameter can only be specified once. Repeated: /name`, because `/name` and `/n` are the same parameter.
 
    1. Other short forms to try: `grade 1 /as WA2 /sc 90`, `dg 1 /as WA2`, `da 1 /date 16-09-2026`, `vg /n Alex Yeoh /c A1`<br>
       Expected: The same results as for the commands with the full command words and prefixes.

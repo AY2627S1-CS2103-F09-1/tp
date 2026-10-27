@@ -76,7 +76,6 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 * Some prefixes also have a short form, which works in the same way as the full prefix: `/n` for `/name`, `/c` for `/class`, `/m` for `/members`, `/as` for `/assessment`, `/st` for `/status` and `/sc` for `/score`.<br>
   For example, `delete /n John Tan /c A1` is the same as `delete /name John Tan /class A1`.<br>
   Giving both forms of a prefix in one command, such as `/name` and `/n`, counts as giving the parameter twice.
-  
 * A word that starts with `/` after a space is always read as a parameter, so it cannot be used inside a value.<br>
   For example, `Paper 1 / Paper 2` cannot be used as an assessment name, but a slash inside a word, such as in `CA1/CA2` or `Ravi s/o Kumar`, is fine.
 

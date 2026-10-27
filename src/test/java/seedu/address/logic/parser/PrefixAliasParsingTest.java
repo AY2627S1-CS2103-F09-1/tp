@@ -1,7 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
@@ -75,14 +75,14 @@ public class PrefixAliasParsingTest {
 
     @Test
     public void parseCommand_prefixGivenInBothForms_throwsParseExceptionForRepeatedParameter() {
-        assertRepeatedParameter("add /name John /n Jane /class A1");
-        assertRepeatedParameter("add /name John /class A1 /c A2");
-        assertRepeatedParameter("delete /n John /name Jane /class A1");
-        assertRepeatedParameter("attendance 1 /date 16-09-2026 /status absent /st late");
-        assertRepeatedParameter("grade 1 /assessment WA2 /as WA3 /score 97");
-        assertRepeatedParameter("grade 1 /assessment WA2 /score 97 /sc 98");
-        assertRepeatedParameter("tag /group Group A /members 1 /m 2");
-        assertRepeatedParameter("deleteG 1 /as WA2 /assessment WA3");
+        assertRepeatedParameter("add /name John /n Jane /class A1", "/name");
+        assertRepeatedParameter("add /name John /class A1 /c A2", "/class");
+        assertRepeatedParameter("delete /n John /name Jane /class A1", "/name");
+        assertRepeatedParameter("attendance 1 /date 16-09-2026 /status absent /st late", "/status");
+        assertRepeatedParameter("grade 1 /assessment WA2 /as WA3 /score 97", "/assessment");
+        assertRepeatedParameter("grade 1 /assessment WA2 /score 97 /sc 98", "/score");
+        assertRepeatedParameter("tag /group Group A /members 1 /m 2", "/members");
+        assertRepeatedParameter("deleteG 1 /as WA2 /assessment WA3", "/assessment");
     }
 
     @Test
@@ -92,7 +92,8 @@ public class PrefixAliasParsingTest {
         assertUnknownParameter("tag /group A /m 1 /n John",
                 GroupMembershipCommandParser.MESSAGE_UNKNOWN_PARAMETER);
         assertUnknownParameter("viewA /n John /c A1 /st late", NameAndClassCommandParser.MESSAGE_UNKNOWN_PARAMETER);
-        assertEquals("Unknown parameter. Use /name, /class or /email", AddCommandParser.MESSAGE_UNKNOWN_PARAMETER);
+        assertEquals("Unknown parameter. Use /name, /class or /email" + ParserUtil.MESSAGE_SLASH_WORD_HINT,
+                AddCommandParser.MESSAGE_UNKNOWN_PARAMETER);
     }
 
     @Test
@@ -111,8 +112,9 @@ public class PrefixAliasParsingTest {
         assertEquals(expectedCommand, parser.parseCommand(shortForm));
     }
 
-    private void assertRepeatedParameter(String userInput) {
-        assertThrows(ParseException.class, MESSAGE_DUPLICATE_PARAMETERS, () -> parser.parseCommand(userInput));
+    private void assertRepeatedParameter(String userInput, String repeatedPrefix) {
+        String expectedMessage = getErrorMessageForDuplicatePrefixes(repeatedPrefix);
+        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand(userInput));
     }
 
     private void assertUnknownParameter(String userInput, String expectedMessage) {
