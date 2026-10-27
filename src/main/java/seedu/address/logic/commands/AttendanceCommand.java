@@ -5,7 +5,9 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import java.time.LocalDate;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Attendance;
@@ -31,6 +33,8 @@ public abstract class AttendanceCommand extends Command {
     public static final String MESSAGE_UNUSUAL_YEAR = " Warning: the year %1$s is before %2$s. If the date is "
             + "a typo, use deleteA to remove the record and enter it again.";
 
+    private static final Logger logger = LogsCenter.getLogger(AttendanceCommand.class);
+
     /**
      * Checks that {@code date} is not after today.
      *
@@ -52,12 +56,19 @@ public abstract class AttendanceCommand extends Command {
     protected static CommandResult recordAttendance(Model model, Person person, LocalDate date,
             Attendance.Status status) throws CommandException {
         requireAllNonNull(model, person, date, status);
+        requireNotInFuture(date);
         Optional<Attendance> existingRecord = person.getAttendanceOn(date);
         if (existingRecord.isPresent()) {
+            logger.info("Rejected duplicate attendance for " + person.getName()
+                + " on " + Attendance.formatDate(date));
             throw new CommandException(String.format(MESSAGE_DUPLICATE_ATTENDANCE, person.getName(),
                     Attendance.formatDate(date), existingRecord.get().getStatus()));
         }
-        model.setPerson(person, person.withAttendance(new Attendance(date, status)));
+        Person updatedPerson = person.withAttendance(new Attendance(date, status));
+        model.setPerson(person, updatedPerson);
+        assert updatedPerson.hasAttendanceOn(date) : "Attendance record must exist after it is recorded";
+        logger.info("Recorded attendance for " + person.getName() + " on "
+            + Attendance.formatDate(date) + " as " + status);
         return new CommandResult(String.format(MESSAGE_SUCCESS, person.getName(), Attendance.formatDate(date),
                 status) + getUnusualYearWarning(date));
     }

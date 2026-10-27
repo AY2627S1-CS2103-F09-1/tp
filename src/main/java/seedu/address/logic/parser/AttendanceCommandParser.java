@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_DATE;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
@@ -30,6 +31,7 @@ public class AttendanceCommandParser implements Parser<AttendanceCommand> {
 
     @Override
     public AttendanceCommand parse(String args) throws ParseException {
+        requireNonNull(args);
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE, PREFIX_STATUS);
         ParserUtil.requireNoStuckPrefixes(args);

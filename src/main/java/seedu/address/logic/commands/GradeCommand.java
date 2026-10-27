@@ -3,7 +3,9 @@ package seedu.address.logic.commands;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.Optional;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Grade;
@@ -26,6 +28,8 @@ public abstract class GradeCommand extends Command {
     public static final String MESSAGE_DUPLICATE_GRADE =
             "%1$s already has a grade of %2$s for %3$s. Use deleteG to remove it first.";
 
+    private static final Logger logger = LogsCenter.getLogger(GradeCommand.class);
+
     /**
      * Records {@code grade} in {@code person} and returns a success result.
      *
@@ -36,11 +40,17 @@ public abstract class GradeCommand extends Command {
         requireAllNonNull(model, person, grade);
         Optional<Grade> existingGrade = person.getGradeFor(grade);
         if (existingGrade.isPresent()) {
+            logger.info("Rejected duplicate grade for " + person.getName()
+                + " on assessment " + existingGrade.get().getAssessmentName());
             throw new CommandException(String.format(MESSAGE_DUPLICATE_GRADE, person.getName(),
                     existingGrade.get().getScore().stripTrailingZeros().toPlainString(),
                     existingGrade.get().getAssessmentName()));
         }
-        model.setPerson(person, person.withGrade(grade));
+        Person updatedPerson = person.withGrade(grade);
+        model.setPerson(person, updatedPerson);
+        assert updatedPerson.hasGradeFor(grade) : "Grade must exist after it is recorded";
+        logger.info("Recorded grade for " + person.getName() + " on assessment " + grade.getAssessmentName()
+            + " with score " + grade.getScore().stripTrailingZeros().toPlainString());
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 grade.getScore().stripTrailingZeros().toPlainString(), grade.getAssessmentName(),
                 person.getName(), person.getClassName()));
