@@ -17,6 +17,8 @@ import org.junit.jupiter.api.Test;
 
 import seedu.address.commons.util.StringUtil;
 import seedu.address.logic.commands.AddCommand;
+import seedu.address.logic.commands.AttendanceByIndexCommand;
+import seedu.address.logic.commands.AttendanceByNameAndClassCommand;
 import seedu.address.logic.commands.AttendanceCommand;
 import seedu.address.logic.commands.ClearCommand;
 import seedu.address.logic.commands.Command;
@@ -32,6 +34,8 @@ import seedu.address.logic.commands.DeleteGradeCommand;
 import seedu.address.logic.commands.EditCommand;
 import seedu.address.logic.commands.EditCommand.EditPersonDescriptor;
 import seedu.address.logic.commands.ExitCommand;
+import seedu.address.logic.commands.GradeByIndexCommand;
+import seedu.address.logic.commands.GradeByNameAndClassCommand;
 import seedu.address.logic.commands.GradeCommand;
 import seedu.address.logic.commands.HelpCommand;
 import seedu.address.logic.commands.ImportCommand;
@@ -55,14 +59,14 @@ public class AddressBookParserTest {
     private final AddressBookParser parser = new AddressBookParser();
 
     @Test
-    public void parseCommand_add() throws Exception {
+    public void parseCommand_addWithAllParameters_returnsAddCommand() throws Exception {
         Person person = new PersonBuilder().build();
         AddCommand command = (AddCommand) parser.parseCommand(PersonUtil.getAddCommand(person));
         assertEquals(new AddCommand(person), command);
     }
 
     @Test
-    public void parseCommand_clear() throws Exception {
+    public void parseCommand_clearWithSurroundingSpaces_returnsClearCommand() throws Exception {
         assertTrue(parser.parseCommand(ClearCommand.COMMAND_WORD) instanceof ClearCommand);
         assertTrue(parser.parseCommand("  " + ClearCommand.COMMAND_WORD + "   ") instanceof ClearCommand);
     }
@@ -77,21 +81,21 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_delete() throws Exception {
+    public void parseCommand_deleteWithIndex_returnsDeleteByIndexCommand() throws Exception {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " " + INDEX_FIRST_PERSON.getOneBased());
         assertEquals(new DeleteByIndexCommand(INDEX_FIRST_PERSON), command);
     }
 
     @Test
-    public void parseCommand_deleteByNameAndClass() throws Exception {
+    public void parseCommand_deleteWithNameAndClass_returnsByNameAndClassCommand() throws Exception {
         DeleteCommand command = (DeleteCommand) parser.parseCommand(
                 DeleteCommand.COMMAND_WORD + " /name John Tan /class A1");
         assertEquals(new DeleteByNameAndClassCommand("John Tan", "A1"), command);
     }
 
     @Test
-    public void parseCommand_edit() throws Exception {
+    public void parseCommand_editWithIndexAndDetails_returnsEditCommand() throws Exception {
         Person person = new PersonBuilder().build();
         EditPersonDescriptor descriptor = new EditPersonDescriptorBuilder(person).build();
         EditCommand command = (EditCommand) parser.parseCommand(EditCommand.COMMAND_WORD + " "
@@ -100,7 +104,7 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_exit() throws Exception {
+    public void parseCommand_exitWithOrWithoutArguments_returnsExitCommand() throws Exception {
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD) instanceof ExitCommand);
         assertTrue(parser.parseCommand(ExitCommand.COMMAND_WORD + " 3") instanceof ExitCommand);
     }
@@ -112,20 +116,20 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_help() throws Exception {
+    public void parseCommand_helpWithOrWithoutArguments_returnsHelpCommand() throws Exception {
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD) instanceof HelpCommand);
         assertTrue(parser.parseCommand(HelpCommand.COMMAND_WORD + " 3") instanceof HelpCommand);
     }
 
     @Test
-    public void parseCommand_list() throws Exception {
+    public void parseCommand_listWithAndWithoutKeyword_returnsListCommand() throws Exception {
         assertEquals(new ListCommand(), parser.parseCommand(ListCommand.COMMAND_WORD));
         assertEquals(new ListCommand(new PersonMatchesKeyword("Alice Pauline")),
                 parser.parseCommand(ListCommand.COMMAND_WORD + " Alice Pauline"));
     }
 
     @Test
-    public void parseCommand_tag() throws Exception {
+    public void parseCommand_tagWithGroupAndMembers_returnsTagCommand() throws Exception {
         TagCommand command = (TagCommand) parser.parseCommand(
                 TagCommand.COMMAND_WORD + " /group Group A /members 1, 2");
         assertEquals(new TagCommand(new Tag("Group A"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)),
@@ -133,7 +137,7 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_untag() throws Exception {
+    public void parseCommand_untagWithGroupAndMembers_returnsUntagCommand() throws Exception {
         UntagCommand command = (UntagCommand) parser.parseCommand(
                 UntagCommand.COMMAND_WORD + " /group Group A /members 1, 2");
         assertEquals(new UntagCommand(new Tag("Group A"), List.of(INDEX_FIRST_PERSON, INDEX_SECOND_PERSON)),
@@ -141,11 +145,30 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_import() throws Exception {
+    public void parseCommand_importWithPath_returnsImportCommand() throws Exception {
         ImportCommand command = (ImportCommand) parser.parseCommand(
                 ImportCommand.COMMAND_WORD + " students.csv");
 
         assertEquals(new ImportCommand("students.csv"), command);
+    }
+
+    @Test
+    public void parseCommand_tabsAndUnusualSpaces_treatedAsSpaces() throws Exception {
+        Command expected = parser.parseCommand("attendance 1 /date 16-09-2026 /status late");
+
+        assertEquals(expected, parser.parseCommand("attendance\t1\t/date 16-09-2026\t/status late"));
+        assertEquals(expected, parser.parseCommand(
+                "attendance\u00A01\u00A0/date\u00A016-09-2026\u00A0/status\u00A0late"));
+        assertEquals(expected, parser.parseCommand(
+                "\u3000attendance\u30001\u3000/date 16-09-2026 /status late\u3000"));
+        assertEquals(new ListCommand(new PersonMatchesKeyword("Alice Pauline")),
+                parser.parseCommand("list\u00A0Alice\u00A0Pauline"));
+    }
+
+    @Test
+    public void parseCommand_importPathWithUnusualSpace_keepsThePath() throws Exception {
+        assertEquals(new ImportCommand("data/my\u00A0folder/students.csv"),
+                parser.parseCommand("import\u00A0data/my\u00A0folder/students.csv"));
     }
 
     @Test
@@ -225,8 +248,9 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_commandWordWithDifferentCase_stillReportsProblemsOfItsArguments() {
-        String expectedMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteCommand.MESSAGE_USAGE);
-        assertThrows(ParseException.class, expectedMessage, () -> parser.parseCommand("DELETE x"));
+        assertThrows(ParseException.class, ParserUtil.MESSAGE_INVALID_INDEX, () -> parser.parseCommand("DELETE x"));
+        assertThrows(ParseException.class, String.format(MESSAGE_INVALID_COMMAND_FORMAT,
+                DeleteCommand.MESSAGE_USAGE), () -> parser.parseCommand("DELETE"));
     }
 
     @Test
@@ -237,9 +261,9 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_attendance() throws Exception {
+    public void parseCommand_attendanceWithIndex_returnsAttendanceByIndexCommand() throws Exception {
         LocalDate date = LocalDate.of(2026, 9, 16);
-        AttendanceCommand expected = new AttendanceCommand(
+        AttendanceCommand expected = new AttendanceByIndexCommand(
             INDEX_FIRST_PERSON, date, Attendance.Status.ABSENT);
 
         AttendanceCommand actual = (AttendanceCommand) parser.parseCommand(
@@ -249,29 +273,54 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_viewAttendance() throws Exception {
+    public void parseCommand_attendanceWithNameAndClass_returnsAttendanceByNameAndClassCommand()
+            throws Exception {
+        AttendanceCommand expected = new AttendanceByNameAndClassCommand("John Tan", "A1",
+                LocalDate.of(2026, 9, 16), Attendance.Status.LATE);
+
+        assertEquals(expected, parser.parseCommand(
+                "attendance /name John Tan /class A1 /date 16-09-2026 /status late"));
+    }
+
+    @Test
+    public void parseCommand_viewAttendance_returnsViewAttendanceCommand() throws Exception {
         ViewAttendanceCommand expected = new ViewAttendanceCommand("John Tan", "A1");
 
         assertEquals(expected, parser.parseCommand("viewA /name John Tan /class A1"));
     }
 
     @Test
-    public void parseCommand_grade() throws Exception {
-        GradeCommand expected = new GradeCommand(INDEX_FIRST_PERSON,
+    public void parseCommand_gradeWithIndex_returnsGradeByIndexCommand() throws Exception {
+        GradeCommand expected = new GradeByIndexCommand(INDEX_FIRST_PERSON,
                 new Grade("Assignment 1", new BigDecimal("97.5")));
 
         assertEquals(expected, parser.parseCommand("grade 1 /assessment Assignment 1 /score 97.5"));
     }
 
     @Test
-    public void parseCommand_deleteGrade() throws Exception {
+    public void parseCommand_gradeWithNameAndClass_returnsGradeByNameAndClassCommand() throws Exception {
+        GradeCommand expected = new GradeByNameAndClassCommand("John Tan", "A1",
+                new Grade("Assignment 1", new BigDecimal("97.5")));
+
+        assertEquals(expected, parser.parseCommand(
+                "grade /name John Tan /class A1 /assessment Assignment 1 /score 97.5"));
+    }
+
+    @Test
+    public void parseCommand_viewGrade_returnsViewGradeCommand() throws Exception {
+        assertEquals(new ViewGradeCommand("John Tan", "A1"),
+                parser.parseCommand("viewG /name John Tan /class A1"));
+    }
+
+    @Test
+    public void parseCommand_deleteGradeWithIndex_returnsByIndexCommand() throws Exception {
         DeleteGradeCommand expected = new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Assignment 1");
 
         assertEquals(expected, parser.parseCommand("deleteG 1 /assessment Assignment 1"));
     }
 
     @Test
-    public void parseCommand_deleteGradeByNameAndClass() throws Exception {
+    public void parseCommand_deleteGradeWithNameAndClass_returnsByNameAndClassCommand() throws Exception {
         DeleteGradeCommand command = (DeleteGradeCommand) parser.parseCommand(
                 DeleteGradeCommand.COMMAND_WORD + " /name John Tan /class A1 /assessment WA2");
         assertEquals(new DeleteGradeByNameAndClassCommand("John Tan", "A1", "WA2"),
@@ -279,7 +328,7 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_deleteAttendance() throws Exception {
+    public void parseCommand_deleteAttendanceWithIndex_returnsByIndexCommand() throws Exception {
         LocalDate date = LocalDate.of(2026, 9, 16);
         DeleteAttendanceCommand expected = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, date);
 
@@ -287,7 +336,7 @@ public class AddressBookParserTest {
     }
 
     @Test
-    public void parseCommand_deleteAttendanceByNameAndClass() throws Exception {
+    public void parseCommand_deleteAttendanceWithNameAndClass_returnsByNameAndClassCommand() throws Exception {
         LocalDate date = LocalDate.of(2026, 9, 16);
         DeleteAttendanceCommand command = (DeleteAttendanceCommand) parser.parseCommand(
                 "deleteA /name John Tan /class A1 /date 16-09-2026");

@@ -36,7 +36,7 @@ public class EmailTest {
     }
 
     @Test
-    public void isValidEmail() {
+    public void isValidEmail_variousInputs_returnsExpected() {
         // null email
         assertThrows(NullPointerException.class, () -> Email.isValidEmail(null));
 
@@ -124,7 +124,7 @@ public class EmailTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousEmails_returnsExpected() {
         Email email = new Email("valid@email");
 
         // same values -> returns true

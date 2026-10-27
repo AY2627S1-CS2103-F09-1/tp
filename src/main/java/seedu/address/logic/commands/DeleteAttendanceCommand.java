@@ -6,7 +6,6 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
 import java.time.LocalDate;
-import java.util.Locale;
 
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -31,7 +30,7 @@ public abstract class DeleteAttendanceCommand extends Command {
             + PREFIX_DATE + " 16-09-2026";
 
     public static final String MESSAGE_SUCCESS =
-            "Attendance of %1$s for %2$s on %3$td-%3$tm-%3$tY has been deleted";
+            "Attendance of %1$s for %2$s on %3$s has been deleted";
     public static final String MESSAGE_ATTENDANCE_NOT_FOUND = "Attendance for this date not found";
 
     /**
@@ -47,14 +46,12 @@ public abstract class DeleteAttendanceCommand extends Command {
                 .findFirst()
                 .orElseThrow(() -> new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND));
 
-        // previous operation catches nonexistent attendance record
-        // so following operation need not check for it again
         Person personWithoutAttendance = person.withoutAttendance(attendance);
         assert personWithoutAttendance.getAttendanceRecords().stream()
                 .noneMatch(record -> record.getDate().equals(date)) : "Attendance record was not removed";
 
         model.setPerson(person, personWithoutAttendance);
         return new CommandResult(String.format(MESSAGE_SUCCESS,
-                attendance.getStatus().name().toLowerCase(Locale.ROOT), person.getName(), attendance.getDate()));
+                attendance.getStatus(), person.getName(), Attendance.formatDate(attendance.getDate())));
     }
 }

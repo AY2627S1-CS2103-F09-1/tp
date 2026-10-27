@@ -1,9 +1,9 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.ViewGradeCommandParser.MESSAGE_UNKNOWN_PARAMETER;
@@ -47,12 +47,14 @@ public class ViewGradeCommandParserTest {
 
     @Test
     public void parse_duplicateName_failure() {
-        assertParseFailure(parser, " /name John /name Jane /class A1", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, " /name John /name Jane /class A1",
+                getErrorMessageForDuplicatePrefixes("/name"));
     }
 
     @Test
     public void parse_duplicateClassPrefix_failure() {
-        assertParseFailure(parser, " /name John Tan /class A1 /class A2", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, " /name John Tan /class A1 /class A2",
+                getErrorMessageForDuplicatePrefixes("/class"));
     }
 
     @Test
@@ -69,7 +71,8 @@ public class ViewGradeCommandParserTest {
     @Test
     public void parse_unknownParameter_failure() {
         assertParseFailure(parser, " /name John Tan /class A1 /foo bar", MESSAGE_UNKNOWN_PARAMETER);
-        assertParseFailure(parser, " /name John Tan /class A1 /email john@example.com", MESSAGE_UNKNOWN_PARAMETER);
+        assertParseFailure(parser, " /name John Tan /class A1 /email john@example.com",
+                MESSAGE_UNKNOWN_PARAMETER);
     }
 
     @Test

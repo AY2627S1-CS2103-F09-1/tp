@@ -42,13 +42,13 @@ public class ViewAttendanceCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        Person student = model.getAddressBook().getPersonList().stream()
-                .filter(person -> person.hasNameAndClass(name, className))
-                .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+        Person student = model.findPerson(name, className)
+                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
 
         String attendance = student.getAttendanceRecords().stream()
-            .sorted(Comparator.comparing(Attendance::getDate).reversed()).map(Attendance::toDisplayString)
-            .collect(Collectors.joining("\n"));
+                .sorted(Comparator.comparing(Attendance::getDate).reversed())
+                .map(Attendance::toDisplayString)
+                .collect(Collectors.joining("\n"));
         if (attendance.isEmpty()) {
             attendance = MESSAGE_NO_ATTENDANCE;
         }

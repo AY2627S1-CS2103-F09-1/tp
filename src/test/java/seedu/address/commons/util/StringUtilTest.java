@@ -2,10 +2,13 @@ package seedu.address.commons.util;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static seedu.address.testutil.Assert.assertThrows;
 
 import java.io.FileNotFoundException;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.junit.jupiter.api.Test;
 
@@ -14,7 +17,7 @@ public class StringUtilTest {
     //---------------- Tests for isNonZeroUnsignedInteger --------------------------------------
 
     @Test
-    public void isNonZeroUnsignedInteger() {
+    public void isNonZeroUnsignedInteger_variousInputs_returnsExpected() {
 
         // EP: empty strings
         assertFalse(StringUtil.isNonZeroUnsignedInteger("")); // Boundary value
@@ -91,7 +94,59 @@ public class StringUtilTest {
     }
 
     @Test
-    public void getDetails_exceptionGiven() {
+    public void toComparisonKey_fullWidthLetters_sameKeyAsAsciiLetters() {
+        assertEquals("quiz 1", StringUtil.toComparisonKey("\uff31uiz 1")); // full-width Q
+        assertEquals("alex yeoh", StringUtil.toComparisonKey("\uff21\uff2c\uff25\uff38 Yeoh")); // full-width ALEX
+        assertEquals("a1", StringUtil.toComparisonKey("A\uff11")); // full-width digit 1
+        assertEquals("alex yeoh", StringUtil.toComparisonKey("Alex\u00a0Yeoh")); // no-break space
+    }
+
+    @Test
+    public void compareNaturally_numbersInText_comparedByValue() {
+        assertTrue(StringUtil.compareNaturally("Team 2", "Team 10") < 0);
+        assertTrue(StringUtil.compareNaturally("Week 11", "Week 9") > 0);
+        assertTrue(StringUtil.compareNaturally("Team 02", "Team 10") < 0);
+        assertTrue(StringUtil.compareNaturally("A9", "A10") < 0);
+        assertTrue(StringUtil.compareNaturally("9" + "0".repeat(30), "1" + "0".repeat(31)) < 0);
+    }
+
+    @Test
+    public void compareNaturally_separatorsAndCase_doNotChangeTheLetterOrder() {
+        assertTrue(StringUtil.compareNaturally("Group A", "Group B") < 0);
+        assertTrue(StringUtil.compareNaturally("Group-A", "Group B") < 0);
+        assertTrue(StringUtil.compareNaturally("Group_A", "Group B") < 0);
+        assertTrue(StringUtil.compareNaturally("group a", "Group B") < 0);
+        assertTrue(StringUtil.compareNaturally("Team", "Team 1") < 0);
+    }
+
+    @Test
+    public void compareNaturally_sameUnderTheRules_stillHaveAFixedOrder() {
+        assertEquals(0, StringUtil.compareNaturally("Team 1", "Team 1"));
+        assertNotEquals(0, StringUtil.compareNaturally("team 1", "Team 1"));
+        assertNotEquals(0, StringUtil.compareNaturally("Group-A", "Group A"));
+        assertEquals(-Integer.signum(StringUtil.compareNaturally("Team 07", "Team 7")),
+                Integer.signum(StringUtil.compareNaturally("Team 7", "Team 07")));
+    }
+
+    @Test
+    public void compareNaturally_mixedLabels_sortsAsAPersonWould() {
+        List<String> labels = new ArrayList<>(List.of("Team 10", "Group_A", "Team 2", "team 1", "Group B",
+                "Group-A", "Group A", "Week 9", "Week 11"));
+
+        labels.sort(StringUtil::compareNaturally);
+
+        assertEquals(List.of("Group A", "Group-A", "Group_A", "Group B", "team 1", "Team 2", "Team 10", "Week 9",
+                "Week 11"), labels);
+    }
+
+    @Test
+    public void compareNaturally_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> StringUtil.compareNaturally(null, "a"));
+        assertThrows(NullPointerException.class, () -> StringUtil.compareNaturally("a", null));
+    }
+
+    @Test
+    public void getDetails_exceptionGiven_containsExceptionAndMessage() {
         assertTrue(StringUtil.getDetails(new FileNotFoundException("file not found"))
             .contains("java.io.FileNotFoundException: file not found"));
     }

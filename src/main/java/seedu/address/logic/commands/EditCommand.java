@@ -76,7 +76,7 @@ public class EditCommand extends Command {
         if (index.getZeroBased() >= lastShownList.size()) {
             logger.info("Rejected an index outside the displayed list: " + index.getOneBased()
                     + " (list size: " + lastShownList.size() + ")");
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(Messages.getInvalidDisplayedIndexMessage(lastShownList.size()));
         }
 
         Person personToEdit = lastShownList.get(index.getZeroBased());

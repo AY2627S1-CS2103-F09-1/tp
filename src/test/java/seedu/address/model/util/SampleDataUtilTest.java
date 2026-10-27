@@ -17,7 +17,7 @@ import seedu.address.model.tag.Tag;
 public class SampleDataUtilTest {
 
     @Test
-    public void getSamplePersons_noTwoPersonsShareIdentity() {
+    public void getSamplePersons_allSamples_haveDistinctIdentities() {
         Person[] samplePersons = SampleDataUtil.getSamplePersons();
 
         for (int i = 0; i < samplePersons.length; i++) {
@@ -28,7 +28,7 @@ public class SampleDataUtilTest {
     }
 
     @Test
-    public void getSamplePersons_spansSeveralClasses() {
+    public void getSamplePersons_allSamples_spanSeveralClasses() {
         long classCount = Arrays.stream(SampleDataUtil.getSamplePersons())
                 .map(Person::getClassName)
                 .distinct()
@@ -38,7 +38,7 @@ public class SampleDataUtilTest {
     }
 
     @Test
-    public void getSamplePersons_includesPersonsWithAndWithoutEmail() {
+    public void getSamplePersons_allSamples_includeContactsWithAndWithoutEmail() {
         Person[] samplePersons = SampleDataUtil.getSamplePersons();
 
         assertTrue(Arrays.stream(samplePersons).anyMatch(person -> person.getEmail().isPresent()));
@@ -46,7 +46,7 @@ public class SampleDataUtilTest {
     }
 
     @Test
-    public void getSampleAddressBook_containsAllSamplePersonsInOrder() {
+    public void getSampleAddressBook_samplePersons_containedInOrder() {
         ReadOnlyAddressBook sampleAddressBook = SampleDataUtil.getSampleAddressBook();
 
         assertEquals(Arrays.asList(SampleDataUtil.getSamplePersons()), sampleAddressBook.getPersonList());

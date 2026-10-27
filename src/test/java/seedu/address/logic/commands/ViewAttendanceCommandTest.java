@@ -100,7 +100,7 @@ public class ViewAttendanceCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");
 
         assertTrue(command.equals(command));
@@ -112,7 +112,7 @@ public class ViewAttendanceCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");
 
         String expected = ViewAttendanceCommand.class.getCanonicalName()

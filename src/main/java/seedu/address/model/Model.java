@@ -5,8 +5,6 @@ import java.util.function.Predicate;
 
 import javafx.collections.ObservableList;
 import seedu.address.commons.core.GuiSettings;
-import seedu.address.model.person.ClassName;
-import seedu.address.model.person.Name;
 import seedu.address.model.person.Person;
 
 /**
@@ -73,12 +71,17 @@ public interface Model {
     void updateFilteredPersonList(Predicate<Person> predicate);
 
     /**
-     * Finds a person by name and class.
+     * Finds a person whose name and class match {@code name} and {@code className}, ignoring case and extra
+     * whitespace. The strings do not need to be a valid name or class, in which case they simply do not match.
      *
      * @param name name of the person
      * @param className class of the person
      * @return the matching person, if one exists
      */
-    Optional<Person> findPerson(Name name, ClassName className);
+    default Optional<Person> findPerson(String name, String className) {
+        return getAddressBook().getPersonList().stream()
+                .filter(person -> person.hasNameAndClass(name, className))
+                .findFirst();
+    }
 
 }

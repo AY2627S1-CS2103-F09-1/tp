@@ -10,7 +10,7 @@ import org.junit.jupiter.api.Test;
 public class IndexTest {
 
     @Test
-    public void createOneBasedIndex() {
+    public void fromOneBased_variousValues_createsIndexOrThrows() {
         // invalid index
         assertThrows(IndexOutOfBoundsException.class, () -> Index.fromOneBased(0));
 
@@ -24,7 +24,7 @@ public class IndexTest {
     }
 
     @Test
-    public void createZeroBasedIndex() {
+    public void fromZeroBased_variousValues_createsIndexOrThrows() {
         // invalid index
         assertThrows(IndexOutOfBoundsException.class, () -> Index.fromZeroBased(-1));
 
@@ -38,7 +38,7 @@ public class IndexTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousIndices_returnsExpected() {
         final Index fifthPersonIndex = Index.fromOneBased(5);
 
         // same values -> returns true
@@ -59,7 +59,7 @@ public class IndexTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_index_returnsExpectedFormat() {
         Index index = Index.fromZeroBased(0);
         String expected = Index.class.getCanonicalName() + "{zeroBasedIndex=" + index.getZeroBased() + "}";
         assertEquals(expected, index.toString());

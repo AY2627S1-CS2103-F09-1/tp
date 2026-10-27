@@ -14,6 +14,7 @@ import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
@@ -109,36 +110,36 @@ public class DeleteByNameAndClassCommandTest {
     public void execute_noMatchingName_throwsCommandException() {
         DeleteByNameAndClassCommand deleteCommand =
                 new DeleteByNameAndClassCommand("Nobody Here", ALICE_CLASS);
-        assertCommandFailure(deleteCommand, model, DeleteByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_matchingNameButOtherClass_throwsCommandException() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, "Z9");
-        assertCommandFailure(deleteCommand, model, DeleteByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("Nobody Here", "A1");
-        assertCommandFailure(deleteCommand, model, DeleteByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_invalidNameAndClass_throwsCommandExceptionNotFound() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("R@chel", "A1/B2");
-        assertCommandFailure(deleteCommand, model, "No contact found");
+        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_emptyAddressBook_throwsCommandException() {
         Model emptyModel = new ModelManager();
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, ALICE_CLASS);
-        assertCommandFailure(deleteCommand, emptyModel, DeleteByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(deleteCommand, emptyModel, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         DeleteByNameAndClassCommand deleteAliceCommand = new DeleteByNameAndClassCommand("Alice", "A1");
         DeleteByNameAndClassCommand deleteBobCommand = new DeleteByNameAndClassCommand("Bob", "A1");
         DeleteByNameAndClassCommand deleteAliceOtherClassCommand =
@@ -167,7 +168,7 @@ public class DeleteByNameAndClassCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_command_returnsExpectedFormat() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("Alice", "A1");
         String expected = DeleteByNameAndClassCommand.class.getCanonicalName()
                 + "{name=Alice, className=A1}";

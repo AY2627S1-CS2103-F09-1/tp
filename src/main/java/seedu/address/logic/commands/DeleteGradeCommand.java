@@ -45,7 +45,6 @@ public abstract class DeleteGradeCommand extends Command {
                 .findFirst()
                 .orElseThrow(() -> new CommandException(MESSAGE_GRADE_NOT_FOUND));
 
-        // previous operation catches nonexistent grade so following operation need not check for it again
         Person personWithoutGrade = person.withoutGrade(grade);
         assert personWithoutGrade.getGradeRecords().stream()
                 .noneMatch(record -> record.isSameAssessment(grade)) : "Grade was not removed";

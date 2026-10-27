@@ -11,6 +11,7 @@ import javafx.scene.control.Label;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.Region;
+import seedu.address.commons.util.StringUtil;
 import seedu.address.model.person.Attendance;
 import seedu.address.model.person.Grade;
 import seedu.address.model.person.Person;
@@ -24,10 +25,10 @@ public class PersonCard extends UiPart<Region> {
     private static final String FXML = "PersonListCard.fxml";
     private static final int MAX_RECENT_RECORDS = 3;
     private static final String MESSAGE_NO_ATTENDANCE = "Recent attendance: none";
-    private static final String MESSAGE_OLDER_RECORDS = "+%d older record(s)";
+    private static final String MESSAGE_OLDER_RECORDS = "+%s older record(s)";
     private static final String HEADER_RECENT_ATTENDANCE = "Recent attendance:\n";
     private static final String MESSAGE_NO_GRADES = "Recent grades: none";
-    private static final String MESSAGE_OLDER_GRADES = "+%d older grade(s)";
+    private static final String MESSAGE_OLDER_GRADES = "+%s older grade(s)";
     private static final String HEADER_RECENT_GRADES = "Recent grades:\n";
 
     /**
@@ -73,11 +74,11 @@ public class PersonCard extends UiPart<Region> {
     }
 
     /**
-     * Returns the tags of {@code person} in alphabetical order, ignoring case.
+     * Returns the tags of {@code person} in the order of {@link StringUtil#compareNaturally(String, String)}.
      */
     static List<Tag> getSortedTags(Person person) {
         return person.getTags().stream()
-                .sorted(Comparator.comparing(tag -> tag.tagName, String.CASE_INSENSITIVE_ORDER))
+                .sorted(Comparator.comparing(tag -> tag.tagName, StringUtil::compareNaturally))
                 .toList();
     }
 

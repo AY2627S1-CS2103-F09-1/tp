@@ -10,17 +10,18 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
 import static seedu.address.testutil.TypicalPersons.BENSON;
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
-
-import java.math.BigDecimal;
+import static seedu.address.testutil.TypicalRecords.ALICE_WITH_GRADES;
+import static seedu.address.testutil.TypicalRecords.GRADE;
+import static seedu.address.testutil.TypicalRecords.OTHER_GRADE;
+import static seedu.address.testutil.TypicalRecords.getModelWithAliceGrades;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
+import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.person.Grade;
 import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
@@ -32,17 +33,12 @@ public class DeleteGradeByNameAndClassCommandTest {
 
     private static final String ALICE_NAME = ALICE.getName().toString();
     private static final String ALICE_CLASS = ALICE.getClassName().toString();
-    private static final Grade GRADE = new Grade("Quiz 1", new BigDecimal("90.50"));
-    private static final Grade OTHER_GRADE = new Grade("Exam", new BigDecimal("80"));
 
     private Model model;
-    private Person aliceWithGrades;
 
     @BeforeEach
     public void setUp() {
-        model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        aliceWithGrades = ALICE.withGrade(GRADE).withGrade(OTHER_GRADE);
-        model.setPerson(ALICE, aliceWithGrades);
+        model = getModelWithAliceGrades();
     }
 
     @Test
@@ -58,7 +54,7 @@ public class DeleteGradeByNameAndClassCommandTest {
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
-                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz,1"));
+                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz 期末"));
         assertThrows(AssertionError.class, () ->
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "   "));
     }
@@ -69,7 +65,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz 1");
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithGrades, ALICE.withGrade(OTHER_GRADE));
+        expectedModel.setPerson(ALICE_WITH_GRADES, ALICE.withGrade(OTHER_GRADE));
 
         String expectedMessage = String.format(DeleteGradeCommand.MESSAGE_SUCCESS,
                 "90.5", "Quiz 1", ALICE.getName(), ALICE.getClassName());
@@ -82,7 +78,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 new DeleteGradeByNameAndClassCommand("  aLiCe   Pauline ", "a1", "QUIZ    1");
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithGrades, ALICE.withGrade(OTHER_GRADE));
+        expectedModel.setPerson(ALICE_WITH_GRADES, ALICE.withGrade(OTHER_GRADE));
 
         assertCommandSuccess(command, model,
                 "Grade of 90.5 for Quiz 1 for student Alice Pauline in class A1 has been deleted",
@@ -108,7 +104,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 .filter(person -> person.getName().equals(ALICE.getName()))
                 .count());
         assertEquals(2, model.getAddressBook().getPersonList().stream()
-                .filter(person -> person.equals(aliceWithGrades))
+                .filter(person -> person.equals(ALICE_WITH_GRADES))
                 .findFirst().orElseThrow().getGradeRecords().size());
     }
 
@@ -130,7 +126,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 "Grade of 90.5 for Quiz 1 for student Benson Meier in class A1 has been deleted",
                 expectedModel);
         assertEquals(1, model.getFilteredPersonList().size());
-        assertTrue(model.getFilteredPersonList().contains(aliceWithGrades));
+        assertTrue(model.getFilteredPersonList().contains(ALICE_WITH_GRADES));
     }
 
     @Test
@@ -145,28 +141,28 @@ public class DeleteGradeByNameAndClassCommandTest {
     public void execute_noMatchingName_throwsCommandException() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Nobody Here", ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, model, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_matchingNameButOtherClass_throwsCommandException() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, "Z9", "Quiz 1");
-        assertCommandFailure(command, model, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Nobody Here", ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, model, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
     public void execute_invalidNameAndClass_throwsCommandExceptionNotFound() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("R@chel", "A1/B2", "Quiz 1");
-        assertCommandFailure(command, model, "No contact found");
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
@@ -174,11 +170,11 @@ public class DeleteGradeByNameAndClassCommandTest {
         Model emptyModel = new ModelManager();
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, emptyModel, DeleteGradeByNameAndClassCommand.MESSAGE_NOT_FOUND);
+        assertCommandFailure(command, emptyModel, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_followsEqualityContract() {
         DeleteGradeByNameAndClassCommand deleteAliceQuiz =
                 new DeleteGradeByNameAndClassCommand("Alice", "A1", "Quiz 1");
 
@@ -198,7 +194,7 @@ public class DeleteGradeByNameAndClassCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Alice", "A1", "Quiz 1");
         String expected = DeleteGradeByNameAndClassCommand.class.getCanonicalName()

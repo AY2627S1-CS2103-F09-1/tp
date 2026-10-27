@@ -2,6 +2,7 @@ package seedu.address.logic.parser;
 
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
+import static seedu.address.logic.Messages.MESSAGE_MISSING_DATE;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
@@ -21,8 +22,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCommand> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_DATE;
-    public static final String MESSAGE_MISSING_DATE = "Missing date. Please provide the date of attendance.";
+            "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_DATE
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteAttendanceCommand.MESSAGE_USAGE);
@@ -31,6 +32,7 @@ public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCom
     public DeleteAttendanceCommand parse(String args) throws ParseException {
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE);
@@ -49,15 +51,14 @@ public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCom
     /**
      * Returns a command that deletes attendance from the person at the index in {@code argMultimap}.
      *
-     * @throws ParseException If the index or date is invalid or missing.
+     * @throws ParseException If the index is missing or not a positive integer, or the
+     *         date is invalid or missing.
      */
     private static DeleteAttendanceByIndexCommand parseByIndex(ArgumentMultimap argMultimap) throws ParseException {
-        Index index;
-        try {
-            index = ParserUtil.parseIndex(argMultimap.getPreamble());
-        } catch (ParseException pe) {
-            throw new ParseException(INVALID_FORMAT_MESSAGE, pe);
+        if (argMultimap.getPreamble().isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
         }
+        Index index = ParserUtil.parseIndex(argMultimap.getPreamble());
         return new DeleteAttendanceByIndexCommand(index, parseDate(argMultimap));
     }
 

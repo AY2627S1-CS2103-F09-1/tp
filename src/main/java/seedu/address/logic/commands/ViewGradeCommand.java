@@ -43,9 +43,8 @@ public class ViewGradeCommand extends Command {
     @Override
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
-        Person student = model.getAddressBook().getPersonList().stream()
-                .filter(person -> person.hasNameAndClass(name, className))
-                .findFirst().orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+        Person student = model.findPerson(name, className)
+                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
 
         List<Grade> gradeRecords = new ArrayList<>(student.getGradeRecords());
         Collections.reverse(gradeRecords);

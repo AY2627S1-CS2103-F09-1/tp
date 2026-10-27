@@ -2,6 +2,7 @@ package seedu.address.logic.commands;
 
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
+import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.util.logging.Logger;
 
@@ -17,7 +18,6 @@ import seedu.address.model.person.Person;
  */
 public class DeleteByNameAndClassCommand extends DeleteCommand {
 
-    public static final String MESSAGE_NOT_FOUND = "No contact found";
 
     private static final Logger logger = LogsCenter.getLogger(DeleteByNameAndClassCommand.class);
 
@@ -44,7 +44,7 @@ public class DeleteByNameAndClassCommand extends DeleteCommand {
                 .findFirst()
                 .orElseThrow(() -> {
                     logger.info("No contact found for name: " + name + ", class: " + className);
-                    return new CommandException(MESSAGE_NOT_FOUND);
+                    return new CommandException(MESSAGE_CONTACT_NOT_FOUND);
                 });
 
         return deletePerson(model, personToDelete);

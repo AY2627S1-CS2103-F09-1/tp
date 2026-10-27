@@ -69,7 +69,7 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
-    public void tokenize_oneArgument() {
+    public void tokenize_oneArgument_extractsPreambleAndArgument() {
         // Preamble present
         String argsString = "  Some preamble string p/ Argument value ";
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash);
@@ -85,7 +85,7 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
-    public void tokenize_multipleArguments() {
+    public void tokenize_multipleArguments_extractsEachArgument() {
         // Only two arguments are present
         String argsString = "SomePreambleString -t dashT-Value p/ pSlash value";
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT, hatQ);
@@ -121,7 +121,7 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
-    public void tokenize_multipleArgumentsWithRepeats() {
+    public void tokenize_repeatedArguments_keepsEveryValue() {
         // Two arguments repeated, some have empty values
         String argsString = "SomePreambleString -t dashT-Value ^Q ^Q -t another dashT value p/ pSlash value -t";
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT, hatQ);
@@ -132,7 +132,7 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
-    public void tokenize_multipleArgumentsJoined() {
+    public void tokenize_joinedArguments_doesNotRecognizeThem() {
         String argsString = "SomePreambleStringp/ pSlash joined-tjoined -t not joined^Qjoined";
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(argsString, pSlash, dashT, hatQ);
         assertPreamblePresent(argMultimap, "SomePreambleStringp/ pSlash joined-tjoined");
@@ -385,7 +385,7 @@ public class ArgumentTokenizerTest {
     }
 
     @Test
-    public void equalsMethod() {
+    public void equals_variousPrefixes_returnsExpected() {
         Prefix aaa = new Prefix("aaa");
 
         assertEquals(aaa, aaa);

@@ -30,14 +30,14 @@ public class ImportCommand extends Command {
             + "Parameters: FILEPATH\n"
             + "Example: " + COMMAND_WORD + " students.csv";
 
-    public static final String MESSAGE_SUCCESS = "Imported %1$d contacts from %2$s";
+    public static final String MESSAGE_SUCCESS = "Imported %1$s contacts from %2$s";
     public static final String MESSAGE_FILE_NOT_FOUND = "File not found at %s";
     public static final String MESSAGE_CSV_ONLY = "Only .csv files are supported";
     public static final String MESSAGE_FILE_EMPTY = "File empty";
     public static final String MESSAGE_HEADER = "CSV header must contain 'name' and 'class' columns";
-    public static final String MESSAGE_INVALID_FIELD_COUNT = "Invalid number of fields on row %d";
-    public static final String MESSAGE_DUPLICATE = "Duplicate contact on row %d";
-    public static final String MESSAGE_INVALID_CONTACT = "Invalid contact data on row %d";
+    public static final String MESSAGE_INVALID_FIELD_COUNT = "Invalid number of fields on row %s";
+    public static final String MESSAGE_DUPLICATE = "Duplicate contact on row %s";
+    public static final String MESSAGE_INVALID_CONTACT = "Invalid contact data on row %s";
     public static final String MESSAGE_FAILURE = "Failed to import from %s";
 
     /** The most mebibytes (MiB, each 1024 * 1024 bytes) that a file can have. The whole file is read into memory. */

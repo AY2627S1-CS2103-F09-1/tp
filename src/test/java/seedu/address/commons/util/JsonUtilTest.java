@@ -18,7 +18,7 @@ public class JsonUtilTest {
     private static final Path SERIALIZATION_FILE = TestUtil.getFilePathInSandboxFolder("serialize.json");
 
     @Test
-    public void serializeObjectToJsonFile_noExceptionThrown() throws IOException {
+    public void serializeObjectToJsonFile_validObject_writesExpectedJson() throws IOException {
         SerializableTestClass serializableTestClass = new SerializableTestClass();
         serializableTestClass.setTestValues();
 
@@ -28,7 +28,7 @@ public class JsonUtilTest {
     }
 
     @Test
-    public void deserializeObjectFromJsonFile_noExceptionThrown() throws IOException {
+    public void deserializeObjectFromJsonFile_validJson_returnsExpectedObject() throws IOException {
         FileUtil.writeToFile(SERIALIZATION_FILE, SerializableTestClass.JSON_STRING_REPRESENTATION);
 
         SerializableTestClass serializableTestClass = JsonUtil

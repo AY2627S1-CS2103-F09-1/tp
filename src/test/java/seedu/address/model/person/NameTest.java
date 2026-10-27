@@ -30,7 +30,7 @@ public class NameTest {
     }
 
     @Test
-    public void isValidName() {
+    public void isValidName_variousInputs_returnsExpected() {
         // null name
         assertThrows(NullPointerException.class, () -> Name.isValidName(null));
 
@@ -136,7 +136,7 @@ public class NameTest {
     }
 
     @Test
-    public void matches() {
+    public void matches_variousTexts_returnsExpected() {
         Name name = new Name("Valid Name");
 
         // same text -> returns true
@@ -170,7 +170,7 @@ public class NameTest {
     }
 
     @Test
-    public void toString_keepsTextAsGiven() {
+    public void toString_extraSpaces_keepsTextAsGiven() {
         assertEquals("john   TAN", new Name("john   TAN").toString());
         assertEquals("john   TAN", new Name("john   TAN").fullName);
     }
@@ -194,7 +194,13 @@ public class NameTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_fullWidthLetters_returnsTrue() {
+        assertEquals(new Name("Alex Yeoh"), new Name("\uff21lex Yeoh"));
+        assertTrue(new Name("Alex Yeoh").matches("\uff21\uff2c\uff25\uff38 yeoh"));
+    }
+
+    @Test
+    public void equals_variousNames_returnsExpected() {
         Name name = new Name("Valid Name");
 
         // same values -> returns true

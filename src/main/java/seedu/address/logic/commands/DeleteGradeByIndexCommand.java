@@ -38,7 +38,7 @@ public class DeleteGradeByIndexCommand extends DeleteGradeCommand {
         requireNonNull(model);
         List<Person> displayedPeople = model.getFilteredPersonList();
         if (targetIndex.getZeroBased() >= displayedPeople.size()) {
-            throw new CommandException(Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+            throw new CommandException(Messages.getInvalidDisplayedIndexMessage(displayedPeople.size()));
         }
         return deleteGrade(model, displayedPeople.get(targetIndex.getZeroBased()), assessmentName);
     }

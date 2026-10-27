@@ -17,6 +17,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Collections;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 
 import org.junit.jupiter.api.Test;
@@ -235,7 +236,7 @@ public class PersonTest {
     }
 
     @Test
-    public void isSamePerson() {
+    public void isSamePerson_variousPersons_returnsExpected() {
         // same object -> returns true
         assertTrue(ALICE.isSamePerson(ALICE));
 
@@ -278,7 +279,7 @@ public class PersonTest {
     }
 
     @Test
-    public void hasNameAndClass() {
+    public void hasNameAndClass_variousInputs_matchesIgnoringCaseAndExtraSpaces() {
         // exact name and class -> returns true
         assertTrue(BOB.hasNameAndClass(VALID_NAME_BOB, VALID_CLASS_BOB));
 
@@ -328,7 +329,7 @@ public class PersonTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousPersons_returnsExpected() {
         // same values -> returns true
         Person aliceCopy = new PersonBuilder(ALICE).build();
         assertTrue(ALICE.equals(aliceCopy));
@@ -372,7 +373,7 @@ public class PersonTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_person_returnsExpectedFormat() {
         String expected = Person.class.getCanonicalName() + "{name=" + ALICE.getName() + ", className="
                 + ALICE.getClassName() + ", email=" + ALICE.getEmail().get() + ", tags=" + ALICE.getTags()
                 + ", attendanceRecords=" + ALICE.getAttendanceRecords() + ", gradeRecords="
@@ -381,7 +382,69 @@ public class PersonTest {
     }
 
     @Test
-    public void withAttendance_addsRecord() {
+    public void hasAttendanceOn_variousDates_returnsExpected() {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Person person = new PersonBuilder().build().withAttendance(new Attendance(date, Attendance.Status.LATE));
+
+        assertTrue(person.hasAttendanceOn(date));
+        assertFalse(person.hasAttendanceOn(date.plusDays(1)));
+        assertFalse(new PersonBuilder().build().hasAttendanceOn(date));
+    }
+
+    @Test
+    public void hasAttendanceOn_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().hasAttendanceOn(null));
+    }
+
+    @Test
+    public void getAttendanceOn_variousDates_returnsExpected() {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+        Attendance record = new Attendance(date, Attendance.Status.LATE);
+        Person person = new PersonBuilder().build().withAttendance(record);
+
+        assertEquals(Optional.of(record), person.getAttendanceOn(date));
+        assertEquals(Optional.empty(), person.getAttendanceOn(date.plusDays(1)));
+        assertEquals(Optional.empty(), new PersonBuilder().build().getAttendanceOn(date));
+    }
+
+    @Test
+    public void getAttendanceOn_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().getAttendanceOn(null));
+    }
+
+    @Test
+    public void getGradeFor_variousAssessments_returnsTheStoredGrade() {
+        Grade stored = new Grade("Quiz 1", BigDecimal.TEN);
+        Person person = new PersonBuilder().build().withGrade(stored);
+
+        assertEquals(Optional.of(stored), person.getGradeFor(new Grade("Quiz 1", BigDecimal.ONE)));
+        assertEquals(Optional.of(stored), person.getGradeFor(new Grade("  QUIZ   1 ", BigDecimal.ONE)));
+        assertEquals(Optional.empty(), person.getGradeFor(new Grade("Quiz 2", BigDecimal.TEN)));
+        assertEquals(Optional.empty(), new PersonBuilder().build().getGradeFor(new Grade("Quiz 1", BigDecimal.TEN)));
+    }
+
+    @Test
+    public void getGradeFor_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().getGradeFor(null));
+    }
+
+    @Test
+    public void hasGradeFor_variousAssessments_returnsExpected() {
+        Person person = new PersonBuilder().build().withGrade(new Grade("Quiz 1", BigDecimal.TEN));
+
+        assertTrue(person.hasGradeFor(new Grade("Quiz 1", BigDecimal.ONE))); // score is not compared
+        assertTrue(person.hasGradeFor(new Grade("  QUIZ   1 ", BigDecimal.ONE))); // case and spaces
+        assertFalse(person.hasGradeFor(new Grade("Quiz 2", BigDecimal.TEN)));
+        assertFalse(new PersonBuilder().build().hasGradeFor(new Grade("Quiz 1", BigDecimal.TEN)));
+    }
+
+    @Test
+    public void hasGradeFor_null_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new PersonBuilder().build().hasGradeFor(null));
+    }
+
+    @Test
+    public void withAttendance_newDate_returnsPersonWithRecord() {
         LocalDate date = LocalDate.of(2026, 9, 16);
         Attendance record = new Attendance(date, Attendance.Status.PRESENT);
 
@@ -453,7 +516,7 @@ public class PersonTest {
     }
 
     @Test
-    public void withGrade_addsGrade() {
+    public void withGrade_newAssessment_returnsPersonWithGrade() {
         Person original = new PersonBuilder().build();
         Grade grade = new Grade("Assignment 1", new BigDecimal("97.5"));
 
