@@ -19,6 +19,7 @@ import seedu.address.model.person.Person;
 public class ViewGradeCommand extends Command {
 
     public static final String COMMAND_WORD = "viewG";
+    public static final String COMMAND_ALIAS = "vg";
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Displays all grades for a student.\n"
             + "Parameters: /name NAME /class CLASS\n"

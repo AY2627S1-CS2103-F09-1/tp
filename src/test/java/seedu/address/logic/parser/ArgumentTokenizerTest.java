@@ -3,11 +3,14 @@ package seedu.address.logic.parser;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import java.util.List;
 
 import org.junit.jupiter.api.Test;
+
+import seedu.address.logic.parser.exceptions.ParseException;
 
 public class ArgumentTokenizerTest {
 
@@ -291,6 +294,94 @@ public class ArgumentTokenizerTest {
 
         assertEquals(List.of("/phone"),
                 ArgumentTokenizer.findUnrecognizedPrefixes(" /name John\t/phone 123", slashName));
+    }
+
+    @Test
+    public void tokenize_aliasOfPrefix_valueIsStoredUnderFullPrefix() {
+        Prefix slashName = new Prefix("/name", "/n");
+        Prefix slashClass = new Prefix("/class", "/c");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize("pre /n John Tan /c A1", slashName, slashClass);
+
+        assertPreamblePresent(argMultimap, "pre");
+        assertArgumentPresent(argMultimap, slashName, "John Tan");
+        assertArgumentPresent(argMultimap, slashClass, "A1");
+    }
+
+    @Test
+    public void tokenize_fullFormAndAliasOfSamePrefix_valuesAreCollectedTogether() {
+        Prefix slashName = new Prefix("/name", "/n");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /name John /n Tan", slashName);
+
+        assertArgumentPresent(argMultimap, slashName, "John", "Tan");
+        assertThrows(ParseException.class, () -> argMultimap.verifyNoDuplicatePrefixesFor(slashName));
+    }
+
+    @Test
+    public void tokenize_aliasInAnyCase_valueIsStoredUnderFullPrefix() {
+        Prefix slashName = new Prefix("/name", "/n");
+        Prefix slashClass = new Prefix("/class", "/c");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /N John /C A1", slashName, slashClass);
+
+        assertArgumentPresent(argMultimap, slashName, "John");
+        assertArgumentPresent(argMultimap, slashClass, "A1");
+    }
+
+    @Test
+    public void tokenize_aliasWithoutValue_valueIsEmpty() {
+        Prefix slashName = new Prefix("/name", "/n");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /n", slashName);
+
+        assertArgumentPresent(argMultimap, slashName, "");
+    }
+
+    @Test
+    public void tokenize_fullFormOfAnotherPrefix_isNotReadAsAlias() {
+        Prefix slashClass = new Prefix("/class", "/n");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /name John", slashClass);
+
+        assertPreamblePresent(argMultimap, "/name John");
+        assertArgumentAbsent(argMultimap, slashClass);
+    }
+
+    @Test
+    public void tokenize_aliasJoinedToText_isNotAPrefix() {
+        Prefix slashName = new Prefix("/name", "/n");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize("x/n John", slashName);
+
+        assertPreamblePresent(argMultimap, "x/n John");
+        assertArgumentAbsent(argMultimap, slashName);
+    }
+
+    @Test
+    public void tokenize_aliasOfPrefixThatIsNotGiven_isNotRecognized() {
+        Prefix slashName = new Prefix("/name", "/n");
+
+        ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(" /c A1", slashName);
+
+        assertPreamblePresent(argMultimap, "/c A1");
+        assertArgumentAbsent(argMultimap, slashName);
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_aliasOfKnownPrefix_isKnown() {
+        Prefix slashName = new Prefix("/name", "/n");
+        Prefix slashClass = new Prefix("/class", "/c");
+
+        assertEquals(List.of("/x"),
+                ArgumentTokenizer.findUnrecognizedPrefixes(" /n John /C A1 /x 1", slashName, slashClass));
+    }
+
+    @Test
+    public void findUnrecognizedPrefixes_aliasOfPrefixThatIsNotKnown_returnsToken() {
+        Prefix slashName = new Prefix("/name", "/n");
+
+        assertEquals(List.of("/c"), ArgumentTokenizer.findUnrecognizedPrefixes(" /n John /c A1", slashName));
     }
 
     @Test

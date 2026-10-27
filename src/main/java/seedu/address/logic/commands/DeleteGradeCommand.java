@@ -16,6 +16,7 @@ import seedu.address.model.person.Person;
 public abstract class DeleteGradeCommand extends Command {
 
     public static final String COMMAND_WORD = "deleteG";
+    public static final String COMMAND_ALIAS = "dg";
 
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Deletes a grade identified by its assessment from a contact identified either by the index "

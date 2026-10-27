@@ -399,6 +399,17 @@ public class ParserUtilTest {
     }
 
     @Test
+    public void requireNoEmbeddedPrefix_textThatEndsInAnAlias_doesNotThrow() throws Exception {
+        // only the full prefixes are detected, so that a name that ends in the letter of an alias is accepted
+        ParserUtil.requireNoEmbeddedPrefix("Tan a/c", "name");
+        ParserUtil.requireNoEmbeddedPrefix("Lee x/n", "name");
+        ParserUtil.requireNoEmbeddedPrefix("Lim b/m", "name");
+        ParserUtil.requireNoEmbeddedPrefix("Quiz a/as", "assessment name");
+        ParserUtil.requireNoEmbeddedPrefix("Quiz a/st", "assessment name");
+        ParserUtil.requireNoEmbeddedPrefix("Quiz a/sc", "assessment name");
+    }
+
+    @Test
     public void requireNoEmbeddedPrefix_slashThatIsNotAPrefix_doesNotThrow() throws Exception {
         ParserUtil.requireNoEmbeddedPrefix("Tan s/o Kumar", "name");
         ParserUtil.requireNoEmbeddedPrefix("T11/A", "class");

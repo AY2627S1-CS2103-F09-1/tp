@@ -17,6 +17,7 @@ import seedu.address.model.person.Person;
 public class ViewAttendanceCommand extends Command {
 
     public static final String COMMAND_WORD = "viewA";
+    public static final String COMMAND_ALIAS = "va";
     public static final String MESSAGE_USAGE = COMMAND_WORD
             + ": Displays all attendance records for a student.\n"
             + "Parameters: /name NAME /class CLASS\n"

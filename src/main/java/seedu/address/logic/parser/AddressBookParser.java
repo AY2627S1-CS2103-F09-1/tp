@@ -58,8 +58,9 @@ public class AddressBookParser {
 
     /**
      * Maps each command word, in lower case, to the parser of its arguments. The commands that take no
-     * arguments ignore them, except {@code clear}, which rejects them because it deletes all contacts. Two
-     * command words must not differ only in case, as the lookup ignores case.
+     * arguments ignore them, except {@code clear}, which rejects them because it deletes all contacts. Some
+     * commands also have a shorter alias, which is mapped to the same kind of parser. Two command words or
+     * aliases must not differ only in case, as the lookup ignores case.
      */
     private static final Map<String, Parser<? extends Command>> COMMAND_PARSERS = Map.ofEntries(
             entry(AddCommand.COMMAND_WORD, new AddCommandParser()),
@@ -72,12 +73,17 @@ public class AddressBookParser {
             entry(ExitCommand.COMMAND_WORD, arguments -> new ExitCommand()),
             entry(HelpCommand.COMMAND_WORD, arguments -> new HelpCommand()),
             entry(AttendanceCommand.COMMAND_WORD, new AttendanceCommandParser()),
+            entry(AttendanceCommand.COMMAND_ALIAS, new AttendanceCommandParser()),
             entry(ViewAttendanceCommand.COMMAND_WORD, new ViewAttendanceCommandParser()),
+            entry(ViewAttendanceCommand.COMMAND_ALIAS, new ViewAttendanceCommandParser()),
             entry(ImportCommand.COMMAND_WORD, new ImportCommandParser()),
             entry(GradeCommand.COMMAND_WORD, new GradeCommandParser()),
             entry(ViewGradeCommand.COMMAND_WORD, new ViewGradeCommandParser()),
+            entry(ViewGradeCommand.COMMAND_ALIAS, new ViewGradeCommandParser()),
             entry(DeleteAttendanceCommand.COMMAND_WORD, new DeleteAttendanceCommandParser()),
-            entry(DeleteGradeCommand.COMMAND_WORD, new DeleteGradeCommandParser())
+            entry(DeleteAttendanceCommand.COMMAND_ALIAS, new DeleteAttendanceCommandParser()),
+            entry(DeleteGradeCommand.COMMAND_WORD, new DeleteGradeCommandParser()),
+            entry(DeleteGradeCommand.COMMAND_ALIAS, new DeleteGradeCommandParser())
     );
 
     private static Map.Entry<String, Parser<? extends Command>> entry(String commandWord,
