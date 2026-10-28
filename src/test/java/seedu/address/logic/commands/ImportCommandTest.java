@@ -173,9 +173,9 @@ public class ImportCommandTest {
 
     @Test
     public void execute_fileLargerThanLimit_reportsFileTooLarge() throws IOException, ParseException {
-        // BVA: file size one byte above maximum (smallest file in rejected partition)
+        // BVA: file size of one byte above maximum (smallest file in rejected partition)
         Path csv = tempDir.resolve("students.csv");
-        Files.write(csv, new byte[ImportCommand.MAX_FILE_SIZE_BYTES + 1]);
+        Files.writeString(csv, validCsvWithSize(ImportCommand.MAX_FILE_SIZE_BYTES + 1));
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
         ModelManager model = new ModelManager();
 
@@ -186,8 +186,19 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_moreRowsThanLimit_reportsTooManyRowsAndImportsNothing()
-            throws IOException, ParseException {
+    public void execute_fileAtSizeLimit_importsContact() throws IOException, CommandException, ParseException {
+        // Valid size boundary in a positive test, with every other input valid
+        Path csv = tempDir.resolve("students.csv");
+        Files.writeString(csv, validCsvWithSize(ImportCommand.MAX_FILE_SIZE_BYTES));
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_moreRowsThanLimit_reportsTooManyRowsAndImportsNothing() throws IOException, ParseException {
         // BVA: MAX_ROWS + 1 (first value in rejected row-count partition)
         Path csv = writeCsv(csvWithRows(ImportCommand.MAX_ROWS + 1));
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
@@ -222,17 +233,6 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_missingFileWithInvalidExtension_reportsFileNotFound() throws ParseException {
-        // Both rules are violated; this regression test fixes the specified error-precedence contract.
-        Path txt = tempDir.resolve("missing.txt");
-        ImportCommand command = new ImportCommandParser().parse(txt.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
-
-        assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, txt), exception.getMessage());
-    }
-
-    @Test
     public void execute_missingFile_reportsFileNotFound() throws ParseException {
         Path csv = tempDir.resolve("missing.csv");
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
@@ -240,6 +240,17 @@ public class ImportCommandTest {
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
 
         assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, csv), exception.getMessage());
+    }
+
+    @Test
+    public void execute_missingFileWithInvalidExtension_reportsFileNotFound() throws ParseException {
+        // Combine invalid inputs only after each is covered alone, with all other inputs valid
+        Path txt = tempDir.resolve("missing.txt");
+        ImportCommand command = new ImportCommandParser().parse(txt.toString());
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
+
+        assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, txt), exception.getMessage());
     }
 
     @Test
@@ -351,6 +362,13 @@ public class ImportCommandTest {
             csv.append("Alice,C").append(i).append('\n');
         }
         return csv.toString();
+    }
+
+    /** Returns otherwise valid ASCII CSV content with exactly {@code byteCount} bytes. */
+    private static String validCsvWithSize(int byteCount) {
+        String prefix = "name,class\n";
+        String suffix = "Alice,A1\n";
+        return prefix + " ".repeat(byteCount - prefix.length() - suffix.length()) + suffix;
     }
 
     private Path writeCsv(String content) throws IOException {
