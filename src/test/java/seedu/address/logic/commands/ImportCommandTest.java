@@ -1,14 +1,31 @@
 package seedu.address.logic.commands;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.io.InputStream;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -274,6 +291,34 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_unreadableRegularFile_reportsImportFailure() throws Exception {
+        Path csv = writeCsv("name,class\nAlice,A1\n");
+        try (AutoCloseable ignored = makeUnreadable(csv)) {
+            Assumptions.assumeFalse(Files.isReadable(csv), "File system does not enforce unreadable test files");
+            ImportCommand command = new ImportCommandParser().parse(csv.toString());
+
+            CommandException exception = assertThrows(CommandException.class, () ->
+                    command.execute(new ModelManager()));
+
+            assertEquals(String.format(ImportCommand.MESSAGE_FAILURE, csv), exception.getMessage());
+        }
+    }
+
+    @Test
+    public void readFile_ioError_reportsImportFailure() throws ReflectiveOperationException, IOException {
+        Path directory = Files.createDirectory(tempDir.resolve("unreadable.csv"));
+        ImportCommand command = new ImportCommand(directory.toString());
+        Method readFile = ImportCommand.class.getDeclaredMethod("readFile", Path.class);
+        readFile.setAccessible(true);
+
+        InvocationTargetException exception = assertThrows(InvocationTargetException.class, () ->
+                readFile.invoke(command, directory));
+        CommandException cause = assertInstanceOf(CommandException.class, exception.getCause());
+
+        assertEquals(String.format(ImportCommand.MESSAGE_FAILURE, directory), cause.getMessage());
+    }
+
+    @Test
     public void execute_invalidHeader_reportsHeaderError() throws IOException, ParseException {
         Path csv = writeCsv("name,email\nAlice,alice@example.com\n");
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
@@ -341,6 +386,31 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void resolvePath_relativePathFromJar_resolvesAgainstJarDirectory() throws Exception {
+        Path jar = tempDir.resolve("classmates.jar");
+        String className = ImportCommand.class.getName();
+        String classEntry = className.replace('.', '/') + ".class";
+        try (InputStream classBytes = ImportCommand.class.getClassLoader().getResourceAsStream(classEntry);
+                JarOutputStream jarOutput = new JarOutputStream(Files.newOutputStream(jar))) {
+            jarOutput.putNextEntry(new JarEntry(classEntry));
+            classBytes.transferTo(jarOutput);
+            jarOutput.closeEntry();
+        }
+
+        try (URLClassLoader jarClassLoader = new ImportCommandJarClassLoader(
+                jar.toUri().toURL(), ImportCommand.class.getClassLoader(), className)) {
+            Class<?> jarImportCommand = Class.forName(className, true, jarClassLoader);
+            Object command = jarImportCommand.getConstructor(String.class).newInstance("students.csv");
+            Method resolvePath = jarImportCommand.getDeclaredMethod("resolvePath", String.class);
+            resolvePath.setAccessible(true);
+
+            Path resolvedPath = (Path) resolvePath.invoke(command, "students.csv");
+
+            assertEquals(tempDir.resolve("students.csv"), resolvedPath);
+        }
+    }
+
+    @Test
     public void equals_variousCommands_returnsExpected() {
         ImportCommand command = new ImportCommand("students.csv");
         ImportCommand sameCommand = new ImportCommand("students.csv");
@@ -374,5 +444,59 @@ public class ImportCommandTest {
     private Path writeCsv(String content) throws IOException {
         Path csv = tempDir.resolve("students.csv");
         return Files.writeString(csv, content);
+    }
+
+    /** Makes {@code file} unreadable and returns an action that restores its original permissions. */
+    private static AutoCloseable makeUnreadable(Path file) throws IOException {
+        PosixFileAttributeView posixView = Files.getFileAttributeView(file, PosixFileAttributeView.class);
+        if (posixView != null) {
+            Set<PosixFilePermission> originalPermissions = posixView.readAttributes().permissions();
+            posixView.setPermissions(Set.of());
+            return () -> posixView.setPermissions(originalPermissions);
+        }
+
+        AclFileAttributeView aclView = Files.getFileAttributeView(file, AclFileAttributeView.class);
+        if (aclView != null) {
+            List<AclEntry> originalAcl = aclView.getAcl();
+            AclEntry denyRead = AclEntry.newBuilder()
+                    .setType(AclEntryType.DENY)
+                    .setPrincipal(Files.getOwner(file))
+                    .setPermissions(AclEntryPermission.READ_DATA)
+                    .build();
+            List<AclEntry> unreadableAcl = new ArrayList<>();
+            unreadableAcl.add(denyRead);
+            unreadableAcl.addAll(originalAcl);
+            aclView.setAcl(unreadableAcl);
+            return () -> aclView.setAcl(originalAcl);
+        }
+
+        return () -> { };
+    }
+
+    /** Loads only {@link ImportCommand} from the supplied JAR and delegates all its dependencies. */
+    private static class ImportCommandJarClassLoader extends URLClassLoader {
+        private final String importCommandClassName;
+
+        ImportCommandJarClassLoader(URL jarUrl, ClassLoader parent, String importCommandClassName) {
+            super(new URL[]{jarUrl}, parent);
+            this.importCommandClassName = importCommandClassName;
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (!name.equals(importCommandClassName)) {
+                return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+                Class<?> loadedClass = findLoadedClass(name);
+                if (loadedClass == null) {
+                    loadedClass = findClass(name);
+                }
+                if (resolve) {
+                    resolveClass(loadedClass);
+                }
+                return loadedClass;
+            }
+        }
     }
 }

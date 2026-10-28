@@ -47,6 +47,24 @@ public class DeleteAttendanceCommandTest {
     }
 
     @Test
+    public void deleteAttendance_personDoesNotRemoveRecord_throwsAssertionError() {
+        Person personThatKeepsAttendance = new Person(ALICE_WITH_ATTENDANCE.getName(),
+                ALICE_WITH_ATTENDANCE.getClassName(), ALICE_WITH_ATTENDANCE.getEmail(),
+                ALICE_WITH_ATTENDANCE.getTags(), ALICE_WITH_ATTENDANCE.getAttendanceRecords(),
+                ALICE_WITH_ATTENDANCE.getGradeRecords()) {
+            @Override
+            public Person withoutAttendance(Attendance attendance) {
+                return this;
+            }
+        };
+        Model modelWithFaultyPerson = new ModelManager();
+        modelWithFaultyPerson.addPerson(personThatKeepsAttendance);
+
+        assertThrows(AssertionError.class, () -> DeleteAttendanceCommand.deleteAttendance(
+                modelWithFaultyPerson, personThatKeepsAttendance, DATE));
+    }
+
+    @Test
     public void deleteAttendance_existingRecord_removesRecordAndShowsStoredDetails() throws CommandException {
         CommandResult result = DeleteAttendanceCommand.deleteAttendance(model, ALICE_WITH_ATTENDANCE, DATE);
 

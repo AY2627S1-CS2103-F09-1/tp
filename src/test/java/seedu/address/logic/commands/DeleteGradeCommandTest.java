@@ -14,6 +14,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Grade;
 import seedu.address.model.person.Person;
 
 /** Contains tests for the shared grade-deletion behavior. */
@@ -40,6 +41,23 @@ public class DeleteGradeCommandTest {
     public void deleteGrade_personNotInModel_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
                 DeleteGradeCommand.deleteGrade(new ModelManager(), ALICE_WITH_GRADES, "Quiz 1"));
+    }
+
+    @Test
+    public void deleteGrade_personDoesNotRemoveGrade_throwsAssertionError() {
+        Person personThatKeepsGrade = new Person(ALICE_WITH_GRADES.getName(),
+                ALICE_WITH_GRADES.getClassName(), ALICE_WITH_GRADES.getEmail(), ALICE_WITH_GRADES.getTags(),
+                ALICE_WITH_GRADES.getAttendanceRecords(), ALICE_WITH_GRADES.getGradeRecords()) {
+            @Override
+            public Person withoutGrade(Grade grade) {
+                return this;
+            }
+        };
+        Model modelWithFaultyPerson = new ModelManager();
+        modelWithFaultyPerson.addPerson(personThatKeepsGrade);
+
+        assertThrows(AssertionError.class, () ->
+                DeleteGradeCommand.deleteGrade(modelWithFaultyPerson, personThatKeepsGrade, "Quiz 1"));
     }
 
     @Test
