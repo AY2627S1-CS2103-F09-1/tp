@@ -35,7 +35,7 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName(), validPerson.getClassName()),
                 expectedModel);
     }
 
@@ -70,7 +70,7 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName(), validPerson.getClassName()),
                 expectedModel);
     }
 
@@ -103,7 +103,8 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(samePersonInOtherClass);
 
         assertCommandSuccess(new AddCommand(samePersonInOtherClass), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName()),
+                String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName(),
+                        samePersonInOtherClass.getClassName()),
                 expectedModel);
     }
 

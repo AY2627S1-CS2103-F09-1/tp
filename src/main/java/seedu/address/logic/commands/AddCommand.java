@@ -30,7 +30,7 @@ public class AddCommand extends Command {
             + PREFIX_CLASS + " A1 "
             + PREFIX_EMAIL + " johnd@example.com";
 
-    public static final String MESSAGE_SUCCESS = "%1$s added to contacts";
+    public static final String MESSAGE_SUCCESS = "%1$s in class %2$s added to contacts";
     public static final String MESSAGE_DUPLICATE_PERSON = "%1$s already exists in class %2$s";
 
     private static final Logger logger = LogsCenter.getLogger(AddCommand.class);
@@ -59,7 +59,7 @@ public class AddCommand extends Command {
         assert model.hasPerson(toAdd) : "The contact must be in the model after it is added";
 
         logger.info("Added contact: " + toAdd.getName() + " in " + toAdd.getClassName());
-        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd.getName()));
+        return new CommandResult(String.format(MESSAGE_SUCCESS, toAdd.getName(), toAdd.getClassName()));
     }
 
     @Override
