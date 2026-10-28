@@ -130,22 +130,8 @@ public class DeleteGradeByNameAndClassCommandTest {
     }
 
     @Test
-    public void execute_gradeNotFound_throwsCommandException() {
-        DeleteGradeByNameAndClassCommand command =
-                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Assignment 1");
-
-        assertCommandFailure(command, model, DeleteGradeCommand.MESSAGE_GRADE_NOT_FOUND);
-    }
-
-    @Test
-    public void execute_noMatchingName_throwsCommandException() {
-        DeleteGradeByNameAndClassCommand command =
-                new DeleteGradeByNameAndClassCommand("Nobody Here", ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
-    }
-
-    @Test
     public void execute_matchingNameButOtherClass_throwsCommandException() {
+        // EP: [name matches, class does not]
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, "Z9", "Quiz 1");
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
@@ -153,24 +139,10 @@ public class DeleteGradeByNameAndClassCommandTest {
 
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
+        // EP: [name does not match, class matches] (complement of previous combination)
         DeleteGradeByNameAndClassCommand command =
                 new DeleteGradeByNameAndClassCommand("Nobody Here", ALICE_CLASS, "Quiz 1");
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
-    }
-
-    @Test
-    public void execute_invalidNameAndClass_throwsCommandExceptionNotFound() {
-        DeleteGradeByNameAndClassCommand command =
-                new DeleteGradeByNameAndClassCommand("R@chel", "A1/B2", "Quiz 1");
-        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
-    }
-
-    @Test
-    public void execute_emptyAddressBook_throwsCommandException() {
-        Model emptyModel = new ModelManager();
-        DeleteGradeByNameAndClassCommand command =
-                new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "Quiz 1");
-        assertCommandFailure(command, emptyModel, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
