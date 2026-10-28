@@ -7,8 +7,10 @@ import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -27,6 +29,8 @@ public class ViewGradeCommand extends Command {
     public static final String MESSAGE_NO_GRADES = "No grades recorded.";
     public static final String MESSAGE_SUCCESS = "Here are the grades for %s from class %s\n%s";
 
+    private static final Logger logger = LogsCenter.getLogger(ViewGradeCommand.class);
+
     private final String name;
     private final String className;
 
@@ -44,7 +48,11 @@ public class ViewGradeCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         Person student = model.findPerson(name, className)
-                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.info("Could not find student " + name + " in class " + className
+                        + " when viewing grades");
+                    return new CommandException(MESSAGE_CONTACT_NOT_FOUND);
+                });
 
         List<Grade> gradeRecords = new ArrayList<>(student.getGradeRecords());
         Collections.reverse(gradeRecords);
@@ -52,6 +60,8 @@ public class ViewGradeCommand extends Command {
         if (grades.isEmpty()) {
             grades = MESSAGE_NO_GRADES;
         }
+
+        logger.info("Displayed grades for " + student.getName() + " in class " + student.getClassName());
 
         return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), grades));
     }

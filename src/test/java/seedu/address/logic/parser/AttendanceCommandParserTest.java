@@ -6,6 +6,7 @@ import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import java.time.LocalDate;
 
@@ -20,6 +21,11 @@ import seedu.address.model.person.Attendance;
 public class AttendanceCommandParserTest {
 
     private final AttendanceCommandParser parser = new AttendanceCommandParser();
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
 
     @Test
     public void parse_unknownParameter_failure() {

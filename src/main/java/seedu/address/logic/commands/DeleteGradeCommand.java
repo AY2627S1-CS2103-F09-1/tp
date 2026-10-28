@@ -53,8 +53,8 @@ public abstract class DeleteGradeCommand extends Command {
                 .filter(record -> record.hasAssessmentName(assessmentName))
                 .findFirst()
                 .orElseThrow(() -> {
-                    logger.info("No grade found for " + person.getName() + " in " + person.getClassName()
-                            + " for assessment " + assessmentName);
+                    logger.info("Rejected deletion: no grade for assessment " + assessmentName
+                            + " of " + person.getName());
                     return new CommandException(MESSAGE_GRADE_NOT_FOUND);
                 });
 

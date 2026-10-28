@@ -4,7 +4,9 @@ import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.util.List;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -17,6 +19,8 @@ import seedu.address.model.person.Person;
  * Records a grade for the person identified using their displayed index.
  */
 public class GradeByIndexCommand extends GradeCommand {
+
+    private static final Logger logger = LogsCenter.getLogger(GradeByIndexCommand.class);
 
     private final Index targetIndex;
     private final Grade grade;
@@ -35,6 +39,8 @@ public class GradeByIndexCommand extends GradeCommand {
         requireNonNull(model);
         List<Person> displayedPeople = model.getFilteredPersonList();
         if (targetIndex.getZeroBased() >= displayedPeople.size()) {
+            logger.info("Rejected an index outside the displayed list: " + targetIndex.getOneBased()
+                    + " (list size: " + displayedPeople.size() + ")");
             throw new CommandException(Messages.getInvalidDisplayedIndexMessage(displayedPeople.size()));
         }
         return recordGrade(model, displayedPeople.get(targetIndex.getZeroBased()), grade);

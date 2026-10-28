@@ -5,8 +5,10 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.util.Comparator;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -24,6 +26,8 @@ public class ViewAttendanceCommand extends Command {
             + "Example: " + COMMAND_WORD + " /name John Tan /class A1";
     public static final String MESSAGE_NO_ATTENDANCE = "No attendance records.";
     public static final String MESSAGE_SUCCESS = "Here is the attendance for %s from class %s\n%s";
+
+    private static final Logger logger = LogsCenter.getLogger(ViewAttendanceCommand.class);
 
     private final String name;
     private final String className;
@@ -43,7 +47,11 @@ public class ViewAttendanceCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         Person student = model.findPerson(name, className)
-                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.info("Could not find student " + name + " in class " + className
+                        + " when viewing attendance");
+                    return new CommandException(MESSAGE_CONTACT_NOT_FOUND);
+                });
 
         String attendance = student.getAttendanceRecords().stream()
                 .sorted(Comparator.comparing(Attendance::getDate).reversed())
@@ -52,6 +60,9 @@ public class ViewAttendanceCommand extends Command {
         if (attendance.isEmpty()) {
             attendance = MESSAGE_NO_ATTENDANCE;
         }
+
+        logger.info("Displayed attendance history for " + student.getName()
+            + " in class " + student.getClassName());
 
         return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), attendance));
     }

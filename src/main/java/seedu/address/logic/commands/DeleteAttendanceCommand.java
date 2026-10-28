@@ -53,8 +53,8 @@ public abstract class DeleteAttendanceCommand extends Command {
                 .filter(record -> record.getDate().equals(date))
                 .findFirst()
                 .orElseThrow(() -> {
-                    logger.info("No attendance record found for " + person.getName() + " in "
-                            + person.getClassName() + " on " + Attendance.formatDate(date));
+                    logger.info("Rejected deletion: no attendance record for " + person.getName()
+                            + " on " + Attendance.formatDate(date));
                     return new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND);
                 });
 
