@@ -41,6 +41,9 @@ public abstract class DeleteAttendanceCommand extends Command {
     protected static CommandResult deleteAttendance(Model model, Person person, LocalDate date)
             throws CommandException {
         requireAllNonNull(model, person, date);
+        assert model.getAddressBook().getPersonList().contains(person)
+                : "The contact whose attendance is deleted must be in the model";
+
         Attendance attendance = person.getAttendanceRecords().stream()
                 .filter(record -> record.getDate().equals(date))
                 .findFirst()
@@ -51,6 +54,9 @@ public abstract class DeleteAttendanceCommand extends Command {
                 .noneMatch(record -> record.getDate().equals(date)) : "Attendance record was not removed";
 
         model.setPerson(person, personWithoutAttendance);
+        assert model.getAddressBook().getPersonList().contains(personWithoutAttendance)
+                : "The contact without the attendance record must be in the model";
+
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 attendance.getStatus(), person.getName(), Attendance.formatDate(attendance.getDate())));
     }

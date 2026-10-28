@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 
 import seedu.address.logic.commands.ImportCommand;
@@ -12,6 +13,7 @@ public class ImportCommandParser implements Parser<ImportCommand> {
 
     @Override
     public ImportCommand parse(String args) throws ParseException {
+        requireNonNull(args);
         String filePath = args.trim();
         if (filePath.isEmpty()) {
             throw new ParseException("Specify file path");

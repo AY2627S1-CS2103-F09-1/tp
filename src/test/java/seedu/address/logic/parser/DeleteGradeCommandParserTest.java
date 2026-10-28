@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_ASSESSMENT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
@@ -23,6 +24,11 @@ public class DeleteGradeCommandParserTest {
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteGradeCommand.MESSAGE_USAGE);
 
     private final DeleteGradeCommandParser parser = new DeleteGradeCommandParser();
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
 
     @Test
     public void parse_validIndex_success() {

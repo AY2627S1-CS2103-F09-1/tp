@@ -22,6 +22,7 @@ import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
+import seedu.address.model.person.Person;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -62,6 +63,21 @@ public class DeleteGradeByIndexCommandTest {
         String expectedMessage = String.format(DeleteGradeCommand.MESSAGE_SUCCESS,
                 "90.5", "Quiz 1", ALICE.getName(), ALICE.getClassName());
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_modelDoesNotStoreChangedContact_throwsAssertionError() {
+        Model modelThatKeepsContacts = new ModelManager(model.getAddressBook(), new UserPrefs()) {
+            @Override
+            public void setPerson(Person target, Person editedPerson) {
+                // Intentionally does nothing, to simulate a model that fails to store the changed contact
+            }
+        };
+
+        DeleteGradeByIndexCommand command =
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 1");
+
+        assertThrows(AssertionError.class, () -> command.execute(modelThatKeepsContacts));
     }
 
     @Test

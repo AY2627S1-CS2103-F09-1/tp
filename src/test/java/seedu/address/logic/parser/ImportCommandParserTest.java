@@ -12,6 +12,13 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public class ImportCommandParserTest {
 
     @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        ImportCommandParser parser = new ImportCommandParser();
+
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
+
+    @Test
     public void parse_missingPath_throwsParseException() {
         ImportCommandParser parser = new ImportCommandParser();
         ParseException exception = assertThrows(ParseException.class, () -> parser.parse("   "));

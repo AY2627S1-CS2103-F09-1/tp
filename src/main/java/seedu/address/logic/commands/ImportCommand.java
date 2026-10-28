@@ -85,6 +85,8 @@ public class ImportCommand extends Command {
         for (Person person : persons.reversed()) {
             model.addPerson(person);
         }
+        assert persons.stream().allMatch(model::hasPerson)
+                : "Every imported contact must be in the model";
         return new CommandResult(String.format(MESSAGE_SUCCESS, persons.size(), filePath));
     }
 

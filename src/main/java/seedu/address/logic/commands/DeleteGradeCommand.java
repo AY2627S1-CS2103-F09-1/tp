@@ -34,12 +34,16 @@ public abstract class DeleteGradeCommand extends Command {
 
     /**
      * Deletes the grade for {@code assessmentName} from {@code person} and returns a success result.
+     * {@code person} must be in {@code model}.
      *
      * @throws CommandException If the person has no grade for the assessment or the grade cannot be removed.
      */
     protected static CommandResult deleteGrade(Model model, Person person, String assessmentName)
             throws CommandException {
         requireAllNonNull(model, person, assessmentName);
+        assert model.getAddressBook().getPersonList().contains(person)
+                : "The contact whose grade is deleted must be in the model";
+
         Grade grade = person.getGradeRecords().stream()
                 .filter(record -> record.hasAssessmentName(assessmentName))
                 .findFirst()
@@ -50,6 +54,9 @@ public abstract class DeleteGradeCommand extends Command {
                 .noneMatch(record -> record.isSameAssessment(grade)) : "Grade was not removed";
 
         model.setPerson(person, personWithoutGrade);
+        assert model.getAddressBook().getPersonList().contains(personWithoutGrade)
+                : "The contact without the grade must be in the model";
+
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 grade.getScore().stripTrailingZeros().toPlainString(), grade.getAssessmentName(),
                 person.getName(), person.getClassName()));

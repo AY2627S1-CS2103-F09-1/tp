@@ -19,6 +19,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.ImportCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
+import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
 public class ImportCommandTest {
@@ -36,6 +37,19 @@ public class ImportCommandTest {
         ImportCommand command = new ImportCommand("students.csv");
 
         assertThrows(NullPointerException.class, () -> command.execute(null));
+    }
+
+    @Test
+    public void execute_modelDoesNotStoreContacts_throwsAssertionError() throws IOException {
+        Path csv = writeCsv("name,class\nAlice,A1\n");
+        ModelManager modelThatDropsContacts = new ModelManager() {
+            @Override
+            public void addPerson(Person person) {
+                // Intentionally does nothing to simulate a model that fails to store an imported contact
+            }
+        };
+
+        assertThrows(AssertionError.class, () -> new ImportCommand(csv.toString()).execute(modelThatDropsContacts));
     }
 
     @Test

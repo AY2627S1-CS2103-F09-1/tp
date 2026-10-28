@@ -27,6 +27,7 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Attendance;
+import seedu.address.model.person.Person;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -59,6 +60,21 @@ public class DeleteAttendanceByIndexCommandTest {
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
                 "absent", ALICE.getName(), Attendance.formatDate(DATE));
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
+    }
+
+    @Test
+    public void execute_modelDoesNotStoreChangedContact_throwsAssertionError() {
+        Model modelThatKeepsContacts = new ModelManager(model.getAddressBook(), new UserPrefs()) {
+            @Override
+            public void setPerson(Person target, Person editedPerson) {
+                // Intentionally does nothing, to simulate a model that fails to store the changed contact
+            }
+        };
+
+        DeleteAttendanceByIndexCommand command =
+                new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
+
+        assertThrows(AssertionError.class, () -> command.execute(modelThatKeepsContacts));
     }
 
     @Test
