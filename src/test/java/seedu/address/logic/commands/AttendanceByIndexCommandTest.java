@@ -215,4 +215,18 @@ public class AttendanceByIndexCommandTest {
         assertEquals(expected, command.toString());
     }
 
+    @Test
+    public void execute_validAttendance_recordIsPresentInModel() throws Exception {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+
+        AttendanceByIndexCommand command =
+            new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.PRESENT);
+
+        command.execute(model);
+
+        Person updatedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertTrue(updatedPerson.hasAttendanceOn(date));
+        assertEquals(Attendance.Status.PRESENT, updatedPerson.getAttendanceOn(date).orElseThrow().getStatus());
+    }
+
 }

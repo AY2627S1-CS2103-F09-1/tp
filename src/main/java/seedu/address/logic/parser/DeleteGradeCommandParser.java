@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static java.util.Objects.requireNonNull;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_ASSESSMENT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
@@ -28,6 +29,7 @@ public class DeleteGradeCommandParser implements Parser<DeleteGradeCommand> {
 
     @Override
     public DeleteGradeCommand parse(String args) throws ParseException {
+        requireNonNull(args);
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_ASSESSMENT);
         ParserUtil.requireNoStuckPrefixes(args);

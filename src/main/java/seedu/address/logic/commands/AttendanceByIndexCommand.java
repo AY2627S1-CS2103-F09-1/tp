@@ -5,7 +5,9 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -18,6 +20,8 @@ import seedu.address.model.person.Person;
  * Records the attendance of the person identified using their displayed index.
  */
 public class AttendanceByIndexCommand extends AttendanceCommand {
+
+    private static final Logger logger = LogsCenter.getLogger(AttendanceByIndexCommand.class);
 
     private final Index targetIndex;
     private final LocalDate date;
@@ -39,6 +43,8 @@ public class AttendanceByIndexCommand extends AttendanceCommand {
         requireNotInFuture(date);
         List<Person> displayedPeople = model.getFilteredPersonList();
         if (targetIndex.getZeroBased() >= displayedPeople.size()) {
+            logger.info("Rejected an index outside the displayed list: " + targetIndex.getOneBased()
+                    + " (list size: " + displayedPeople.size() + ")");
             throw new CommandException(Messages.getInvalidDisplayedIndexMessage(displayedPeople.size()));
         }
         return recordAttendance(model, displayedPeople.get(targetIndex.getZeroBased()), date, status);

@@ -33,7 +33,7 @@ import seedu.address.model.tag.Tag;
 /**
  * Contains utility methods used for parsing strings in the various *Parser classes.
  */
-public class ParserUtil {
+public final class ParserUtil {
 
     public static final String MESSAGE_INVALID_INDEX = "Index must be a positive integer.";
     public static final String MESSAGE_INVALID_DATE = "Invalid date format. Please use the format DD-MM-YYYY.";
@@ -79,12 +79,16 @@ public class ParserUtil {
     /** Passed to {@code String#split} so that empty entries at the end, such as in "1,3,", are kept. */
     private static final int KEEP_TRAILING_EMPTY_ENTRIES = -1;
 
+    private ParserUtil() {
+    }
+
     /**
      * Parses {@code oneBasedIndex} into an {@code Index} and returns it. Leading and trailing whitespaces will be
      * trimmed.
      * @throws ParseException if the specified index is invalid (not a non-zero unsigned integer).
      */
     public static Index parseIndex(String oneBasedIndex) throws ParseException {
+        requireNonNull(oneBasedIndex);
         String trimmedIndex = oneBasedIndex.trim();
         if (!StringUtil.isNonZeroUnsignedInteger(trimmedIndex)) {
             throw new ParseException(MESSAGE_INVALID_INDEX);
