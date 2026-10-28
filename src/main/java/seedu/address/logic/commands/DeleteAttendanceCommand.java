@@ -6,7 +6,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
 import java.time.LocalDate;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Attendance;
@@ -33,8 +35,11 @@ public abstract class DeleteAttendanceCommand extends Command {
             "Attendance of %1$s for %2$s on %3$s has been deleted";
     public static final String MESSAGE_ATTENDANCE_NOT_FOUND = "Attendance for this date not found";
 
+    private static final Logger logger = LogsCenter.getLogger(DeleteAttendanceCommand.class);
+
     /**
      * Deletes the attendance record for {@code date} from {@code person} and returns a success result.
+     * {@code person} must be in {@code model}.
      *
      * @throws CommandException If the person has no attendance record for the date or the record cannot be removed.
      */
@@ -47,7 +52,11 @@ public abstract class DeleteAttendanceCommand extends Command {
         Attendance attendance = person.getAttendanceRecords().stream()
                 .filter(record -> record.getDate().equals(date))
                 .findFirst()
-                .orElseThrow(() -> new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.info("No attendance record found for " + person.getName() + " in "
+                            + person.getClassName() + " on " + Attendance.formatDate(date));
+                    return new CommandException(MESSAGE_ATTENDANCE_NOT_FOUND);
+                });
 
         Person personWithoutAttendance = person.withoutAttendance(attendance);
         assert personWithoutAttendance.getAttendanceRecords().stream()
@@ -57,6 +66,8 @@ public abstract class DeleteAttendanceCommand extends Command {
         assert model.getAddressBook().getPersonList().contains(personWithoutAttendance)
                 : "The contact without the attendance record must be in the model";
 
+        logger.info("Deleted attendance record for " + person.getName() + " in " + person.getClassName()
+                + " on " + Attendance.formatDate(date));
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 attendance.getStatus(), person.getName(), Attendance.formatDate(attendance.getDate())));
     }

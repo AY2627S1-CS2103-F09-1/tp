@@ -5,6 +5,9 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_ASSESSMENT;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 
+import java.util.logging.Logger;
+
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Grade;
@@ -32,6 +35,8 @@ public abstract class DeleteGradeCommand extends Command {
             "Grade of %s for %s for student %s in class %s has been deleted";
     public static final String MESSAGE_GRADE_NOT_FOUND = "Grade for this assessment not found";
 
+    private static final Logger logger = LogsCenter.getLogger(DeleteGradeCommand.class);
+
     /**
      * Deletes the grade for {@code assessmentName} from {@code person} and returns a success result.
      * {@code person} must be in {@code model}.
@@ -47,7 +52,11 @@ public abstract class DeleteGradeCommand extends Command {
         Grade grade = person.getGradeRecords().stream()
                 .filter(record -> record.hasAssessmentName(assessmentName))
                 .findFirst()
-                .orElseThrow(() -> new CommandException(MESSAGE_GRADE_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.info("No grade found for " + person.getName() + " in " + person.getClassName()
+                            + " for assessment " + assessmentName);
+                    return new CommandException(MESSAGE_GRADE_NOT_FOUND);
+                });
 
         Person personWithoutGrade = person.withoutGrade(grade);
         assert personWithoutGrade.getGradeRecords().stream()
@@ -57,6 +66,8 @@ public abstract class DeleteGradeCommand extends Command {
         assert model.getAddressBook().getPersonList().contains(personWithoutGrade)
                 : "The contact without the grade must be in the model";
 
+        logger.info("Deleted grade for " + person.getName() + " in " + person.getClassName()
+                + " for assessment " + grade.getAssessmentName());
         return new CommandResult(String.format(MESSAGE_SUCCESS,
                 grade.getScore().stripTrailingZeros().toPlainString(), grade.getAssessmentName(),
                 person.getName(), person.getClassName()));

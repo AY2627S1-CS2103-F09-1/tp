@@ -5,7 +5,9 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.time.LocalDate;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -15,6 +17,8 @@ import seedu.address.model.person.Person;
  * Deletes an attendance record from the person identified by name and class.
  */
 public class DeleteAttendanceByNameAndClassCommand extends DeleteAttendanceCommand {
+
+    private static final Logger logger = LogsCenter.getLogger(DeleteAttendanceByNameAndClassCommand.class);
 
     private final String name;
     private final String className;
@@ -34,7 +38,10 @@ public class DeleteAttendanceByNameAndClassCommand extends DeleteAttendanceComma
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
         Person person = model.findPerson(name, className)
-                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.info("No contact found for name: " + name + ", class: " + className);
+                    return new CommandException(MESSAGE_CONTACT_NOT_FOUND);
+                });
         return deleteAttendance(model, person, date);
     }
 
