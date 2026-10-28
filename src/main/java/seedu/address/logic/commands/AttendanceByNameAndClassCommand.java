@@ -5,7 +5,9 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
 
 import java.time.LocalDate;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
@@ -16,6 +18,8 @@ import seedu.address.model.person.Person;
  * Records the attendance of the person identified by name and class.
  */
 public class AttendanceByNameAndClassCommand extends AttendanceCommand {
+
+    private static final Logger logger = LogsCenter.getLogger(AttendanceByNameAndClassCommand.class);
 
     private final String name;
     private final String className;
@@ -40,7 +44,10 @@ public class AttendanceByNameAndClassCommand extends AttendanceCommand {
         requireNonNull(model);
         requireNotInFuture(date);
         Person person = model.findPerson(name, className)
-                .orElseThrow(() -> new CommandException(MESSAGE_CONTACT_NOT_FOUND));
+                .orElseThrow(() -> {
+                    logger.info("No contact found for name: " + name + ", class: " + className);
+                    return new CommandException(MESSAGE_CONTACT_NOT_FOUND);
+                });
         return recordAttendance(model, person, date, status);
     }
 

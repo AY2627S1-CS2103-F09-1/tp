@@ -7,6 +7,7 @@ import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.ViewGradeCommandParser.MESSAGE_UNKNOWN_PARAMETER;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import org.junit.jupiter.api.Test;
 
@@ -15,6 +16,11 @@ import seedu.address.logic.commands.ViewGradeCommand;
 public class ViewGradeCommandParserTest {
 
     private final ViewGradeCommandParser parser = new ViewGradeCommandParser();
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
 
     @Test
     public void parse_validArguments_success() {

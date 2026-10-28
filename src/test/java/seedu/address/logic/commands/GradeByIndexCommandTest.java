@@ -119,6 +119,14 @@ public class GradeByIndexCommandTest {
     }
 
     @Test
+    public void execute_validGrade_gradeIsPresentInModel() throws Exception {
+        new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE).execute(model);
+
+        Person updatedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertTrue(updatedPerson.hasGradeFor(GRADE));
+    }
+
+    @Test
     public void equals_variousCommands_followsEqualityContract() {
         GradeByIndexCommand command = new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE);
 

@@ -5,7 +5,9 @@ import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.core.index.Index;
 import seedu.address.commons.util.ToStringBuilder;
 import seedu.address.logic.Messages;
@@ -17,6 +19,8 @@ import seedu.address.model.person.Person;
  * Deletes an attendance record from the person identified using their displayed index.
  */
 public class DeleteAttendanceByIndexCommand extends DeleteAttendanceCommand {
+
+    private static final Logger logger = LogsCenter.getLogger(DeleteAttendanceByIndexCommand.class);
 
     private final Index targetIndex;
     private final LocalDate date;
@@ -35,6 +39,8 @@ public class DeleteAttendanceByIndexCommand extends DeleteAttendanceCommand {
         requireNonNull(model);
         List<Person> displayedPeople = model.getFilteredPersonList();
         if (targetIndex.getZeroBased() >= displayedPeople.size()) {
+            logger.info("Rejected an index outside the displayed list: " + targetIndex.getOneBased()
+                    + " (list size: " + displayedPeople.size() + ")");
             throw new CommandException(Messages.getInvalidDisplayedIndexMessage(displayedPeople.size()));
         }
         return deleteAttendance(model, displayedPeople.get(targetIndex.getZeroBased()), date);

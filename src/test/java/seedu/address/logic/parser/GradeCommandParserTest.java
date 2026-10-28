@@ -6,6 +6,7 @@ import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
+import static seedu.address.testutil.Assert.assertThrows;
 
 import java.math.BigDecimal;
 
@@ -20,6 +21,11 @@ import seedu.address.model.person.Grade;
 public class GradeCommandParserTest {
 
     private final GradeCommandParser parser = new GradeCommandParser();
+
+    @Test
+    public void parse_nullArgs_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
 
     @Test
     public void parse_validIndexArguments_success() {
