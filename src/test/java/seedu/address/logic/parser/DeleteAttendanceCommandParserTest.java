@@ -1,5 +1,6 @@
 package seedu.address.logic.parser;
 
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_DATE;
@@ -12,7 +13,6 @@ import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_DATE;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_NONEXISTENT_DATE;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE;
-import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
 import java.time.LocalDate;
@@ -66,24 +66,26 @@ public class DeleteAttendanceCommandParserTest {
 
     @Test
     public void parse_missingNameOrClass_failure() {
+        // Isolate each missing input while keeping other required inputs valid
         assertParseFailure(parser, " /class A1 /date 16-09-2026", MESSAGE_MISSING_NAME);
         assertParseFailure(parser, " /name John Tan /date 16-09-2026", MESSAGE_MISSING_CLASS);
     }
 
     @Test
-    public void parse_invalidIndexOrMixedForms_failure() {
+    public void parse_mixedIdentificationForms_failure() {
         assertParseFailure(parser, "1 /name John Tan /class A1 /date 16-09-2026", MESSAGE_INVALID_FORMAT);
     }
 
     @Test
     public void parse_indexNotPositiveInteger_failure() {
+        // Pair each invalid index with a valid date
         assertParseFailure(parser, "0 /date 16-09-2026", MESSAGE_INVALID_INDEX);
         assertParseFailure(parser, "abc /date 16-09-2026", MESSAGE_INVALID_INDEX);
         assertParseFailure(parser, "99999999999 /date 16-09-2026", MESSAGE_INVALID_INDEX);
     }
 
     @Test
-    public void parse_missingIndexAndName_failure() {
+    public void parse_missingIdentifier_failure() {
         assertParseFailure(parser, " /date 16-09-2026", MESSAGE_INVALID_FORMAT);
     }
 
@@ -97,6 +99,7 @@ public class DeleteAttendanceCommandParserTest {
 
     @Test
     public void parse_invalidDate_failure() {
+        // Pair each invalid date with a valid index
         assertParseFailure(parser, "1 /date 31-02-2026",
                 String.format(MESSAGE_NONEXISTENT_DATE, "31-02-2026"));
         assertParseFailure(parser, "1 /date 2026-09-16", MESSAGE_INVALID_DATE);

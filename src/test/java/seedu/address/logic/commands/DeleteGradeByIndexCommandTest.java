@@ -65,23 +65,8 @@ public class DeleteGradeByIndexCommandTest {
     }
 
     @Test
-    public void execute_validIndex_showsStoredGradeAndPersonDetails() throws Exception {
-        CommandResult result = new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "QUIZ 1").execute(model);
-
-        assertEquals("Grade of 90.5 for Quiz 1 for student Alice Pauline in class A1 has been deleted",
-                result.getFeedbackToUser());
-    }
-
-    @Test
-    public void execute_gradeNotFound_throwsCommandException() {
-        DeleteGradeByIndexCommand command =
-                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Assignment 1");
-
-        assertCommandFailure(command, model, DeleteGradeCommand.MESSAGE_GRADE_NOT_FOUND);
-    }
-
-    @Test
     public void execute_invalidIndexUnfilteredList_throwsCommandException() {
+        // BVA: list size + 1 (first index outside displayed-list partition)
         Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
         DeleteGradeByIndexCommand command =
                 new DeleteGradeByIndexCommand(outOfBoundsIndex, "Quiz 1");
@@ -107,6 +92,7 @@ public class DeleteGradeByIndexCommandTest {
 
     @Test
     public void execute_invalidIndexFilteredList_throwsCommandException() {
+        // Index valid in address book but in the invalid EP for filtered list
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
         assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
 

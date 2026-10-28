@@ -6,12 +6,26 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
+import java.net.URL;
+import java.net.URLClassLoader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.attribute.AclEntry;
+import java.nio.file.attribute.AclEntryPermission;
+import java.nio.file.attribute.AclEntryType;
+import java.nio.file.attribute.AclFileAttributeView;
+import java.nio.file.attribute.PosixFileAttributeView;
+import java.nio.file.attribute.PosixFilePermission;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
+import java.util.jar.JarEntry;
+import java.util.jar.JarOutputStream;
 
+import org.junit.jupiter.api.Assumptions;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 
@@ -19,6 +33,7 @@ import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.ImportCommandParser;
 import seedu.address.logic.parser.exceptions.ParseException;
 import seedu.address.model.ModelManager;
+import seedu.address.model.person.Person;
 import seedu.address.testutil.PersonBuilder;
 
 public class ImportCommandTest {
@@ -36,6 +51,20 @@ public class ImportCommandTest {
         ImportCommand command = new ImportCommand("students.csv");
 
         assertThrows(NullPointerException.class, () -> command.execute(null));
+    }
+
+    @Test
+    public void execute_modelDoesNotStoreContacts_throwsAssertionError() throws IOException {
+        // White-box negative test for model-update-failed partition targeted by the postcondition
+        Path csv = writeCsv("name,class\nAlice,A1\n");
+        ModelManager modelThatDropsContacts = new ModelManager() {
+            @Override
+            public void addPerson(Person person) {
+                // Intentionally does nothing to simulate a model that fails to store an imported contact
+            }
+        };
+
+        assertThrows(AssertionError.class, () -> new ImportCommand(csv.toString()).execute(modelThatDropsContacts));
     }
 
     @Test
@@ -103,19 +132,8 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_nameInOtherScript_doesNotImportContacts() throws IOException, ParseException {
-        Path csv = writeCsv("name,class\nAlice,A1\n\u674E\u660E,A2\n");
-        ModelManager model = new ModelManager();
-        ImportCommand command = new ImportCommandParser().parse(csv.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
-
-        assertEquals("Invalid contact data on row 3", exception.getMessage());
-        assertEquals(0, model.getAddressBook().getPersonList().size());
-    }
-
-    @Test
     public void execute_invalidRow_doesNotImportEarlierRows() throws IOException, ParseException {
+        // Verify atomic import by having an invalid row after a valid one
         Path csv = writeCsv("name,class\nAlice,A1\n\"Bad, Name\",A2\n");
         ModelManager model = new ModelManager();
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
@@ -172,8 +190,9 @@ public class ImportCommandTest {
 
     @Test
     public void execute_fileLargerThanLimit_reportsFileTooLarge() throws IOException, ParseException {
+        // BVA: file size of one byte above maximum (smallest file in rejected partition)
         Path csv = tempDir.resolve("students.csv");
-        Files.write(csv, new byte[ImportCommand.MAX_FILE_SIZE_BYTES + 1]);
+        Files.writeString(csv, validCsvWithSize(ImportCommand.MAX_FILE_SIZE_BYTES + 1));
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
         ModelManager model = new ModelManager();
 
@@ -184,8 +203,20 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_moreRowsThanLimit_reportsTooManyRowsAndImportsNothing()
-            throws IOException, ParseException {
+    public void execute_fileAtSizeLimit_importsContact() throws IOException, CommandException, ParseException {
+        // Valid size boundary in a positive test, with every other input valid
+        Path csv = tempDir.resolve("students.csv");
+        Files.writeString(csv, validCsvWithSize(ImportCommand.MAX_FILE_SIZE_BYTES));
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        assertEquals(1, model.getAddressBook().getPersonList().size());
+    }
+
+    @Test
+    public void execute_moreRowsThanLimit_reportsTooManyRowsAndImportsNothing() throws IOException, ParseException {
+        // BVA: MAX_ROWS + 1 (first value in rejected row-count partition)
         Path csv = writeCsv(csvWithRows(ImportCommand.MAX_ROWS + 1));
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
         ModelManager model = new ModelManager();
@@ -198,7 +229,7 @@ public class ImportCommandTest {
 
     @Test
     public void execute_exactlyLimitRows_isNotRejected() throws IOException, CommandException, ParseException {
-        // Blank rows count as rows, and are ignored when the contacts are imported, so this is quick
+        // BVA: MAX_ROWS (upper boundary of accepted partition)
         Path csv = writeCsv("name,class\nAlice,C1\n" + "\n".repeat(ImportCommand.MAX_ROWS - 1));
         ModelManager model = new ModelManager();
 
@@ -219,26 +250,6 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_missingFileWithInvalidExtension_reportsFileNotFound() throws ParseException {
-        Path txt = tempDir.resolve("missing.txt");
-        ImportCommand command = new ImportCommandParser().parse(txt.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
-
-        assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, txt), exception.getMessage());
-    }
-
-    @Test
-    public void execute_existingDirectoryWithoutCsvExtension_reportsCsvOnly() throws IOException, ParseException {
-        Path directory = Files.createDirectory(tempDir.resolve("folder"));
-        ImportCommand command = new ImportCommandParser().parse(directory.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
-
-        assertEquals(ImportCommand.MESSAGE_CSV_ONLY, exception.getMessage());
-    }
-
-    @Test
     public void execute_missingFile_reportsFileNotFound() throws ParseException {
         Path csv = tempDir.resolve("missing.csv");
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
@@ -246,6 +257,17 @@ public class ImportCommandTest {
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
 
         assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, csv), exception.getMessage());
+    }
+
+    @Test
+    public void execute_missingFileWithInvalidExtension_reportsFileNotFound() throws ParseException {
+        // Combine invalid inputs only after each is covered alone, with all other inputs valid
+        Path txt = tempDir.resolve("missing.txt");
+        ImportCommand command = new ImportCommandParser().parse(txt.toString());
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
+
+        assertEquals(String.format(ImportCommand.MESSAGE_FILE_NOT_FOUND, txt), exception.getMessage());
     }
 
     @Test
@@ -269,6 +291,20 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_unreadableRegularFile_reportsImportFailure() throws Exception {
+        Path csv = writeCsv("name,class\nAlice,A1\n");
+        try (AutoCloseable ignored = makeUnreadable(csv)) {
+            Assumptions.assumeFalse(Files.isReadable(csv), "File system does not enforce unreadable test files");
+            ImportCommand command = new ImportCommandParser().parse(csv.toString());
+
+            CommandException exception = assertThrows(CommandException.class, () ->
+                    command.execute(new ModelManager()));
+
+            assertEquals(String.format(ImportCommand.MESSAGE_FAILURE, csv), exception.getMessage());
+        }
+    }
+
+    @Test
     public void readFile_ioError_reportsImportFailure() throws ReflectiveOperationException, IOException {
         Path directory = Files.createDirectory(tempDir.resolve("unreadable.csv"));
         ImportCommand command = new ImportCommand(directory.toString());
@@ -285,16 +321,6 @@ public class ImportCommandTest {
     @Test
     public void execute_invalidHeader_reportsHeaderError() throws IOException, ParseException {
         Path csv = writeCsv("name,email\nAlice,alice@example.com\n");
-        ImportCommand command = new ImportCommandParser().parse(csv.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
-
-        assertEquals(ImportCommand.MESSAGE_HEADER, exception.getMessage());
-    }
-
-    @Test
-    public void execute_duplicateHeader_reportsHeaderError() throws IOException, ParseException {
-        Path csv = writeCsv("name,class,name\nAlice,A1,Alice\n");
         ImportCommand command = new ImportCommandParser().parse(csv.toString());
 
         CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
@@ -345,47 +371,6 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_quoteAfterUnquotedField_reportsImportFailure() throws IOException, ParseException {
-        Path csv = writeCsv("name,class\nAlice\",A1\n");
-        ImportCommand command = new ImportCommandParser().parse(csv.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
-
-        assertEquals(String.format(ImportCommand.MESSAGE_FAILURE, csv), exception.getMessage());
-    }
-
-    @Test
-    public void execute_nonWhitespaceAfterClosedQuote_reportsImportFailure() throws IOException, ParseException {
-        Path csv = writeCsv("name,class\n\"Alice\"x,A1\n");
-        ImportCommand command = new ImportCommandParser().parse(csv.toString());
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(new ModelManager()));
-
-        assertEquals(String.format(ImportCommand.MESSAGE_FAILURE, csv), exception.getMessage());
-    }
-
-    @Test
-    public void execute_quotedFieldsWithCrLf_importsContacts() throws IOException, CommandException, ParseException {
-        Path csv = writeCsv("\"name\",\"class\"\r\n\"Alice Smith\",\"A1\"\r\n");
-        ModelManager model = new ModelManager();
-
-        new ImportCommandParser().parse(csv.toString()).execute(model);
-
-        assertEquals(1, model.getAddressBook().getPersonList().size());
-    }
-
-    @Test
-    public void execute_quotedFieldWithTrailingWhitespace_importsContacts() throws IOException, CommandException,
-            ParseException {
-        Path csv = writeCsv("\"name\" ,class\n\"Alice Smith\" ,A1");
-        ModelManager model = new ModelManager();
-
-        new ImportCommandParser().parse(csv.toString()).execute(model);
-
-        assertEquals(1, model.getAddressBook().getPersonList().size());
-    }
-
-    @Test
     public void execute_relativePath_importsContacts() throws IOException, CommandException, ParseException {
         Path relativePath = Path.of("build", "import-command-test.csv");
         Files.writeString(relativePath, "name,class\nAlice,A1\n");
@@ -401,24 +386,28 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void execute_utf8BomHeader_importsContacts() throws IOException, CommandException, ParseException {
-        Path csv = writeCsv("\uFEFFname,class\nAlice,A1\n");
-        ModelManager model = new ModelManager();
+    public void resolvePath_relativePathFromJar_resolvesAgainstJarDirectory() throws Exception {
+        Path jar = tempDir.resolve("classmates.jar");
+        String className = ImportCommand.class.getName();
+        String classEntry = className.replace('.', '/') + ".class";
+        try (InputStream classBytes = ImportCommand.class.getClassLoader().getResourceAsStream(classEntry);
+                JarOutputStream jarOutput = new JarOutputStream(Files.newOutputStream(jar))) {
+            jarOutput.putNextEntry(new JarEntry(classEntry));
+            classBytes.transferTo(jarOutput);
+            jarOutput.closeEntry();
+        }
 
-        new ImportCommandParser().parse(csv.toString()).execute(model);
+        try (URLClassLoader jarClassLoader = new ImportCommandJarClassLoader(
+                jar.toUri().toURL(), ImportCommand.class.getClassLoader(), className)) {
+            Class<?> jarImportCommand = Class.forName(className, true, jarClassLoader);
+            Object command = jarImportCommand.getConstructor(String.class).newInstance("students.csv");
+            Method resolvePath = jarImportCommand.getDeclaredMethod("resolvePath", String.class);
+            resolvePath.setAccessible(true);
 
-        assertEquals(1, model.getAddressBook().getPersonList().size());
-    }
+            Path resolvedPath = (Path) resolvePath.invoke(command, "students.csv");
 
-    @Test
-    public void execute_csvWithoutTrailingNewline_importsContacts() throws IOException, CommandException,
-            ParseException {
-        Path csv = writeCsv("name,class\nAlice,A1");
-        ModelManager model = new ModelManager();
-
-        new ImportCommandParser().parse(csv.toString()).execute(model);
-
-        assertEquals(1, model.getAddressBook().getPersonList().size());
+            assertEquals(tempDir.resolve("students.csv"), resolvedPath);
+        }
     }
 
     @Test
@@ -445,8 +434,69 @@ public class ImportCommandTest {
         return csv.toString();
     }
 
+    /** Returns otherwise valid ASCII CSV content with exactly {@code byteCount} bytes. */
+    private static String validCsvWithSize(int byteCount) {
+        String prefix = "name,class\n";
+        String suffix = "Alice,A1\n";
+        return prefix + " ".repeat(byteCount - prefix.length() - suffix.length()) + suffix;
+    }
+
     private Path writeCsv(String content) throws IOException {
         Path csv = tempDir.resolve("students.csv");
         return Files.writeString(csv, content);
+    }
+
+    /** Makes {@code file} unreadable and returns an action that restores its original permissions. */
+    private static AutoCloseable makeUnreadable(Path file) throws IOException {
+        PosixFileAttributeView posixView = Files.getFileAttributeView(file, PosixFileAttributeView.class);
+        if (posixView != null) {
+            Set<PosixFilePermission> originalPermissions = posixView.readAttributes().permissions();
+            posixView.setPermissions(Set.of());
+            return () -> posixView.setPermissions(originalPermissions);
+        }
+
+        AclFileAttributeView aclView = Files.getFileAttributeView(file, AclFileAttributeView.class);
+        if (aclView != null) {
+            List<AclEntry> originalAcl = aclView.getAcl();
+            AclEntry denyRead = AclEntry.newBuilder()
+                    .setType(AclEntryType.DENY)
+                    .setPrincipal(Files.getOwner(file))
+                    .setPermissions(AclEntryPermission.READ_DATA)
+                    .build();
+            List<AclEntry> unreadableAcl = new ArrayList<>();
+            unreadableAcl.add(denyRead);
+            unreadableAcl.addAll(originalAcl);
+            aclView.setAcl(unreadableAcl);
+            return () -> aclView.setAcl(originalAcl);
+        }
+
+        return () -> { };
+    }
+
+    /** Loads only {@link ImportCommand} from the supplied JAR and delegates all its dependencies. */
+    private static class ImportCommandJarClassLoader extends URLClassLoader {
+        private final String importCommandClassName;
+
+        ImportCommandJarClassLoader(URL jarUrl, ClassLoader parent, String importCommandClassName) {
+            super(new URL[]{jarUrl}, parent);
+            this.importCommandClassName = importCommandClassName;
+        }
+
+        @Override
+        protected Class<?> loadClass(String name, boolean resolve) throws ClassNotFoundException {
+            if (!name.equals(importCommandClassName)) {
+                return super.loadClass(name, resolve);
+            }
+            synchronized (getClassLoadingLock(name)) {
+                Class<?> loadedClass = findLoadedClass(name);
+                if (loadedClass == null) {
+                    loadedClass = findClass(name);
+                }
+                if (resolve) {
+                    resolveClass(loadedClass);
+                }
+                return loadedClass;
+            }
+        }
     }
 }

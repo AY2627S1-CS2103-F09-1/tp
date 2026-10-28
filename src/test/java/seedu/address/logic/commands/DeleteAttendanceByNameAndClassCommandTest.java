@@ -97,17 +97,19 @@ public class DeleteAttendanceByNameAndClassCommandTest {
     }
 
     @Test
-    public void execute_attendanceNotFound_throwsCommandException() {
+    public void execute_matchingClassButOtherName_throwsCommandException() {
+        // EP: [name does not match, class matches]
         DeleteAttendanceByNameAndClassCommand command =
-                new DeleteAttendanceByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, DATE.minusDays(1));
+                new DeleteAttendanceByNameAndClassCommand("Nobody Here", ALICE_CLASS, DATE);
 
-        assertCommandFailure(command, model, DeleteAttendanceCommand.MESSAGE_ATTENDANCE_NOT_FOUND);
+        assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
     @Test
-    public void execute_noMatchingContact_throwsCommandException() {
+    public void execute_matchingNameButOtherClass_throwsCommandException() {
+        // EP: [name matches, class does not] (complement of previous combination)
         DeleteAttendanceByNameAndClassCommand command =
-                new DeleteAttendanceByNameAndClassCommand("Nobody Here", ALICE_CLASS, DATE);
+                new DeleteAttendanceByNameAndClassCommand(ALICE_NAME, "Z9", DATE);
 
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }

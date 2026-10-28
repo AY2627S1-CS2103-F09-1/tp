@@ -12,7 +12,9 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.Logger;
 
+import seedu.address.commons.core.LogsCenter;
 import seedu.address.commons.util.CsvParser;
 import seedu.address.commons.util.FileUtil;
 import seedu.address.logic.commands.exceptions.CommandException;
@@ -57,6 +59,7 @@ public class ImportCommand extends Command {
     public static final String MESSAGE_TOO_MANY_ROWS = "File has too many rows. It can have at most "
             + MAX_ROWS + " rows";
 
+    private static final Logger logger = LogsCenter.getLogger(ImportCommand.class);
     private static final String CSV_EXTENSION = ".csv";
 
     private final String filePath;
@@ -74,18 +77,26 @@ public class ImportCommand extends Command {
     public CommandResult execute(Model model) throws CommandException {
         requireNonNull(model);
 
-        Path path = resolvePath(filePath);
-        validatePath(path);
-        String content = readFile(path).strip(); // read file and ignore leading and trailing whitespace
-        CsvParser.ParsedCsv csv = parseCsv(content);
-        requireRowCountWithinLimit(csv);
+        try {
+            Path path = resolvePath(filePath);
+            validatePath(path);
+            String content = readFile(path).strip(); // read file and ignore leading and trailing whitespace
+            CsvParser.ParsedCsv csv = parseCsv(content);
+            requireRowCountWithinLimit(csv);
 
-        List<Person> persons = parsePersons(csv, model);
-        // Each contact is added to the top of the list, so add the last row first to keep the file order
-        for (Person person : persons.reversed()) {
-            model.addPerson(person);
+            List<Person> persons = parsePersons(csv, model);
+            // Each contact is added to the top of the list, so add the last row first to keep the file order
+            for (Person person : persons.reversed()) {
+                model.addPerson(person);
+            }
+            assert persons.stream().allMatch(model::hasPerson)
+                    : "Every imported contact must be in the model";
+            logger.info("Imported " + persons.size() + " contact(s) from " + filePath);
+            return new CommandResult(String.format(MESSAGE_SUCCESS, persons.size(), filePath));
+        } catch (CommandException e) {
+            logger.info("Rejected import from " + filePath + ": " + e.getMessage());
+            throw e;
         }
-        return new CommandResult(String.format(MESSAGE_SUCCESS, persons.size(), filePath));
     }
 
     /**
