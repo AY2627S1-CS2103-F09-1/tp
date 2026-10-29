@@ -114,13 +114,12 @@ The sequence diagram below illustrates the interactions within the `Logic` compo
 
 <box type="info" seamless>
 
-**Note:** The lifeline for `DeleteCommandParser` should end at the destroy marker (X), but due to a limitation of PlantUML, the lifeline continues till the end of diagram.
+**Note:** `DeleteCommandParser` is created when `AddressBookParser` is initialized and exists for the whole duration of the app, so the diagram shows it as an existing participant. See how parsing works below.
 </box>
-
 
 How the `Logic` component works:
 
-1. When `Logic` is called upon to execute a command, `LogicManager` keeps a copy of the address book as it is before the command and passes the command text to an `AddressBookParser` object. This rejects a command that is too long (see [Limits on the size of the input](#limits-on-the-size-of-the-input)), splits the command word from the arguments, replaces every tab and other kind of space in the arguments by a plain space (except in the path of `import`, which can contain them), creates a parser that matches the command word (e.g., `DeleteCommandParser`) and uses it to parse the arguments.
+1. When `Logic` is called upon to execute a command, `LogicManager` keeps a copy of the address book as it is before the command and passes the command text to an `AddressBookParser` object. This rejects a command that is too long (see [Limits on the size of the input](#limits-on-the-size-of-the-input)), splits the command word from the arguments, replaces every tab and other kind of space in the arguments by a plain space (except in the path of `import`, which can contain them), looks up the existing parser for the command word (e.g., `DeleteCommandParser`) and uses it to parse the arguments.
 1. This results in a `Command` object (more precisely, an object of one of its subclasses e.g., `DeleteByIndexCommand`) which is executed by the `LogicManager`.
 1. The command can communicate with the `Model` when it is executed (e.g. to delete a contact).<br>
    Note that although this is shown as a single step in the diagram above for simplicity, the code can require several interactions between the command object and the `Model` to complete the operation. In the `delete 1` example, `DeleteByIndexCommand` first asks the `Model` for the displayed list to find the contact at the index, and then deletes it.
@@ -136,7 +135,8 @@ Here are the other classes in `Logic` (omitted from the class diagram above) tha
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-* When called upon to parse a user command, the `AddressBookParser` class finds the `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) of the command word in a map. The parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`), which the `AddressBookParser` returns as a `Command` object. Command words are matched ignoring case (only the English letters `A-Z` are converted, by `StringUtil#toAsciiLowerCase(String)`), so `LIST` and `viewa` are the commands `list` and `viewA`.
+
+* When called upon to parse a user command, the `AddressBookParser` class finds the `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) of the command word in the static `COMMAND_PARSERS` map. The parser instances in this map are created when `AddressBookParser` is initialized and are reused for commands, rather than constructed by each call to `parseCommand(String)`. The selected parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`), which the `AddressBookParser` returns as a `Command` object. Command words are matched ignoring case (only the English letters `A-Z` are converted, by `StringUtil#toAsciiLowerCase(String)`), so `LIST` and `viewa` are the commands `list` and `viewA`.
 * Some commands also have a shorter alias, which is a `COMMAND_ALIAS` constant of the command class: `att` for `attendance`, `va` for `viewA`, `vg` for `viewG`, `da` for `deleteA` and `dg` for `deleteG`. `AddressBookParser` has a map entry for each alias, with the same kind of parser as for the command word.
 * All `XYZCommandParser` classes implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing. `ExitCommand` and `HelpCommand` take no arguments, so their entries in the map are lambda expressions that ignore the arguments and create the command. `ClearCommand` has a `ClearCommandParser`, because `clear` deletes all contacts and therefore does not ignore extra text (see [Clearing all contacts](#clearing-all-contacts)).
 * Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input, whatever the case of its letters, and stores the values in an `ArgumentMultimap`, which names every repeated prefix in its error message. `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)` rejects a word that looks like a prefix that the command does not accept, and `ParserUtil#requireNoStuckPrefixes(String)` rejects a prefix that is stuck to the text before it (see [Validation of names, classes and assessment names](#validation-of-names-classes-and-assessment-names-feature)). `ListCommandParser` and `ImportCommandParser` do neither, because they take the whole argument as one text, which is a keyword or a file path.
@@ -257,7 +257,7 @@ This section describes some noteworthy details on how certain features are imple
 The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
 
 * `ListCommandParser#parse(String)` takes the whole trimmed argument as one keyword, so a full name or class with spaces is one keyword. If the argument is empty, it creates a `ListCommand` that shows all contacts.
-* `PersonMatchesKeyword` implements `Predicate<Person>`. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the name, class name, or any tag name of the contact. Both are first normalized with `StringUtil#toComparisonKey(String)`, which ignores case and extra spaces and the different ways of typing an accented letter. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. The email is not checked, and the keyword is matched as plain text and not as a regular expression, so symbols such as `.` and `/` are matched as typed.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the name, class name, optional email address or any tag name of the contact. The keyword and each value are first normalized with `StringUtil#toComparisonKey(String)`, which ignores case and extra spaces and the different ways of typing an accented letter. A contact without an email does not match an email keyword. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. The keyword is matched as plain text and not as a regular expression, so symbols such as `.` and `/` are matched as typed.
 * `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with the predicate, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search. It never modifies the address book. With a keyword, the success message shows the number of contacts in the filtered list, and an empty result is not an error.
 
 The contacts that match a keyword are displayed in the same order as in the whole list, from the most recently added to the oldest, because a filter only hides contacts (see [Order of contacts](#order-of-contacts-feature)).
@@ -266,8 +266,8 @@ The contacts that match a keyword are displayed in the same order as in the whol
 
 **Aspect: How a keyword is matched**
 
-* **Alternative 1 (current choice):** Case-insensitive substring match on the name, class and tags.
-  * Pros: Supports partial matches, such as `jo` for `John` or `2103` for `CS2103`, with one simple predicate.
+* **Alternative 1 (current choice):** Case-insensitive substring match on the name, class, email and tags.
+  * Pros: Supports partial matches, such as `jo` for `John`, `2103` for `CS2103` or `example.com` for an email address, with one simple predicate.
   * Cons: A short keyword, such as `a`, matches many contacts.
 * **Alternative 2:** Whole-word match, so that `Han` does not match `Hans`.
   * Pros: More precise results.
@@ -331,11 +331,12 @@ The contacts are displayed from the most recently added to the oldest. The order
 
 #### Implementation
 
-A name, a class name and an assessment name are validated when they are created, so that a value from a command, a CSV file or the data file is held to the same rule. The rules reject only what causes a problem, so that names that real students have are not rejected.
+A name, a class name and an assessment name are validated when they are created, so that a value from a command, a CSV file or the data file is held to the same rule.
 
 * `Name#getConstraintViolation(String)` returns the first problem of a name: it is blank, longer than `Name#MAX_LENGTH` characters, or has a character that is not allowed. `Name#VALIDATION_REGEX` allows a Latin letter followed by any accents, a printable ASCII character other than a comma, and the typographic apostrophes `‘` and `’`. This allows digits and symbols such as `(`, `#` and `/`, and rejects control characters, invisible characters, and letters of other scripts such as Chinese or Cyrillic. The regex is written so that a long invalid name is rejected without backtracking.
-* `StringUtil#toNormalizedForm(String)` converts text to Unicode normalization form C before a name is validated and stored, and `StringUtil#toComparisonKey(String)` converts it to form KC before it is compared. This way, two texts that look the same, such as `é` typed as one character or as `e` followed by an accent, or a full-width `Ａ` and `A`, do not become two names or two assessments.
-* `ClassName#VALIDATION_REGEX` allows letters, digits, spaces and `- . _ / ( )`, and the first character must be a letter or a digit. A class name is ASCII only, as class codes are.
+* `StringUtil#toNormalizedForm(String)` is used to convert names and assessment names to Unicode normalization form C before they are validated and stored. `StringUtil#toComparisonKey(String)` is used to convert names, class names and assessment names to form KC when building their comparison keys. This makes canonically or compatibly equivalent text compare as equal, such as `é` typed as one character or as `e` followed by an accent, as well as a full-width `Ａ` and `A`.
+* `ClassName#VALIDATION_REGEX` validates a class name as entered, before its comparison key is built. It allows ASCII letters, digits, the ordinary space and `- . _ / ( )`, together with their full-width forms; the first character must be a letter or digit in either width. The explicit character set means that other Unicode compatibility characters, such as `Ⓣ` or `⁹`, are rejected even though form KC could convert them to allowed ASCII characters.
+* After validation, the `ClassName` constructor stores the original text and builds a comparison key with `StringUtil#toComparisonKey(String)`. `ClassName#equals(Object)` and `ClassName#matches(String)` use that key, and `Person#isSamePerson(Person)` identifies a duplicate using both the name and class. Consequently, `Ｔ２９` is accepted as a class, compares equal to `T29` and cannot be used to add a second contact with the same name and class.
 * `Grade#getAssessmentNameConstraintViolation(String)` applies the same rule as a name after normalizing it, except that it also allows a comma. A comma is only kept out of a name because it separates the values of a CSV file, and an assessment name is never written to one. `CsvParser` can read a quoted value that contains a comma, but a name that contains one is then rejected, with `Invalid contact data on row N`.
 * `ParserUtil#requireNoEmbeddedPrefix(String, String)` rejects a value that contains a prefix, such as `/class`, that is followed by a space or the end of the value. `ArgumentTokenizer` only reads a prefix that has a space before it, so without this check, `edit 1 /name John/class B` would make `/class B` part of the name without any error. `ParserUtil#parseName(String)`, `ParserUtil#parseClassName(String)` and `ParserUtil#parseAssessmentName(String)` call it, with the prefixes in `CliSyntax#ALL_PREFIXES`. `ParserUtil#requireNoStuckPrefixes(String)` makes the same check for a whole command, such as the `/status` in `attendance 1 /date 16-09-2026/status late`, which would otherwise be reported as a missing status.
 * The check is in `ParserUtil` and not in `Name` or `ClassName`, as the model must not depend on the command syntax. The values that are read from the data file are therefore only checked by the model rules, while `ImportCommand` reads the values of a CSV file with `ParserUtil`, so they are also checked for a missing space.
@@ -807,11 +808,11 @@ The code defends itself against bad input and against its own mistakes in four w
 
 #### Clearing all contacts
 
-* `clear` is the only command without arguments that does not ignore extra text, because it deletes all contacts. `ClearCommandParser#parse(String)` throws a `ParseException` with the usage of `clear` if the arguments are not blank, so a user who types `clear 3`, perhaps expecting to delete one contact, deletes nothing. `AddressBookParser` still creates `HelpCommand` and `ExitCommand` itself and ignores what follows them, as described in the User Guide.
+* `clear` is the only command without arguments that does not ignore extra text, because it deletes all contacts. `ClearCommandParser#parse(String)` throws a `ParseException` with the usage of `clear` if the arguments are not blank, so a user who types `clear 3`, perhaps expecting to delete one contact, deletes nothing. The `COMMAND_PARSERS` entries for `help` and `exit` are reusable lambda parsers that ignore the arguments and create a new `HelpCommand` or `ExitCommand`, as described in the User Guide.
 
 #### Saving and loading data
 
-* `LogicManager#execute(String)` copies the address book before it executes a command. If the address book cannot be saved afterwards, `LogicManager` sets the data of the `Model` back to that copy and throws a `CommandException` that says that the change was undone (`LogicManager#MESSAGE_CHANGE_UNDONE`). Without this, the user would be told that the command failed while the contact was changed on the screen, and the next command that saves would store the change anyway. Only the data is restored. The filter of the displayed list is kept as the command left it.
+* `LogicManager#execute(String)` copies the address book before it executes a command. If the address book cannot be saved afterward, `LogicManager` sets the data of the `Model` back to that copy and throws a `CommandException` that says that the change was undone (`LogicManager#MESSAGE_CHANGE_UNDONE`). Without this, the user would be told that the command failed while the contact was changed on the screen, and the next command that saves would store the change anyway. Only the data is restored. The filter of the displayed list is kept as the command left it.
 * `Person` does not accept two attendance records with the same date, or two grade records for the same assessment (compared ignoring case and extra spaces). The commands already refused a second record, but the constructors did not, so a data file that was edited by hand, or damaged, could create a contact that the commands cannot produce. `JsonAdaptedPerson#toModelType()` reports the `IllegalArgumentException` of the constructor as an `IllegalValueException`, which makes the data file invalid like any other broken rule, so that the rule is written in one place.
 
 #### Unexpected errors
@@ -850,7 +851,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | Priority | As a …                            | I want to …                                                         | So that I can…                                                           |
 |----------|-----------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
 | `* * *`  | TA                                | add new student contacts with name, class and email                 | keep track of who is in each of my classes                               |
-| `* * *`  | TA                                | search for contacts by keyword (e.g. name, class or group)          | find the information I need quickly                                      |
+| `* * *`  | TA                                | search for contacts by keyword (e.g. name, class, email or group)   | find the information I need quickly                                      |
 | `* * *`  | TA setting up a new class         | import my initial students from a CSV file                          | avoid entering every student manually                                    |
 | `* * *`  | TA                                | delete contacts easily                                              | keep my contact list from being cluttered                                |
 | `* * *`  | TA coordinating group assignments | link students belonging to the same group activity together         | answer team-based queries faster                                         |
@@ -922,7 +923,7 @@ The use cases describe what the application does now. Commands with similar inte
 
 **MSS**
 1. User requests to list contacts, giving a keyword.
-2. CM displays the contacts whose name, class or tags contain the keyword, and the number of contacts displayed.
+2. CM displays the contacts whose name, class, email or tags contain the keyword, and the number of contacts displayed.
 
    Use case ends.
 
@@ -1354,7 +1355,10 @@ testers are expected to do more *exploratory* testing.
       Expected: All six contacts are shown, from Alex Yeoh at the top to Roy Balakrishnan at the bottom.
 
    1. Test case: `list friend`<br>
-      Expected: Alex Yeoh and Bernice Yu are shown, as their tags contain `friend`. The status message shows that 2 contacts are listed. A keyword matches part of a name, a class or a tag.
+      Expected: Alex Yeoh and Bernice Yu are shown, as their tags contain `friend`. The status message shows that 2 contacts are listed. A keyword matches part of a name, a class, an email or a tag.
+
+   1. Test case: `list ALEXYEOH@EXAMPLE.COM`<br>
+      Expected: Only Alex Yeoh is shown. Email matching is case-insensitive.
 
    1. Test case: `list yeoh`, followed by `list david`<br>
       Expected: After `list david`, only David Li is shown. The second search covers all contacts, and not only the result of the first search.

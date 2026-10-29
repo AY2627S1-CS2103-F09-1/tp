@@ -35,7 +35,7 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName(), validPerson.getClassName()),
                 expectedModel);
     }
 
@@ -70,7 +70,7 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(validPerson);
 
         assertCommandSuccess(new AddCommand(validPerson), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName()),
+                String.format(AddCommand.MESSAGE_SUCCESS, validPerson.getName(), validPerson.getClassName()),
                 expectedModel);
     }
 
@@ -95,6 +95,16 @@ public class AddCommandIntegrationTest {
     }
 
     @Test
+    public void execute_sameClassInFullWidth_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person duplicatePerson = new PersonBuilder(personInList).withClassName("Ａ１").build();
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
+                duplicatePerson.getClassName());
+
+        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
+    }
+
+    @Test
     public void execute_sameNameDifferentClass_success() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
         Person samePersonInOtherClass = new PersonBuilder(personInList).withClassName(VALID_CLASS_BOB).build();
@@ -103,7 +113,8 @@ public class AddCommandIntegrationTest {
         expectedModel.addPerson(samePersonInOtherClass);
 
         assertCommandSuccess(new AddCommand(samePersonInOtherClass), model,
-                String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName()),
+                String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName(),
+                        samePersonInOtherClass.getClassName()),
                 expectedModel);
     }
 

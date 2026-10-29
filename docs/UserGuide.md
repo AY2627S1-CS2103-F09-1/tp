@@ -48,7 +48,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `viewA /name John Doe /class A1` : Lists the attendance records of `John Doe` in class `A1`.
 
-   * `list John` : Lists the contacts whose name, class or groups contain `John`, which is now only `John Doe`.
+   * `list John` : Lists the contacts whose name, class, email or groups contain `John`, which is now only `John Doe`.
 
    * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
 
@@ -126,13 +126,13 @@ After `list David`:
 
 Besides the errors listed under each command, these errors can appear:
 
-Problem | Message | Commands
---------|---------|---------
-A parameter that the command does not accept is given, such as `/phone` | `Unknown parameter. Use` followed by the parameters that the command accepts and `A word that starts with / is always read as a parameter.`, such as `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.` | All commands that take parameters, except `list` and `import`
-A parameter is given more than once | `Each parameter can only be specified once. Repeated: PARAMETER`, naming each repeated parameter, such as `Repeated: /date, /status` | Same as above
-A parameter is stuck to the text before it, such as the `/score` in `/assessment Quiz/score 90` | `The command contains '/score', which looks like a parameter that is missing a space before it` | `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA` (`add` and `edit` have their own messages below)
-The index is larger than the number of contacts displayed | `The contact index provided is invalid. The displayed list has N contact(s), so the index must be from 1 to N.`, or `The contact index provided is invalid. No contacts are displayed.` if the list is empty | `edit`, `delete`, `grade`, `deleteG`, `attendance`, `deleteA`
-No contact has the given name and class | `Contact not found` | `delete`, `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA`
+| Problem                                                                                         | Message                                                                                                                                                                                                                                                 | Commands                                                                                                                 |
+|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| A parameter that the command does not accept is given, such as `/phone`                         | `Unknown parameter. Use` followed by the parameters that the command accepts and `A word that starts with / is always read as a parameter.`, such as `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.` | All commands that take parameters, except `list` and `import`                                                            |
+| A parameter is given more than once                                                             | `Each parameter can only be specified once. Repeated: PARAMETER`, naming each repeated parameter, such as `Repeated: /date, /status`                                                                                                                    | Same as above                                                                                                            |
+| A parameter is stuck to the text before it, such as the `/score` in `/assessment Quiz/score 90` | `The command contains '/score', which looks like a parameter that is missing a space before it`                                                                                                                                                         | `delete`, `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA` (`add` and `edit` have their own messages below) |
+| The index is larger than the number of contacts displayed                                       | `The contact index provided is invalid. The displayed list has N contact(s), so the index must be from 1 to N.`, or `The contact index provided is invalid. No contacts are displayed.` if the list is empty                                            | `edit`, `delete`, `grade`, `deleteG`, `attendance`, `deleteA`                                                            |
+| No contact has the given name and class                                                         | `Contact not found`                                                                                                                                                                                                                                     | `delete`, `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA`                                                  |
 
 If more than one problem applies, only the first one that is found is shown. Problems with unknown or repeated parameters are always found first.
 
@@ -158,13 +158,13 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
   * Accented letters such as `é`, `ñ` and `ü` are allowed, as in `José Müller` or `Nguyễn Văn An`. Letters of other languages, such as Chinese or Cyrillic letters, are not accepted.
   * Commas are not allowed, because they separate the values in a CSV file.
   * A word that starts with `/` after a space is read as a parameter, so a `/` can be used inside a name, but not at the start of a word.
-* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`. The full-width forms of these characters are also accepted, for example `Ｔ２９`.
 * A name or class cannot contain a parameter name that is stuck to the text before it, such as `John/class A1`, as this is most likely a missing space. The parameter names that are checked are `/name`, `/class`, `/email`, `/tag`, `/group`, `/members`, `/date`, `/status`, `/assessment` and `/score`, in any case.
 * `EMAIL` is optional. If given, it can be at most 254 characters long and must be in the format `local-part@domain`, such as `johnd@example.com`.
   * The local part, before the `@`, can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain, after the `@`, is made up of one or more words separated by periods, as in `example.com`. Each word can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last word must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. Different ways of typing the same letter are also treated as the same, such as `é` typed as one character or as `e` followed by an accent, and a full-width `Ａ` and a normal `A`. The same applies to assessment names.
+* Valid names and classes are compared ignoring case, extra spaces and equivalent Unicode forms. For example, `john  tan` in class `ａ１` is treated as the same contact as `John Tan` in class `A1`. This comparison also treats `é` typed as one character as equivalent to `e` followed by an accent. The same comparison rules apply to assessment names, although each field still has its own rules for which characters are accepted.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -187,6 +187,7 @@ On success, ClassMates shows `NAME added to contacts`.
 Examples:
 * `add /name John Doe /class A1 /email johnd@example.com` adds John Doe in class A1 with an email, and shows `John Doe added to contacts`.
 * `add /name Betsy Crowe /class A2` adds Betsy Crowe in class A2 without an email.
+* If Charlie already exists in class `T29`, `add /name Charlie /class Ｔ２９` is rejected as a duplicate because `Ｔ２９` and `T29` are treated as the same class.
 
 ### Editing a contact: `edit`
 
@@ -234,12 +235,12 @@ Shows a list of all contacts in ClassMates, or only the contacts that match a ke
 Format: `list [KEYWORD]`
 
 * If `KEYWORD` is omitted, all contacts are shown.
-* If `KEYWORD` is given, only the contacts whose name, class or groups contain it are shown, and the message shows how many contacts were listed.
+* If `KEYWORD` is given, only the contacts whose name, class, email or groups contain it are shown, and the message shows how many contacts were listed.
 * The search is case-insensitive; for example, `john` matches `John`.
-* Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
+* Partial matches are included; for example, `jo` matches `John`, `2103` matches the class `CS2103` and `example.com` matches the email `johnd@example.com`.
 * The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the group `friend`.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* The keyword must match within a single name, class or group; for example, it cannot match the end of a name and the start of a class, or run across two groups.
+* The keyword must match within a single name, class, email or group; for example, it cannot match the end of a name and the start of a class, or run across two groups.
 * `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
@@ -247,8 +248,9 @@ Format: `list [KEYWORD]`
 
 Examples:
 * `list` shows all contacts and the message `Listed all contacts.`
-* `list John` shows `John Doe` and any contact in a class or in a group containing `john`, with a message such as `1 contact(s) listed!`
-* `list Group A` shows any contact whose name, class or group contains `Group A`.
+* `list John` shows `John Doe` and any contact whose name, class, email or group contains `john`, with a message such as `1 contact(s) listed!`
+* `list @example.com` shows any contact whose name or email contains `@example.com` as class and group are not permitted to contain `@`.
+* `list Group A` shows any contact whose name, class, email or group contains `Group A`.
 
 ### Deleting a contact: `delete`
 

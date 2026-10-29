@@ -44,6 +44,9 @@ public class ClassNameTest {
         assertFalse(ClassName.isValidClassName(" A1")); // starts with a space
         assertFalse(ClassName.isValidClassName("3É")); // accented letter
         assertFalse(ClassName.isValidClassName("甲班")); // non-English letters
+        assertFalse(ClassName.isValidClassName("Ａ１＆Ｂ２")); // full-width equivalent of a prohibited character
+        assertFalse(ClassName.isValidClassName("Ⓣ29")); // non-full-width compatibility character
+        assertFalse(ClassName.isValidClassName("T2⁹")); // superscript digit
         assertFalse(ClassName.isValidClassName(CLASS_NAME_OVER_MAX_LENGTH)); // too long
 
         // valid class name
@@ -60,6 +63,8 @@ public class ClassNameTest {
         assertTrue(ClassName.isValidClassName("Math (Adv)")); // parentheses
         assertTrue(ClassName.isValidClassName("Sec 3 (Morning)")); // space, digit and parentheses
         assertTrue(ClassName.isValidClassName("Math 101")); // letters, space and digits
+        assertTrue(ClassName.isValidClassName("Ｔ２９")); // full-width letters and digits
+        assertTrue(ClassName.isValidClassName("Ａ－１．２＿Ｂ／Ｃ（Ｄ）")); // full-width allowed symbols
         assertTrue(ClassName.isValidClassName(CLASS_NAME_AT_MAX_LENGTH)); // exactly the maximum length
     }
 
@@ -159,6 +164,9 @@ public class ClassNameTest {
         // different case -> returns true
         assertTrue(new ClassName("A1").equals(new ClassName("a1")));
         assertTrue(className.equals(new ClassName("SEC 3-2")));
+
+        // full-width equivalents -> return true
+        assertTrue(new ClassName("T29").equals(new ClassName("Ｔ２９")));
 
         // repeated and trailing spaces -> returns true
         assertTrue(className.equals(new ClassName("Sec    3-2  ")));
