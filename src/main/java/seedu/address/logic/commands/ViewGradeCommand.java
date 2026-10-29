@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
+import static seedu.address.logic.commands.CommandResult.DisplayTarget.GRADE_HISTORY;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -63,7 +64,9 @@ public class ViewGradeCommand extends Command {
 
         logger.info("Displayed grades for " + student.getName() + " in class " + student.getClassName());
 
-        return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), grades));
+        return new CommandResult(
+                String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), grades),
+                GRADE_HISTORY);
     }
 
     @Override
