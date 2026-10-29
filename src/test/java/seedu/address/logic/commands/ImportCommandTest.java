@@ -239,6 +239,18 @@ public class ImportCommandTest {
     }
 
     @Test
+    public void execute_limitRowsWithBlankRows_isNotRejected() throws IOException, CommandException, ParseException {
+        String csvContent = csvWithRows(ImportCommand.MAX_ROWS)
+            + "\n".repeat(20);
+        Path csv = writeCsv(csvContent);
+        ModelManager model = new ModelManager();
+
+        new ImportCommandParser().parse(csv.toString()).execute(model);
+
+        assertEquals(ImportCommand.MAX_ROWS, model.getFilteredPersonList().size());
+    }
+
+    @Test
     public void execute_invalidExtension_reportsCsvOnly() throws IOException, ParseException {
         Path file = tempDir.resolve("students.txt");
         Files.writeString(file, "name,class\nAlice,A1\n");
