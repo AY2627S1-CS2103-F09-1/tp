@@ -72,7 +72,7 @@ public class AddCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         Person alice = new PersonBuilder().withName("Alice").build();
         Person bob = new PersonBuilder().withName("Bob").build();
         AddCommand addAliceCommand = new AddCommand(alice);
@@ -96,7 +96,7 @@ public class AddCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_addCommand_returnsExpectedFormat() {
         AddCommand addCommand = new AddCommand(ALICE);
         String expected = AddCommand.class.getCanonicalName() + "{toAdd=" + ALICE + "}";
         assertEquals(expected, addCommand.toString());

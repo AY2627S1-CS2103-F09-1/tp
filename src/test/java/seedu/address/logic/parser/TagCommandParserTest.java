@@ -2,8 +2,8 @@ package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.ParserUtil.MESSAGE_DUPLICATE_MEMBER_INDEX;
@@ -171,18 +171,21 @@ public class TagCommandParserTest {
     public void parse_repeatedParameter_failure() {
         // multiple groups
         assertParseFailure(parser, " /group Group B" + GROUP_DESC + MEMBERS_DESC,
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/group"));
 
         // multiple members
-        assertParseFailure(parser, GROUP_DESC + " /members 2" + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, GROUP_DESC + " /members 2" + MEMBERS_DESC,
+                getErrorMessageForDuplicatePrefixes("/members"));
 
         // both repeated
         assertParseFailure(parser, GROUP_DESC + MEMBERS_DESC + GROUP_DESC + MEMBERS_DESC,
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/group", "/members"));
 
         // reported even if one of the values is invalid
-        assertParseFailure(parser, " /group !!" + GROUP_DESC + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, GROUP_DESC + " /members x" + MEMBERS_DESC, MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, " /group !!" + GROUP_DESC + MEMBERS_DESC,
+                getErrorMessageForDuplicatePrefixes("/group"));
+        assertParseFailure(parser, GROUP_DESC + " /members x" + MEMBERS_DESC,
+                getErrorMessageForDuplicatePrefixes("/members"));
     }
 
     @Test

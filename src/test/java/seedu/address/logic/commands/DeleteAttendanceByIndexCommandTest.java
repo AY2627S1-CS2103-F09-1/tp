@@ -10,7 +10,11 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
+import static seedu.address.testutil.TypicalRecords.ALICE_WITH_ATTENDANCE;
+import static seedu.address.testutil.TypicalRecords.DATE;
+import static seedu.address.testutil.TypicalRecords.OTHER_ATTENDANCE;
+import static seedu.address.testutil.TypicalRecords.OTHER_DATE;
+import static seedu.address.testutil.TypicalRecords.getModelWithAliceAttendance;
 
 import java.time.LocalDate;
 
@@ -23,7 +27,6 @@ import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
 import seedu.address.model.person.Attendance;
-import seedu.address.model.person.Person;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -31,19 +34,11 @@ import seedu.address.model.person.Person;
  */
 public class DeleteAttendanceByIndexCommandTest {
 
-    private static final LocalDate DATE = LocalDate.of(2026, 9, 16);
-    private static final LocalDate OTHER_DATE = LocalDate.of(2026, 9, 17);
-    private static final Attendance ATTENDANCE = new Attendance(DATE, Attendance.Status.ABSENT);
-    private static final Attendance OTHER_ATTENDANCE = new Attendance(OTHER_DATE, Attendance.Status.PRESENT);
-
     private Model model;
-    private Person aliceWithAttendance;
 
     @BeforeEach
     public void setUp() {
-        model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        aliceWithAttendance = ALICE.withAttendance(ATTENDANCE).withAttendance(OTHER_ATTENDANCE);
-        model.setPerson(ALICE, aliceWithAttendance);
+        model = getModelWithAliceAttendance();
     }
 
     @Test
@@ -59,7 +54,7 @@ public class DeleteAttendanceByIndexCommandTest {
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
+        expectedModel.setPerson(ALICE_WITH_ATTENDANCE, ALICE.withAttendance(OTHER_ATTENDANCE));
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
                 "absent", ALICE.getName(), Attendance.formatDate(DATE));
@@ -70,9 +65,10 @@ public class DeleteAttendanceByIndexCommandTest {
     public void execute_yearZeroDate_messageShowsYearZero() throws Exception {
         LocalDate yearZero = LocalDate.of(0, 1, 1);
         Attendance yearZeroAttendance = new Attendance(yearZero, Attendance.Status.LATE);
-        model.setPerson(aliceWithAttendance, aliceWithAttendance.withAttendance(yearZeroAttendance));
+        model.setPerson(ALICE_WITH_ATTENDANCE, ALICE_WITH_ATTENDANCE.withAttendance(yearZeroAttendance));
 
-        CommandResult result = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, yearZero).execute(model);
+        CommandResult result = new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON,
+                yearZero).execute(model);
 
         assertEquals("Attendance of late for " + ALICE.getName() + " on 01-01-0000 has been deleted",
                 result.getFeedbackToUser());
@@ -99,7 +95,8 @@ public class DeleteAttendanceByIndexCommandTest {
         Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
         DeleteAttendanceByIndexCommand command = new DeleteAttendanceByIndexCommand(outOfBoundsIndex, DATE);
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -109,7 +106,7 @@ public class DeleteAttendanceByIndexCommandTest {
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE);
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithAttendance, ALICE.withAttendance(OTHER_ATTENDANCE));
+        expectedModel.setPerson(ALICE_WITH_ATTENDANCE, ALICE.withAttendance(OTHER_ATTENDANCE));
         showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
 
         String expectedMessage = String.format(DeleteAttendanceCommand.MESSAGE_SUCCESS,
@@ -125,7 +122,8 @@ public class DeleteAttendanceByIndexCommandTest {
         DeleteAttendanceByIndexCommand command =
                 new DeleteAttendanceByIndexCommand(INDEX_SECOND_PERSON, DATE);
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test

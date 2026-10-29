@@ -18,7 +18,8 @@ import seedu.address.logic.parser.exceptions.ParseException;
 public abstract class NameAndClassCommandParser<T extends Command> implements Parser<T> {
 
     public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_NAME + " or " + PREFIX_CLASS;
+            "Unknown parameter. Use " + PREFIX_NAME + " or " + PREFIX_CLASS
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
     private final String invalidFormatMessage;
 
@@ -41,6 +42,7 @@ public abstract class NameAndClassCommandParser<T extends Command> implements Pa
     @Override
     public T parse(String args) throws ParseException {
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER, PREFIX_NAME, PREFIX_CLASS);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS);

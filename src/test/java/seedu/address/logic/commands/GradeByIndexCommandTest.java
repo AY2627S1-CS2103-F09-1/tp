@@ -85,7 +85,7 @@ public class GradeByIndexCommandTest {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
 
         assertCommandFailure(new GradeByIndexCommand(outOfBoundIndex, GRADE), model,
-                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -94,7 +94,7 @@ public class GradeByIndexCommandTest {
         assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
 
         assertCommandFailure(new GradeByIndexCommand(INDEX_SECOND_PERSON, GRADE), model,
-                Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -103,7 +103,7 @@ public class GradeByIndexCommandTest {
         model.setPerson(person, person.withGrade(new Grade("Assignment 1", BigDecimal.TEN)));
 
         assertCommandFailure(new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE), model,
-                GradeCommand.MESSAGE_DUPLICATE_GRADE);
+                String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
     @Test
@@ -114,7 +114,8 @@ public class GradeByIndexCommandTest {
         GradeByIndexCommand command = new GradeByIndexCommand(INDEX_FIRST_PERSON,
                 new Grade("  ASSIGNMENT   1 ", BigDecimal.ONE));
 
-        assertCommandFailure(command, model, GradeCommand.MESSAGE_DUPLICATE_GRADE);
+        assertCommandFailure(command, model,
+                String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
     @Test

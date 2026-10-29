@@ -34,7 +34,7 @@ public class StorageManagerTest {
     }
 
     @Test
-    public void prefsReadSave() throws Exception {
+    public void prefsReadSave_validPrefs_readsWhatWasSaved() throws Exception {
         /*
          * Note: This is an integration test that verifies the StorageManager is properly wired to the
          * {@link JsonUserPrefsStorage} class.
@@ -48,7 +48,7 @@ public class StorageManagerTest {
     }
 
     @Test
-    public void addressBookReadSave() throws Exception {
+    public void addressBookReadSave_validAddressBook_readsWhatWasSaved() throws Exception {
         /*
          * Note: This is an integration test that verifies the StorageManager is properly wired to the
          * {@link JsonAddressBookStorage} class.
@@ -61,7 +61,7 @@ public class StorageManagerTest {
     }
 
     @Test
-    public void getAddressBookFilePath() {
+    public void getAddressBookFilePath_storageManager_returnsNonNull() {
         assertNotNull(storageManager.getAddressBookFilePath());
     }
 

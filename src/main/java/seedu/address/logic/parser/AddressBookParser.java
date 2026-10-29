@@ -44,7 +44,16 @@ public class AddressBookParser {
     /**
      * Used for initial separation of command word and args.
      */
-    private static final Pattern BASIC_COMMAND_FORMAT = Pattern.compile("(?<commandWord>\\S+)(?<arguments>.*)");
+    private static final Pattern BASIC_COMMAND_FORMAT =
+            Pattern.compile("(?<commandWord>[^\\s\\p{Zs}]+)(?<arguments>.*)");
+
+    /**
+     * Matches the kinds of space, other than the space itself, that can be typed or pasted by mistake: a tab, a
+     * non-breaking space (which is common in text copied from a web page or a document), or a wide space.
+     */
+    private static final Pattern UNUSUAL_SPACES = Pattern.compile("[\\p{Zs}\\t]");
+    private static final Pattern LEADING_OR_TRAILING_SPACES = Pattern.compile("^[\\s\\p{Zs}]+|[\\s\\p{Zs}]+$");
+    private static final Pattern LEADING_SPACES = Pattern.compile("^[\\s\\p{Zs}]+");
     private static final Logger logger = LogsCenter.getLogger(AddressBookParser.class);
 
     /**
@@ -90,13 +99,14 @@ public class AddressBookParser {
         if (userInput.length() > MAX_INPUT_LENGTH) {
             throw new ParseException(MESSAGE_INPUT_TOO_LONG);
         }
-        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(userInput.trim());
+        final Matcher matcher = BASIC_COMMAND_FORMAT.matcher(
+                LEADING_OR_TRAILING_SPACES.matcher(userInput).replaceAll(""));
         if (!matcher.matches()) {
             throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, HelpCommand.MESSAGE_USAGE));
         }
 
         final String commandWord = matcher.group("commandWord");
-        final String arguments = matcher.group("arguments");
+        final String arguments = normalizeSpaces(commandWord, matcher.group("arguments"));
 
         // Note to developers: Change LOG_LEVEL in LogsCenter to enable lower level (i.e., FINE, FINER and lower)
         // log messages such as the one below.
@@ -109,6 +119,21 @@ public class AddressBookParser {
             throw new ParseException(MESSAGE_UNKNOWN_COMMAND);
         }
         return parser.parse(arguments);
+    }
+
+    /**
+     * Returns {@code arguments} with every tab and every other kind of space replaced by a space, so that the
+     * parsers only have to recognize the space. The arguments of {@code import} are the path of a file, whose
+     * name can contain such a character, so only the spaces that separate it from the command word are
+     * replaced.
+     */
+    private static String normalizeSpaces(String commandWord, String arguments) {
+        boolean isImport = StringUtil.toAsciiLowerCase(commandWord)
+                .equals(StringUtil.toAsciiLowerCase(ImportCommand.COMMAND_WORD));
+        if (isImport) {
+            return " " + LEADING_SPACES.matcher(arguments).replaceAll("");
+        }
+        return UNUSUAL_SPACES.matcher(arguments).replaceAll(" ");
     }
 
 }

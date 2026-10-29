@@ -10,9 +10,9 @@ import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 import static seedu.address.testutil.TypicalIndexes.INDEX_SECOND_PERSON;
 import static seedu.address.testutil.TypicalPersons.ALICE;
-import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
-
-import java.math.BigDecimal;
+import static seedu.address.testutil.TypicalRecords.ALICE_WITH_GRADES;
+import static seedu.address.testutil.TypicalRecords.OTHER_GRADE;
+import static seedu.address.testutil.TypicalRecords.getModelWithAliceGrades;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,8 +22,6 @@ import seedu.address.logic.Messages;
 import seedu.address.model.Model;
 import seedu.address.model.ModelManager;
 import seedu.address.model.UserPrefs;
-import seedu.address.model.person.Grade;
-import seedu.address.model.person.Person;
 
 /**
  * Contains integration tests (interaction with the Model) and unit tests for
@@ -31,17 +29,11 @@ import seedu.address.model.person.Person;
  */
 public class DeleteGradeByIndexCommandTest {
 
-    private static final Grade GRADE = new Grade("Quiz 1", new BigDecimal("90.50"));
-    private static final Grade OTHER_GRADE = new Grade("Exam", new BigDecimal("80"));
-
     private Model model;
-    private Person aliceWithGrades;
 
     @BeforeEach
     public void setUp() {
-        model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
-        aliceWithGrades = ALICE.withGrade(GRADE).withGrade(OTHER_GRADE);
-        model.setPerson(ALICE, aliceWithGrades);
+        model = getModelWithAliceGrades();
     }
 
     @Test
@@ -54,7 +46,7 @@ public class DeleteGradeByIndexCommandTest {
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
-                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz,1"));
+                new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 期末"));
         assertThrows(AssertionError.class, () ->
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "   "));
     }
@@ -65,7 +57,7 @@ public class DeleteGradeByIndexCommandTest {
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "quiz   1");
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithGrades, ALICE.withGrade(OTHER_GRADE));
+        expectedModel.setPerson(ALICE_WITH_GRADES, ALICE.withGrade(OTHER_GRADE));
 
         String expectedMessage = String.format(DeleteGradeCommand.MESSAGE_SUCCESS,
                 "90.5", "Quiz 1", ALICE.getName(), ALICE.getClassName());
@@ -94,7 +86,8 @@ public class DeleteGradeByIndexCommandTest {
         DeleteGradeByIndexCommand command =
                 new DeleteGradeByIndexCommand(outOfBoundsIndex, "Quiz 1");
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test
@@ -104,7 +97,7 @@ public class DeleteGradeByIndexCommandTest {
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 1");
 
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(aliceWithGrades, ALICE.withGrade(OTHER_GRADE));
+        expectedModel.setPerson(ALICE_WITH_GRADES, ALICE.withGrade(OTHER_GRADE));
         showPersonAtIndex(expectedModel, INDEX_FIRST_PERSON);
 
         String expectedMessage = String.format(DeleteGradeCommand.MESSAGE_SUCCESS,
@@ -120,7 +113,8 @@ public class DeleteGradeByIndexCommandTest {
         DeleteGradeByIndexCommand command =
                 new DeleteGradeByIndexCommand(INDEX_SECOND_PERSON, "Quiz 1");
 
-        assertCommandFailure(command, model, Messages.MESSAGE_INVALID_PERSON_DISPLAYED_INDEX);
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
     @Test

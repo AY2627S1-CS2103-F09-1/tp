@@ -422,7 +422,7 @@ public class ImportCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         ImportCommand command = new ImportCommand("students.csv");
         ImportCommand sameCommand = new ImportCommand("students.csv");
         ImportCommand differentCommand = new ImportCommand("others.csv");

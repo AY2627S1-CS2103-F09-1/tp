@@ -21,7 +21,7 @@ public class ModelManagerTest {
     private ModelManager modelManager = new ModelManager();
 
     @Test
-    public void constructor() {
+    public void constructor_noArguments_usesDefaults() {
         assertEquals(new UserPrefs(), modelManager.getUserPrefs());
         assertEquals(new GuiSettings(), modelManager.getGuiSettings());
         assertEquals(new AddressBook(), new AddressBook(modelManager.getAddressBook()));
@@ -118,7 +118,7 @@ public class ModelManagerTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousModels_returnsExpected() {
         AddressBook addressBook = new AddressBookBuilder().withPerson(ALICE).withPerson(BENSON).build();
         AddressBook differentAddressBook = new AddressBook();
         UserPrefs userPrefs = new UserPrefs();

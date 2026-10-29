@@ -2,6 +2,8 @@ package seedu.address.logic.commands;
 
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 
+import java.util.Optional;
+
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.model.Model;
 import seedu.address.model.person.Grade;
@@ -21,7 +23,8 @@ public abstract class GradeCommand extends Command {
             + "Example: " + COMMAND_WORD + " 5 /assessment Assignment 1 /score 97";
 
     public static final String MESSAGE_SUCCESS = "Grade of %s recorded for %s for student %s in class %s.";
-    public static final String MESSAGE_DUPLICATE_GRADE = "Grade for this assessment already exists";
+    public static final String MESSAGE_DUPLICATE_GRADE =
+            "%1$s already has a grade of %2$s for %3$s. Use deleteG to remove it first.";
 
     /**
      * Records {@code grade} in {@code person} and returns a success result.
@@ -31,8 +34,11 @@ public abstract class GradeCommand extends Command {
     protected static CommandResult recordGrade(Model model, Person person, Grade grade)
             throws CommandException {
         requireAllNonNull(model, person, grade);
-        if (person.hasGradeFor(grade)) {
-            throw new CommandException(MESSAGE_DUPLICATE_GRADE);
+        Optional<Grade> existingGrade = person.getGradeFor(grade);
+        if (existingGrade.isPresent()) {
+            throw new CommandException(String.format(MESSAGE_DUPLICATE_GRADE, person.getName(),
+                    existingGrade.get().getScore().stripTrailingZeros().toPlainString(),
+                    existingGrade.get().getAssessmentName()));
         }
         model.setPerson(person, person.withGrade(grade));
         return new CommandResult(String.format(MESSAGE_SUCCESS,

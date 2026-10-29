@@ -39,7 +39,7 @@ public class ClearCommandTest {
     }
 
     @Test
-    public void messageUsage_describesCommandWithoutParameters() {
+    public void messageUsage_clearCommand_describesCommandWithoutParameters() {
         assertEquals("clear: Clears all contacts from ClassMates. Nothing can be written after the command word.\n"
                 + "Example: clear", ClearCommand.MESSAGE_USAGE);
     }

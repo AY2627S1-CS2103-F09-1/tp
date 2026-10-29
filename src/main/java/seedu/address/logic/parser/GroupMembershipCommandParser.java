@@ -22,7 +22,8 @@ public abstract class GroupMembershipCommandParser<T extends GroupMembershipComm
     public static final String MESSAGE_MISSING_GROUP = "Missing group name";
     public static final String MESSAGE_MISSING_MEMBERS = "Missing members";
     public static final String MESSAGE_UNKNOWN_PARAMETER =
-            "Unknown parameter. Use " + PREFIX_GROUP + " or " + PREFIX_MEMBERS;
+            "Unknown parameter. Use " + PREFIX_GROUP + " or " + PREFIX_MEMBERS
+            + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
     private final String invalidFormatMessage;
 

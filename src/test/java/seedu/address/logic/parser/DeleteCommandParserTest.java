@@ -1,12 +1,13 @@
 package seedu.address.logic.parser;
 
-import static seedu.address.logic.Messages.MESSAGE_DUPLICATE_PARAMETERS;
 import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
+import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseFailure;
 import static seedu.address.logic.parser.CommandParserTestUtil.assertParseSuccess;
 import static seedu.address.logic.parser.DeleteCommandParser.MESSAGE_UNKNOWN_PARAMETER;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_INVALID_INDEX;
 import static seedu.address.testutil.Assert.assertThrows;
 import static seedu.address.testutil.TypicalIndexes.INDEX_FIRST_PERSON;
 
@@ -39,16 +40,16 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_invalidIndex_throwsParseException() {
-        assertParseFailure(parser, "a", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "0", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "-1", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "1 abc", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "a", MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "0", MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "-1", MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "1 abc", MESSAGE_INVALID_INDEX);
     }
 
     @Test
     public void parse_outOfRangeIndex_throwsParseException() {
-        assertParseFailure(parser, Long.toString(Integer.MAX_VALUE + 1L), MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "9".repeat(1000), MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, Long.toString(Integer.MAX_VALUE + 1L), MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "9".repeat(1000), MESSAGE_INVALID_INDEX);
     }
 
     @Test
@@ -77,7 +78,8 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_prefixesInAnyCase_returnsDeleteByNameAndClassCommand() {
-        assertParseSuccess(parser, " /NAME John Tan /Class A1", new DeleteByNameAndClassCommand("John Tan", "A1"));
+        assertParseSuccess(parser, " /NAME John Tan /Class A1",
+                new DeleteByNameAndClassCommand("John Tan", "A1"));
     }
 
     @Test
@@ -132,10 +134,12 @@ public class DeleteCommandParserTest {
 
     @Test
     public void parse_repeatedParameter_throwsParseException() {
-        assertParseFailure(parser, " /name John Tan /name Mary Lim /class A1", MESSAGE_DUPLICATE_PARAMETERS);
-        assertParseFailure(parser, " /name John Tan /class A1 /class B2", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, " /name John Tan /name Mary Lim /class A1",
+                getErrorMessageForDuplicatePrefixes("/name"));
+        assertParseFailure(parser, " /name John Tan /class A1 /class B2",
+                getErrorMessageForDuplicatePrefixes("/class"));
         assertParseFailure(parser, " /name John Tan /class A1 /name John Tan /class A1",
-                MESSAGE_DUPLICATE_PARAMETERS);
+                getErrorMessageForDuplicatePrefixes("/name", "/class"));
     }
 
     @Test
@@ -154,7 +158,7 @@ public class DeleteCommandParserTest {
         assertParseFailure(parser, " /name John /name Mary /phone 91234567", MESSAGE_UNKNOWN_PARAMETER);
 
         // repeated parameter comes before an index mixed with parameters
-        assertParseFailure(parser, "1 /name John /name Mary", MESSAGE_DUPLICATE_PARAMETERS);
+        assertParseFailure(parser, "1 /name John /name Mary", getErrorMessageForDuplicatePrefixes("/name"));
 
         // an index mixed with parameters comes before a missing parameter
         assertParseFailure(parser, "1 /name John Tan", MESSAGE_INVALID_FORMAT);

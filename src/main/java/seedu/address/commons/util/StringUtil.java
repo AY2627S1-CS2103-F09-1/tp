@@ -62,6 +62,82 @@ public class StringUtil {
     }
 
     /**
+     * Compares two texts in the order that a person expects, which is used to sort labels. The case of letters
+     * is ignored, a run of spaces, hyphens and underscores counts as one space, and a number is compared by
+     * its value, not digit by digit. Texts that are equal under these rules are ordered by their case and by
+     * their characters, so that the order is always the same.
+     *   <br>examples:<pre>
+     *       compareNaturally("Team 2", "Team 10") is negative, as 2 is less than 10
+     *       compareNaturally("Group-A", "Group B") is negative, as A comes before B
+     *       </pre>
+     * @param first cannot be null
+     * @param second cannot be null
+     */
+    public static int compareNaturally(String first, String second) {
+        requireNonNull(first);
+        requireNonNull(second);
+        int result = compareWithNumbersByValue(toNaturalKey(first), toNaturalKey(second));
+        if (result != 0) {
+            return result;
+        }
+        result = String.CASE_INSENSITIVE_ORDER.compare(first, second);
+        return result != 0 ? result : first.compareTo(second);
+    }
+
+    private static String toNaturalKey(String s) {
+        return s.trim().replaceAll("[\\s_-]+", " ").toLowerCase(Locale.ROOT);
+    }
+
+    private static int compareWithNumbersByValue(String first, String second) {
+        int firstIndex = 0;
+        int secondIndex = 0;
+        while (firstIndex < first.length() && secondIndex < second.length()) {
+            char firstChar = first.charAt(firstIndex);
+            char secondChar = second.charAt(secondIndex);
+            if (!isAsciiDigit(firstChar) || !isAsciiDigit(secondChar)) {
+                if (firstChar != secondChar) {
+                    return Character.compare(firstChar, secondChar);
+                }
+                firstIndex++;
+                secondIndex++;
+                continue;
+            }
+            int firstEnd = findEndOfDigits(first, firstIndex);
+            int secondEnd = findEndOfDigits(second, secondIndex);
+            int result = compareNumbers(first.substring(firstIndex, firstEnd),
+                    second.substring(secondIndex, secondEnd));
+            if (result != 0) {
+                return result;
+            }
+            firstIndex = firstEnd;
+            secondIndex = secondEnd;
+        }
+        return Integer.compare(first.length() - firstIndex, second.length() - secondIndex);
+    }
+
+    private static boolean isAsciiDigit(char character) {
+        return character >= '0' && character <= '9';
+    }
+
+    private static int findEndOfDigits(String s, int start) {
+        int end = start;
+        while (end < s.length() && isAsciiDigit(s.charAt(end))) {
+            end++;
+        }
+        return end;
+    }
+
+    /** Compares two numbers written with digits, of any length, by their value. */
+    private static int compareNumbers(String firstDigits, String secondDigits) {
+        String first = firstDigits.replaceFirst("^0+(?=.)", "");
+        String second = secondDigits.replaceFirst("^0+(?=.)", "");
+        if (first.length() != second.length()) {
+            return Integer.compare(first.length(), second.length());
+        }
+        return first.compareTo(second);
+    }
+
+    /**
      * Returns a detailed message of {@code t}, including the stack trace.
      */
     public static String getDetails(Throwable t) {

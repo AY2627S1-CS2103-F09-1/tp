@@ -109,7 +109,8 @@ public class GradeByNameAndClassCommandTest {
         GradeByNameAndClassCommand command = new GradeByNameAndClassCommand(
                 person.getName().toString(), person.getClassName().toString(), GRADE);
 
-        assertCommandFailure(command, model, GradeCommand.MESSAGE_DUPLICATE_GRADE);
+        assertCommandFailure(command, model,
+                String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
     @Test

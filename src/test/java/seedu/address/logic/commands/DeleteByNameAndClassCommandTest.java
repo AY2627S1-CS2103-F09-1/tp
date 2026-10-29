@@ -139,7 +139,7 @@ public class DeleteByNameAndClassCommandTest {
     }
 
     @Test
-    public void equals() {
+    public void equals_variousCommands_returnsExpected() {
         DeleteByNameAndClassCommand deleteAliceCommand = new DeleteByNameAndClassCommand("Alice", "A1");
         DeleteByNameAndClassCommand deleteBobCommand = new DeleteByNameAndClassCommand("Bob", "A1");
         DeleteByNameAndClassCommand deleteAliceOtherClassCommand =
@@ -168,7 +168,7 @@ public class DeleteByNameAndClassCommandTest {
     }
 
     @Test
-    public void toStringMethod() {
+    public void toString_command_returnsExpectedFormat() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("Alice", "A1");
         String expected = DeleteByNameAndClassCommand.class.getCanonicalName()
                 + "{name=Alice, className=A1}";

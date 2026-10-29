@@ -14,10 +14,20 @@ public class Grade {
     public static final int MAX_ASSESSMENT_NAME_LENGTH = 80;
     public static final String MESSAGE_INVALID_ASSESSMENT_NAME = "Assessment name must be 1 to 80 characters "
             + "and can only contain English letters (accented letters are allowed), digits, spaces and the "
-            + "symbols on a standard keyboard, except commas.";
+            + "symbols on a standard keyboard.";
     public static final String MESSAGE_INVALID_SCORE = "Score must be a numerical value (0-100).";
+    public static final int MAX_SCORE_DECIMAL_PLACES = 4;
+    public static final String MESSAGE_TOO_MANY_DECIMAL_PLACES = "Score can have at most "
+            + MAX_SCORE_DECIMAL_PLACES + " decimal places.";
     public static final BigDecimal MIN_SCORE = BigDecimal.ZERO;
     public static final BigDecimal MAX_SCORE = BigDecimal.valueOf(100);
+
+    /*
+     * Allows the same characters as Name.VALIDATION_REGEX, and also commas, which are only kept out of names
+     * because they separate the values in a CSV file.
+     */
+    private static final String ASSESSMENT_NAME_REGEX =
+            "(?:\\p{IsLatin}\\p{M}*+|[\\x20-\\x7E&&[^\\p{IsLatin}]]|[\\u2018\\u2019])++";
 
     private final String assessmentName;
     private final String assessmentKey;
@@ -49,14 +59,14 @@ public class Grade {
 
     /**
      * Returns a constraint violation for the assessment name, if any.
-     * An assessment name can contain the same characters as a {@link Name}.
+     * An assessment name can contain the same characters as a {@link Name}, and also commas.
      */
     public static Optional<String> getAssessmentNameConstraintViolation(String assessmentName) {
         requireNonNull(assessmentName);
         String normalizedAssessmentName = StringUtil.toNormalizedForm(assessmentName);
         boolean isTooLong = normalizedAssessmentName.length() > MAX_ASSESSMENT_NAME_LENGTH;
         if (normalizedAssessmentName.isEmpty() || isTooLong
-                || !normalizedAssessmentName.matches(Name.VALIDATION_REGEX)) {
+                || !normalizedAssessmentName.matches(ASSESSMENT_NAME_REGEX)) {
             return Optional.of(MESSAGE_INVALID_ASSESSMENT_NAME);
         }
         return Optional.empty();
