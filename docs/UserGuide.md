@@ -24,7 +24,8 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar classmates.jar`.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Ui](images/Ui.png)
+   <img src="images/Ui.png" alt="The main window of ClassMates" width="600"><br>
+   The window has a command box at the top, a result box below it that shows the outcome of the last command, the list of contacts, and the location of the data file at the bottom.
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order. The later ones use the contact `John Doe` that the `add` command creates:
@@ -103,10 +104,20 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 Many commands act on one contact. `edit`, `tag` and `untag` choose contacts by `INDEX`, and `viewG` and `viewA` choose a contact by `/name NAME /class CLASS`. `delete`, `grade`, `attendance`, `deleteG` and `deleteA` accept either form, but not both in the same command.
 
-* `INDEX` is the position of the contact in the contact list that is displayed now, so after `list Betsy` it is the position in the results, not in the full list. It must be a positive integer 1, 2, 3, ...
+* `INDEX` is the position of the contact in the contact list that is displayed now, so after `list David` it is the position in the results, not in the full list. It must be a positive integer 1, 2, 3, ...
 * `/name NAME /class CLASS` finds the contact with that name in that class among all contacts, even if only some of them are displayed. Case and extra spaces are ignored; for example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
 * The name and class are not checked against the rules for adding a contact. A value that `add` would reject simply matches no contact.
 * If no contact matches, ClassMates shows `Contact not found`.
+
+For example, David Li is the 4th contact in the list that `list` shows, but the 1st contact in the list that `list David` shows. An index that you type refers to the list that is on the screen at that moment.
+
+After `list`:
+
+<img src="images/DisplayedListFull.png" alt="The list after list, in which David Li is the 4th contact" width="500">
+
+After `list David`:
+
+<img src="images/DisplayedListFiltered.png" alt="The list after list David, in which David Li is the 1st contact" width="500">
 
 ### Errors shared by several commands
 
@@ -211,7 +222,7 @@ Examples:
 * `edit 2 /email newmail@example.com` changes the email of the 2nd contact in the displayed list, and shows a message such as `Alex Yeoh in class A1 has been edited`.
 * `edit 1 /name John Tann /class A2` changes the name and the class of the 1st contact.
 * `edit 4 /email` removes the email of the 4th contact.
-* `list Betsy` followed by `edit 1 /class B1` changes the class of the 1st contact in the results of the `list Betsy` command.
+* `list David` followed by `edit 1 /class B1` changes the class of the 1st contact in the results of the `list David` command.
 
 ### Listing and searching contacts: `list`
 
@@ -258,8 +269,8 @@ The index is not a positive integer, or has other text with it, such as `delete 
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd contact in ClassMates.
-* `list Betsy` followed by `delete 1` deletes the 1st contact in the results of the `list Betsy` command.
-* `list Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list Betsy` command.
+* `list David` followed by `delete 1` deletes the 1st contact in the results of the `list David` command.
+* `list David` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list David` command.
 
 ### Linking contacts to a group: `tag`
 
@@ -294,11 +305,13 @@ One or more of the contacts are already in the group | `One or more contacts are
 
 The entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
 If several indices are repeated or not found, or several contacts are already in the group, all of them are listed in the message, separated by commas.<br>
-On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given.
+On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given. The group is shown as a label on each linked contact, as in the picture below, which shows the result of `tag /group Group A /members 1,2,3`.
+
+<img src="images/TagGroups.png" alt="Group A shown as a label on the first three contacts" width="600">
 
 Examples:
 * `tag /group Group A /members 1,3,5` links the 1st, 3rd and 5th contacts in the displayed list to `Group A`, and shows a message such as `Contacts successfully linked to group Group A: Betsy Crowe (A2), Bernice Yu (A1), David Li (A2)`.
-* `list Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `list Betsy` command to `Team 2`.
+* `list David` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `list David` command to `Team 2`.
 
 ### Removing contacts from a group: `untag`
 
@@ -408,7 +421,7 @@ Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE` or `grade /name N
 * A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, so to change a score, delete the grade with [`deleteG`](#deleting-grades-deleteg) and record it again. Grades for different assessments are separate. Names that differ in more than case and spaces, such as `Quiz 1` and `Quiz1`, are different assessments.
 * Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
 * `/assessment` and `/score` can each be given at most once.
-* The card of a contact in the list shows only its 3 most recent grades, last recorded first, followed by a line such as `+2 older grade(s)` if there are more. Use `viewG` to see all of them.
+* The card of a contact in the list shows only its 3 most recent grades, last recorded first, followed by a line such as `+2 older grade(s)` if there are more, as in the picture in [Recording attendance](#recording-attendance-attendance). Use `viewG` to see all of them.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -430,7 +443,7 @@ On success, ClassMates shows `Grade of SCORE recorded for ASSESSMENT_NAME for st
 
 Examples:
 * `grade 5 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for the 5th contact in the displayed list.
-* `list Betsy` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list Betsy` command.
+* `list David` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list David` command.
 * `grade /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for Alex Yeoh from class A1.
 
 ### Viewing grades: `viewG`
@@ -452,19 +465,13 @@ There is text before the first parameter, such as `viewG John /class A1` | `Inva
 `/name` is missing or has nothing after it | `Command requires a name`
 `/class` is missing or has nothing after it | `Command requires a class`
 
-On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Grade History`, followed by `Here are the grades for NAME from class CLASS` and one line for each grade.
+On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Grade History`, followed by `Here are the grades for NAME from class CLASS` and one line for each grade, as in the picture below.
 
-```
-Grade History
-
-Here are the grades for John Tan from class A1
-Quiz 2: 85
-Quiz 1: 80
-```
+<img src="images/ViewGradePopup.png" alt="The pop-up window of viewG" width="450">
 
 Examples:
-* `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
-* `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+* `viewG /name Alex Yeoh /class A1` shows all grades for Alex Yeoh in class A1, as in the picture above.
+* `viewG /class A1 /name Alex Yeoh` is equivalent; the parameters can be given in either order.
 
 ### Deleting grades: `deleteG`
 
@@ -511,7 +518,11 @@ Format: `attendance INDEX /date DATE /status STATUS` or `attendance /name NAME /
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
 * A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, so to change a status, delete the record with [`deleteA`](#deleting-attendance-deletea) and record it again. Records for different dates are separate.
 * `/name`, `/class`, `/date` and `/status` can each be given at most once.
-* The card of a contact in the list shows only its 3 most recent attendance records, newest date first, followed by a line such as `+2 older record(s)` if there are more. Use `viewA` to see all of them.
+* The card of a contact in the list shows only its 3 most recent attendance records, newest date first, followed by a line such as `+2 older record(s)` if there are more. Use `viewA` to see all of them. A contact without a record shows `Recent attendance: none`.
+
+In the picture below, Alex Yeoh has 5 attendance records and 5 grades, so only the 3 most recent of each are shown, followed by `+2 older record(s)` and `+2 older grade(s)`:
+
+<img src="images/ContactCards.png" alt="Contact cards with recent attendance and grades" width="600">
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -534,7 +545,7 @@ On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, 
 
 Examples:
 * `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
-* `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
+* `list David` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list David` command as late on 16 September 2026.
 * `attendance /name Alex Yeoh /class A1 /date 16-09-2026 /status absent` records Alex Yeoh from class A1 as absent on 16 September 2026.
 
 ### Viewing attendance: `viewA`
@@ -557,21 +568,15 @@ There is text before the first parameter, such as `viewA John /class A1` | `Inva
 `/name` is missing or has nothing after it | `Command requires a name`
 `/class` is missing or has nothing after it | `Command requires a class`
 
-On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Attendance History`, followed by `Here is the attendance for NAME from class CLASS` and one line for each record.
+On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Attendance History`, followed by `Here is the attendance for NAME from class CLASS` and one line for each record, as in the picture below.
 
-```
-Attendance History
-
-Here is the attendance for John Tan from class A1
-16-Sep-2026  absent
-14-Sep-2026  late
-```
+<img src="images/ViewAttendancePopup.png" alt="The pop-up window of viewA" width="450">
 
 If the contact has no records, the lines after the first are replaced by `No attendance records.`
 
 Examples:
-* `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
-* `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+* `viewA /name Alex Yeoh /class A1` shows all attendance records for Alex Yeoh in class A1, as in the picture above.
+* `viewA /class A1 /name Alex Yeoh` is equivalent; the parameters can be given in either order.
 
 ### Deleting attendance: `deleteA`
 
