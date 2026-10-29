@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandResult.DisplayTarget.GRADE_HISTORY;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.math.BigDecimal;
@@ -35,6 +36,7 @@ public class ViewGradeCommandTest {
 
         assertEquals("Here are the grades for " + person.getName() + " from class " + person.getClassName()
                         + "\nQuiz 3: 90\nQuiz 2: 85\nQuiz 1: 80", result.getFeedbackToUser());
+        assertEquals(GRADE_HISTORY, result.getDisplayTarget());
     }
 
     @Test

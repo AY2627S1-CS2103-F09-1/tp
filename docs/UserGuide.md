@@ -6,7 +6,7 @@
 
 # ClassMates User Guide
 
-ClassMates is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, ClassMates can help you manage contacts faster than traditional GUI applications.
+ClassMates is a **desktop application for teaching assistants (TAs) to manage student contacts across classes, record attendance and track grades**. It is optimized for use through a Command Line Interface (CLI) while retaining the benefits of a Graphical User Interface (GUI), so TAs who type quickly can manage their student records faster than with a traditional GUI application.
 
 <!-- * Table of Contents -->
 <page-nav-print />
@@ -15,14 +15,14 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
+1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
 1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103-F09-1/tp/releases).
 
-1. Copy the file to the folder you want to use as the _home folder_ for your ClassMates.
+1. Copy the file to the folder you want to use as the _home folder_ for your ClassMates. The folder must not be write-protected as ClassMates creates and updates files in it.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar classmates.jar`.<br>
+1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar "classmates.jar"` rather than double-clicking the file.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
    <img src="images/Ui.png" alt="The main window of ClassMates" width="600"><br>
    The window has a command box at the top, a result box below it that shows the outcome of the last command, the list of contacts, and the location of the data file at the bottom.
@@ -182,10 +182,10 @@ The class is empty, too long or has characters that are not allowed | `Class nam
 The email is too long, not valid, or `/email` has nothing after it | `Email is too long` or a description of the valid email format
 The same name already exists in the same class | `NAME already exists in class CLASS`
 
-On success, ClassMates shows `NAME added to contacts`.
+On success, ClassMates shows `NAME in class CLASS added to contacts`.
 
 Examples:
-* `add /name John Doe /class A1 /email johnd@example.com` adds John Doe in class A1 with an email, and shows `John Doe added to contacts`.
+* `add /name John Doe /class A1 /email johnd@example.com` adds John Doe in class A1 with an email, and shows `John Doe in class A1 added to contacts`.
 * `add /name Betsy Crowe /class A2` adds Betsy Crowe in class A2 without an email.
 * If Charlie already exists in class `T29`, `add /name Charlie /class Ｔ２９` is rejected as a duplicate because `Ｔ２９` and `T29` are treated as the same class.
 
@@ -714,6 +714,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
 2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+3. **Do not open multiple instances of ClassMates at the same time.** Multiple instances use the same data file but do not synchronize their changes, so one instance can overwrite changes saved by another. Close the running instance before opening ClassMates again.
 
 --------------------------------------------------------------------------------------------------------------------
 

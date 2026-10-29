@@ -595,7 +595,7 @@ The `viewA` command displays all attendance records for a contact. It is impleme
 
 * `ViewAttendanceCommandParser` extends `NameAndClassCommandParser` (see [Logic component](#logic-component)), which uses `ArgumentTokenizer` with the `/name` and `/class` prefixes, and creates a `ViewAttendanceCommand` with the name and class as plain strings.
 * `ViewAttendanceCommand#execute(Model)` searches the whole address book for a contact using `Model#findPerson(String, String)`, which ignores case and extra whitespace. If no contact matches, it throws a `CommandException` with the contact-not-found message. Otherwise, it formats all of the attendance records of the contact from the most recent date to the earliest and returns them in the command result, or returns the no-attendance-records message if there are none.
-* The UI displays the result of a successful `viewA` command in a separate pop-up window rather than in the main result display. `MainWindow#executeCommand(String)` recognizes a `viewA` command by the command word that the user typed and passes the returned command result to a dedicated history pop-up. The pop-up contains a heading, a scrollable text area containing the attendance records, and a close button. The text area expands when the window is resized.
+* The UI displays the result of a successful `viewA` or `va` command in a separate pop-up window rather than in the main result display. `ViewAttendanceCommand` marks its `CommandResult` with the attendance-history display target, which `MainWindow#executeCommand(String)` uses to select the pop-up without parsing the command text again. The `viewG` and `vg` commands similarly use the grade-history display target. The pop-up contains a heading, a scrollable text area containing the records, and a close button. The text area expands when the window is resized.
 
 #### Design considerations
 
@@ -694,93 +694,6 @@ The user can press the Up and Down keys in the command box to recall the command
 * **Alternative 2:** Save the history to a file and load it at the next launch.
   * Pros: Commands from earlier sessions can be recalled.
   * Cons: Needs a file and a format, with handling for a missing or invalid file. The commands also contain contact details, so the file would hold data that the user has not chosen to save.
-
-### \[Proposed\] Undo/redo feature
-
-#### Proposed Implementation
-
-The proposed undo/redo mechanism is facilitated by `VersionedAddressBook`. It extends `AddressBook` with an undo/redo history, stored internally as an `addressBookStateList` and `currentStatePointer`. Additionally, it implements the following operations:
-
-* `VersionedAddressBook#commit()` -- Saves the current address book state in its history.
-* `VersionedAddressBook#undo()` -- Restores the previous address book state from its history.
-* `VersionedAddressBook#redo()` -- Restores a previously undone address book state from its history.
-
-These operations are exposed in the `Model` interface as `Model#commitAddressBook()`, `Model#undoAddressBook()` and `Model#redoAddressBook()` respectively.
-
-Given below is an example usage scenario and how the undo/redo mechanism behaves at each step.
-
-Step 1. The user launches the application for the first time. The `VersionedAddressBook` will be initialized with the initial address book state, and the `currentStatePointer` pointing to that single address book state.
-
-<puml src="diagrams/UndoRedoState0.puml" alt="UndoRedoState0" />
-
-Step 2. The user executes `delete 5` command to delete the 5th contact in the address book. The `delete` command calls `Model#commitAddressBook()`, causing the modified state of the address book after the `delete 5` command executes to be saved in the `addressBookStateList`, and the `currentStatePointer` is shifted to the newly inserted address book state.
-
-<puml src="diagrams/UndoRedoState1.puml" alt="UndoRedoState1" />
-
-Step 3. The user executes `add /name David …​` to add a new contact. The `add` command also calls `Model#commitAddressBook()`, causing another modified address book state to be saved into the `addressBookStateList`.
-
-<puml src="diagrams/UndoRedoState2.puml" alt="UndoRedoState2" />
-
-<box type="info" seamless>
-
-**Note:** If a command fails its execution, it will not call `Model#commitAddressBook()`, so the address book state will not be saved into the `addressBookStateList`.
-</box>
-
-Step 4. The user now decides that adding the contact was a mistake, and decides to undo that action by executing the `undo` command. The `undo` command will call `Model#undoAddressBook()`, which will shift the `currentStatePointer` once to the left, pointing it to the previous address book state, and restores the address book to that state.
-
-<puml src="diagrams/UndoRedoState3.puml" alt="UndoRedoState3" />
-
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index 0, pointing to the initial AddressBook state, then there are no previous AddressBook states to restore. The `undo` command uses `Model#canUndoAddressBook()` to check if this is the case. If so, it will return an error to the user rather
-than attempting to perform the undo.
-</box>
-
-The following sequence diagram shows how an undo operation goes through the `Logic` component:
-
-<puml src="diagrams/UndoSequenceDiagram-Logic.puml" alt="UndoSequenceDiagram-Logic" />
-
-<box type="info" seamless>
-
-**Note:** The lifeline for `UndoCommand` should end at the destroy marker (X), but due to a limitation of PlantUML, it continues to the end of the diagram.
-</box>
-
-Similarly, how an undo operation goes through the `Model` component is shown below:
-
-<puml src="diagrams/UndoSequenceDiagram-Model.puml" alt="UndoSequenceDiagram-Model" />
-
-The `redo` command does the opposite — it calls `Model#redoAddressBook()`, which shifts the `currentStatePointer` once to the right, pointing to the previously undone state, and restores the address book to that state.
-
-<box type="info" seamless>
-
-**Note:** If the `currentStatePointer` is at index `addressBookStateList.size() - 1`, pointing to the latest address book state, then there are no undone AddressBook states to restore. The `redo` command uses `Model#canRedoAddressBook()` to check if this is the case. If so, it will return an error to the user rather than attempting to perform the redo.
-</box>
-
-Step 5. The user then decides to execute the command `list`. Commands that do not modify the address book, such as `list`, will usually not call `Model#commitAddressBook()`, `Model#undoAddressBook()` or `Model#redoAddressBook()`. Thus, the `addressBookStateList` remains unchanged.
-
-<puml src="diagrams/UndoRedoState4.puml" alt="UndoRedoState4" />
-
-Step 6. The user executes `clear`, which calls `Model#commitAddressBook()`. Since the `currentStatePointer` is not pointing at the end of the `addressBookStateList`, all address book states after the `currentStatePointer` will be purged. Reason: It no longer makes sense to redo the `add /name David …` command. This is the behavior that most modern desktop applications follow.
-
-<puml src="diagrams/UndoRedoState5.puml" alt="UndoRedoState5" />
-
-The following activity diagram summarizes what happens when a user executes a new command:
-
-<puml src="diagrams/CommitActivityDiagram.puml" width="250" />
-
-#### Design considerations:
-
-**Aspect: How undo & redo execute:**
-
-* **Alternative 1 (current choice):** Saves the entire address book.
-  * Pros: Easy to implement.
-  * Cons: May have performance issues in terms of memory usage.
-
-* **Alternative 2:** Individual command knows how to undo/redo by
-  itself.
-  * Pros: Will use less memory (e.g. for `delete`, just save the contact being deleted).
-  * Cons: We must ensure that the implementation of each individual command is correct.
 
 
 --------------------------------------------------------------------------------------------------------------------
@@ -1250,7 +1163,7 @@ The use cases describe what the application does now. Commands with similar inte
 
 ### Non-Functional Requirements
 
-1. Should work on any _mainstream OS_ as long as it has Java `25` or above installed.
+1. Should work on any _mainstream OS_ as long as it has Java `25` installed.
 2. Should be usable without an installer, and be distributed as a single JAR file, or as a single ZIP file containing the JAR and any necessary files.
 3. Should store contact, attendance, and grade data locally in a human-editable text file, and work without a remote server, a database, a user account or an Internet connection.
 4. Should support one user operating on their own locally stored data.
@@ -1300,16 +1213,19 @@ testers are expected to do more *exploratory* testing.
 
 1. Initial launch
 
-   1. Download the JAR file and copy it into an empty folder.
+   1. Download the JAR file and copy it into an empty folder that is not write-protected.
 
-   1. Double-click the JAR file.<br>
+   1. Open a terminal and run `java -version`.<br>
+      Expected: The version shown is Java 25.
+
+   1. In the terminal, `cd` to the folder containing the JAR file and run `java -jar "classmates.jar"`.<br>
       Expected: The GUI opens with a set of sample contacts. The window size may not be optimal.
 
 1. Saving window preferences
 
    1. Resize the window to an optimal size. Move the window to a different location. Close the window.
 
-   1. Relaunch the app by double-clicking the JAR file.<br>
+   1. Relaunch the app using the same `java -jar "classmates.jar"` command.<br>
        Expected: The most recent window size and location are retained.
 
 1. Dealing with a data file that cannot be read
@@ -1327,7 +1243,7 @@ testers are expected to do more *exploratory* testing.
    1. Prerequisites: The app contains the sample data.
 
    1. Test case: `list yeoh`, followed by `add /name John Doe /class A1 /email johnd@example.com`<br>
-      Expected: After the `add` command, all contacts are shown again, even though only Alex Yeoh was shown before, with John Doe at the top of the list. The status message shows `John Doe added to contacts`.
+      Expected: After the `add` command, all contacts are shown again, even though only Alex Yeoh was shown before, with John Doe at the top of the list. The status message shows `John Doe in class A1 added to contacts`.
 
    1. Test case: `add /NAME José Müller (Joe) #2 /Class T11/A`<br>
       Expected: The contact is added with the name and the class as typed. The case of the prefixes does not matter, and accents, digits, symbols and a `/` in a class are allowed.
@@ -1393,8 +1309,6 @@ testers are expected to do more *exploratory* testing.
 
    1. Test case: `delete /name David Li /class B1`<br>
       Expected: No contact is deleted. The status message shows `Contact not found`, because both the name and the class must match, and David Li is in class A2.
-
-1. _{ more test cases … }_
 
 ### Editing a contact
 
