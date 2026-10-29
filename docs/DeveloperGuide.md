@@ -257,7 +257,7 @@ This section describes some noteworthy details on how certain features are imple
 The `list` command shows all contacts, or, when it is given a keyword, only the contacts that match the keyword. It is implemented by `ListCommandParser`, `ListCommand` and `PersonMatchesKeyword`.
 
 * `ListCommandParser#parse(String)` takes the whole trimmed argument as one keyword, so a full name or class with spaces is one keyword. If the argument is empty, it creates a `ListCommand` that shows all contacts.
-* `PersonMatchesKeyword` implements `Predicate<Person>`. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the name, class name, or any tag name of the contact. Both are first normalized with `StringUtil#toComparisonKey(String)`, which ignores case and extra spaces and the different ways of typing an accented letter. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. The email is not checked, and the keyword is matched as plain text and not as a regular expression, so symbols such as `.` and `/` are matched as typed.
+* `PersonMatchesKeyword` implements `Predicate<Person>`. `PersonMatchesKeyword#test(Person)` returns true if the keyword is a substring of the name, class name, optional email address or any tag name of the contact. The keyword and each value are first normalized with `StringUtil#toComparisonKey(String)`, which ignores case and extra spaces and the different ways of typing an accented letter. A contact without an email does not match an email keyword. The fields, and each tag, are checked separately, so a keyword cannot match across two fields or two tags. The keyword is matched as plain text and not as a regular expression, so symbols such as `.` and `/` are matched as typed.
 * `ListCommand#execute(Model)` calls `Model#updateFilteredPersonList(Predicate)` with the predicate, which is `Model#PREDICATE_SHOW_ALL_PERSONS` when no keyword is given. This replaces any earlier filter, so `list` always searches the whole address book and a plain `list` clears a previous search. It never modifies the address book. With a keyword, the success message shows the number of contacts in the filtered list, and an empty result is not an error.
 
 The contacts that match a keyword are displayed in the same order as in the whole list, from the most recently added to the oldest, because a filter only hides contacts (see [Order of contacts](#order-of-contacts-feature)).
@@ -266,8 +266,8 @@ The contacts that match a keyword are displayed in the same order as in the whol
 
 **Aspect: How a keyword is matched**
 
-* **Alternative 1 (current choice):** Case-insensitive substring match on the name, class and tags.
-  * Pros: Supports partial matches, such as `jo` for `John` or `2103` for `CS2103`, with one simple predicate.
+* **Alternative 1 (current choice):** Case-insensitive substring match on the name, class, email and tags.
+  * Pros: Supports partial matches, such as `jo` for `John`, `2103` for `CS2103` or `example.com` for an email address, with one simple predicate.
   * Cons: A short keyword, such as `a`, matches many contacts.
 * **Alternative 2:** Whole-word match, so that `Han` does not match `Hans`.
   * Pros: More precise results.
@@ -850,7 +850,7 @@ Priorities: High (must have) - `* * *`, Medium (nice to have) - `* *`, Low (unli
 | Priority | As a …                            | I want to …                                                         | So that I can…                                                           |
 |----------|-----------------------------------|---------------------------------------------------------------------|--------------------------------------------------------------------------|
 | `* * *`  | TA                                | add new student contacts with name, class and email                 | keep track of who is in each of my classes                               |
-| `* * *`  | TA                                | search for contacts by keyword (e.g. name, class or group)          | find the information I need quickly                                      |
+| `* * *`  | TA                                | search for contacts by keyword (e.g. name, class, email or group)   | find the information I need quickly                                      |
 | `* * *`  | TA setting up a new class         | import my initial students from a CSV file                          | avoid entering every student manually                                    |
 | `* * *`  | TA                                | delete contacts easily                                              | keep my contact list from being cluttered                                |
 | `* * *`  | TA coordinating group assignments | link students belonging to the same group activity together         | answer team-based queries faster                                         |
@@ -922,7 +922,7 @@ The use cases describe what the application does now. Commands with similar inte
 
 **MSS**
 1. User requests to list contacts, giving a keyword.
-2. CM displays the contacts whose name, class or tags contain the keyword, and the number of contacts displayed.
+2. CM displays the contacts whose name, class, email or tags contain the keyword, and the number of contacts displayed.
 
    Use case ends.
 
@@ -1354,7 +1354,10 @@ testers are expected to do more *exploratory* testing.
       Expected: All six contacts are shown, from Alex Yeoh at the top to Roy Balakrishnan at the bottom.
 
    1. Test case: `list friend`<br>
-      Expected: Alex Yeoh and Bernice Yu are shown, as their tags contain `friend`. The status message shows that 2 contacts are listed. A keyword matches part of a name, a class or a tag.
+      Expected: Alex Yeoh and Bernice Yu are shown, as their tags contain `friend`. The status message shows that 2 contacts are listed. A keyword matches part of a name, a class, an email or a tag.
+
+   1. Test case: `list ALEXYEOH@EXAMPLE.COM`<br>
+      Expected: Only Alex Yeoh is shown. Email matching is case-insensitive.
 
    1. Test case: `list yeoh`, followed by `list david`<br>
       Expected: After `list david`, only David Li is shown. The second search covers all contacts, and not only the result of the first search.

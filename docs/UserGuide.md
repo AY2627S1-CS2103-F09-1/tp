@@ -47,7 +47,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `viewA /name John Doe /class A1` : Lists the attendance records of `John Doe` in class `A1`.
 
-   * `list John` : Lists the contacts whose name, class or groups contain `John`, which is now only `John Doe`.
+   * `list John` : Lists the contacts whose name, class, email or groups contain `John`, which is now only `John Doe`.
 
    * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
 
@@ -223,12 +223,12 @@ Shows a list of all contacts in ClassMates, or only the contacts that match a ke
 Format: `list [KEYWORD]`
 
 * If `KEYWORD` is omitted, all contacts are shown.
-* If `KEYWORD` is given, only the contacts whose name, class or groups contain it are shown, and the message shows how many contacts were listed.
+* If `KEYWORD` is given, only the contacts whose name, class, email or groups contain it are shown, and the message shows how many contacts were listed.
 * The search is case-insensitive; for example, `john` matches `John`.
-* Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
+* Partial matches are included; for example, `jo` matches `John`, `2103` matches the class `CS2103` and `example.com` matches the email `johnd@example.com`.
 * The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the group `friend`.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* The keyword must match within a single name, class or group; for example, it cannot match the end of a name and the start of a class, or run across two groups.
+* The keyword must match within a single name, class, email or group; for example, it cannot match the end of a name and the start of a class, or run across two groups.
 * `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
@@ -236,8 +236,9 @@ Format: `list [KEYWORD]`
 
 Examples:
 * `list` shows all contacts and the message `Listed all contacts.`
-* `list John` shows `John Doe` and any contact in a class or in a group containing `john`, with a message such as `1 contact(s) listed!`
-* `list Group A` shows any contact whose name, class or group contains `Group A`.
+* `list John` shows `John Doe` and any contact whose name, class, email or group contains `john`, with a message such as `1 contact(s) listed!`
+* `list @example.com` shows any contact whose name or email contains `@example.com` as class and group are not permitted to contain `@`.
+* `list Group A` shows any contact whose name, class, email or group contains `Group A`.
 
 ### Deleting a contact: `delete`
 

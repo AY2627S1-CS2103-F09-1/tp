@@ -8,7 +8,8 @@ import seedu.address.commons.util.StringUtil;
 import seedu.address.commons.util.ToStringBuilder;
 
 /**
- * Tests that a {@code Person}'s {@code Name}, {@code ClassName} or any {@code Tag} contains the keyword given.
+ * Tests that a {@code Person}'s {@code Name}, {@code ClassName}, {@code Email} or any {@code Tag} contains the
+ * keyword given.
  * Matching is a contiguous substring match that ignores case and extra whitespace.
  */
 public class PersonMatchesKeyword implements Predicate<Person> {
@@ -29,6 +30,7 @@ public class PersonMatchesKeyword implements Predicate<Person> {
         requireNonNull(person);
         return containsKeyword(person.getName().fullName)
                 || containsKeyword(person.getClassName().value)
+                || containsKeyword(person.getEmail().map(Email::toString).orElse(""))
                 || person.getTags().stream().map(tag -> tag.tagName).anyMatch(this::containsKeyword);
     }
 

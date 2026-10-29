@@ -83,6 +83,16 @@ public class ListCommandTest {
     }
 
     @Test
+    public void execute_keywordMatchesEmail_showsMatchingPersons() {
+        PersonMatchesKeyword predicate = new PersonMatchesKeyword("ALICE@EXAMPLE.COM");
+        expectedModel.updateFilteredPersonList(predicate);
+        String expectedMessage = String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 1);
+
+        assertCommandSuccess(new ListCommand(predicate), model, expectedMessage, expectedModel);
+        assertEquals(Collections.singletonList(ALICE), model.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_keywordMatchesNobody_showsEmptyList() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("zzz");
         expectedModel.updateFilteredPersonList(predicate);
