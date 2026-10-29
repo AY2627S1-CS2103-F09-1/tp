@@ -149,7 +149,8 @@ public class ImportCommand extends Command {
      * @throws CommandException If there are more rows.
      */
     private static void requireRowCountWithinLimit(CsvParser.ParsedCsv csv) throws CommandException {
-        if (csv.records().size() > MAX_ROWS) {
+        long nonBlankRowCount = csv.records().stream().filter(record -> !record.isBlank()).count();
+        if (nonBlankRowCount > MAX_ROWS) {
             throw new CommandException(MESSAGE_TOO_MANY_ROWS);
         }
     }
