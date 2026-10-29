@@ -147,13 +147,13 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
   * Accented letters such as `é`, `ñ` and `ü` are allowed, as in `José Müller` or `Nguyễn Văn An`. Letters of other languages, such as Chinese or Cyrillic letters, are not accepted.
   * Commas are not allowed, because they separate the values in a CSV file.
   * A word that starts with `/` after a space is read as a parameter, so a `/` can be used inside a name, but not at the start of a word.
-* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`. The full-width forms of these characters are also accepted, for example `Ｔ２９`.
 * A name or class cannot contain a parameter name that is stuck to the text before it, such as `John/class A1`, as this is most likely a missing space. The parameter names that are checked are `/name`, `/class`, `/email`, `/tag`, `/group`, `/members`, `/date`, `/status`, `/assessment` and `/score`, in any case.
 * `EMAIL` is optional. If given, it can be at most 254 characters long and must be in the format `local-part@domain`, such as `johnd@example.com`.
   * The local part, before the `@`, can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain, after the `@`, is made up of one or more words separated by periods, as in `example.com`. Each word can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last word must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. Different ways of typing the same letter are also treated as the same, such as `é` typed as one character or as `e` followed by an accent, and a full-width `Ａ` and a normal `A`. The same applies to assessment names.
+* Valid names and classes are compared ignoring case, extra spaces and equivalent Unicode forms. For example, `john  tan` in class `ａ１` is treated as the same contact as `John Tan` in class `A1`. This comparison also treats `é` typed as one character as equivalent to `e` followed by an accent. The same comparison rules apply to assessment names, although each field still has its own rules for which characters are accepted.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -176,6 +176,7 @@ On success, ClassMates shows `NAME added to contacts`.
 Examples:
 * `add /name John Doe /class A1 /email johnd@example.com` adds John Doe in class A1 with an email, and shows `John Doe added to contacts`.
 * `add /name Betsy Crowe /class A2` adds Betsy Crowe in class A2 without an email.
+* If Charlie already exists in class `T29`, `add /name Charlie /class Ｔ２９` is rejected as a duplicate because `Ｔ２９` and `T29` are treated as the same class.
 
 ### Editing a contact: `edit`
 

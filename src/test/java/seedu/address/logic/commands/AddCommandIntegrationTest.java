@@ -95,6 +95,16 @@ public class AddCommandIntegrationTest {
     }
 
     @Test
+    public void execute_sameClassInFullWidth_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person duplicatePerson = new PersonBuilder(personInList).withClassName("Ａ１").build();
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
+                duplicatePerson.getClassName());
+
+        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
+    }
+
+    @Test
     public void execute_sameNameDifferentClass_success() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
         Person samePersonInOtherClass = new PersonBuilder(personInList).withClassName(VALID_CLASS_BOB).build();
