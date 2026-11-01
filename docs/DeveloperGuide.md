@@ -157,24 +157,13 @@ How the parsing works:
 The `Model` component,
 
 * stores the address book data i.e., all `Person` objects (which are contained in a `UniquePersonList` object).
-* is used through the `Model` interface, which `ModelManager` implements. `ModelManager` holds one `AddressBook`, one `UserPrefs` and the filtered list of `Person` objects. Commands use it to check for a duplicate (`hasPerson(Person)`), to add, delete and replace a contact (`addPerson(Person)`, `deletePerson(Person)` and `setPerson(Person, Person)`), to find a contact by name and class (`findPerson(String, String)`), and to change which contacts are displayed (`updateFilteredPersonList(Predicate<Person>)`). `addPerson` puts the contact at the top of the list and shows all contacts again (see [Order of contacts](#order-of-contacts-feature)), while `setPerson` replaces a contact in place, so it keeps its position. These methods have preconditions, for example that the contact to add is not already in the address book. The commands check them first, so that a problem is reported to the user as a `CommandException`, and not as the unchecked `DuplicatePersonException` or `PersonNotFoundException` that `UniquePersonList` throws.
-* identifies a `Person` by its `Name` and `ClassName` (see `Person#isSamePerson(Person)`). Both are compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
-* keeps `Person` immutable. A change returns a copy, such as `Person#withTag(Tag)` (adds a contact to a group), `Person#withoutTag(Tag)`, `Person#withAttendance(Attendance)` and `Person#withGrade(Grade)`.
-* compares `Tag` objects ignoring case, leading and trailing whitespace, and repeated spaces, so `GroupA` and `  groupa ` are the same tag. A `Tag` is 1 to 80 characters long and can contain letters, digits, spaces, hyphens, and underscores. It keeps the casing it was created with, so that is what the UI shows.
-* stores each contact's attendance as a list of `Attendance` objects, each with a date and a status (`PRESENT`, `ABSENT` or `LATE`), and each contact's grades as a list of `Grade` objects, each with an assessment name and a score from `Grade.MIN_SCORE` (0) to `Grade.MAX_SCORE` (100). A contact has at most one attendance record for a date and one grade for an assessment (assessment names are compared ignoring case). `Person#withAttendance(Attendance)` and `Person#withGrade(Grade)` throw an `IllegalArgumentException` for a duplicate, but only as a safeguard, since the commands check first.
-* treats the `Email` of a `Person` as optional. `Person#getEmail()` returns an `Optional<Email>`, which is empty if the contact has no email.
-* keeps the `Person` objects in the order they are displayed, which is from the most recently added to the oldest (see [Order of contacts](#order-of-contacts-feature)).
-* stores the `Person` objects selected by the current filter, such as search results, in a separate _filtered_ list. It exposes this list as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
-* stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings). This is exposed to the outside as a `ReadOnlyUserPrefs` object.
+* is used through the `Model` interface, which `ModelManager` implements. `ModelManager` holds one `AddressBook`, one `UserPrefs` and the filtered list of `Person` objects. Commands use it to check for a duplicate, to add, delete and replace a contact, to find a contact by name and class, and to change which contacts are displayed. `addPerson(Person)` puts the contact at the top of the list, so the contacts are kept from the most recently added to the oldest, and shows all contacts again, while `setPerson(Person, Person)` replaces a contact in place (see [Order of contacts](#order-of-contacts-feature)). Commands check the preconditions of these methods first, so that a problem is reported to the user as a `CommandException`, and not as an unchecked exception of `UniquePersonList`.
+* identifies a `Person` by its `Name` and `ClassName` together (see `Person#isSamePerson(Person)`), compared ignoring case and extra whitespace, so the same name may appear in different classes but not twice in the same class.
+* keeps `Person` immutable. A change returns a copy, such as `Person#withTag(Tag)` (adds a contact to a group), `Person#withAttendance(Attendance)` and `Person#withGrade(Grade)`. A contact has a list of `Attendance` records (a date and a status) and a list of `Grade` records (an assessment name and a score from 0 to 100), with at most one record for a date and one grade for an assessment. The `with…` methods throw an `IllegalArgumentException` for a duplicate, but only as a safeguard, since the commands check first. The `Email` of a `Person` is optional, and `Person#getEmail()` returns an `Optional<Email>`.
+* compares `Tag` objects ignoring case and extra whitespace, so `GroupA` and `  groupa ` are the same tag. A `Tag` keeps the casing it was created with, which is what the UI shows.
+* exposes the `Person` objects selected by the current filter, such as search results, as an unmodifiable `ObservableList<Person>` that the UI can observe and bind to, so the UI updates when the list changes.
+* stores a `UserPrefs` object that represents the user’s preferences (currently, just the GUI settings), which is exposed to the outside as a `ReadOnlyUserPrefs` object.
 * does not depend on any of the other three components (as the `Model` represents data entities of the domain, they should make sense on their own without depending on other components)
-
-
-<box type="info" seamless>
-
-**Note:** The alternative, arguably more object-oriented, design below keeps a unique list of tags in `AddressBook`, and each `Person` references tags from that list. This lets `AddressBook` maintain one `Tag` object per unique tag instead of each `Person` holding its own `Tag` objects.<br>
-
-<puml src="diagrams/BetterModelClassDiagram.puml" width="450" />
-</box>
 
 
 ### Storage component
