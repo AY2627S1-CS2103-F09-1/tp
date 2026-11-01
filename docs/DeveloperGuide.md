@@ -88,7 +88,7 @@ The `UI` component,
 **How the UI handles a command**
 
 1. `MainWindow` passes its `executeCommand` method to `CommandBox` as a `CommandBox.CommandExecutor`. When the user presses Enter on a non-empty command, `CommandBox` calls it.
-2. `MainWindow#executeCommand(String)` calls `Logic#execute(String)` and shows the feedback of the returned `CommandResult` in `ResultDisplay`, unless the command word is `viewA` or `viewG`, in which case the feedback is shown in a pop-up window instead (see [Viewing attendance](#viewing-attendance-feature)).
+2. `MainWindow#executeCommand(String)` calls `Logic#execute(String)` and shows the feedback of the returned `CommandResult` where the result asks for it, which is its display target. This is `ResultDisplay` for most commands, and a pop-up window for `viewA` and `viewG`, and their aliases `va` and `vg` (see [Viewing attendance](#viewing-attendance-feature)).
 3. If `Logic` throws a `ParseException` or a `CommandException`, `MainWindow` shows the message of the exception in `ResultDisplay`, and `CommandBox` keeps its text so that the user can correct it.
 4. If the `CommandResult` asks for help, `MainWindow#handleHelp()` opens the `HelpWindow`, or focuses it if it is already open. If it asks to exit, `MainWindow#handleExit()` saves the size and position of the window with `Logic#setGuiSettings(GuiSettings)` and hides the window.
 
@@ -96,7 +96,7 @@ The `UI` component,
 
 * `ResultDisplay` shows the feedback or the error message of the last command, and `StatusBarFooter` shows the location of the data file.
 * `HelpWindow` shows a summary of the format of every command, and a button that copies the link to the User Guide.
-* A separate pop-up window, which `MainWindow` creates for each `viewA` or `viewG` command, shows the history of a contact. It is not a `UiPart`, since it is built in code from a `Stage` with a heading, a read-only text area and a `Close` button.
+* A separate pop-up window, which `MainWindow` creates for each `viewA` or `viewG` command (or its alias `va` or `vg`), shows the history of a contact. It is not a `UiPart`, since it is built in code from a `Stage` with a heading, a read-only text area and a `Close` button.
 * Each `PersonCard` shows the displayed index, the name, the class, the email (if the contact has one), the groups of the contact in alphabetical order, and the 3 most recent attendance records and grades, followed by a line such as `+2 older record(s)` if there are more (see `PersonCard`).
 * `UiManager` shows an error dialog and then exits the app if the window fails to start.
 
@@ -738,7 +738,7 @@ An input without a limit lets one pasted text or file freeze the app, so the fol
 
 * `AddressBookParser#parseCommand(String)` rejects a command with more than `AddressBookParser.MAX_INPUT_LENGTH` (5,000) characters with a `ParseException`, before it does anything else. The longest real commands, such as one that links a class of 300 students to a group, have well under 5,000 characters. `LogicManager#execute(String)` writes at most `LogicManager.MAX_LOGGED_COMMAND_LENGTH` (500) characters of a command to the log, so that a long command does not flood it.
 * `Email` is limited to `Email.MAX_LENGTH` (254) characters, and the length is checked before the format. Matching the format regex takes time that grows quickly with the length of an invalid input (about 4 seconds for 5,000 characters), so without the limit a pasted text froze the app.
-* `ImportCommand` rejects a file with more than `ImportCommand.MAX_FILE_SIZE_BYTES` (5 MiB) before it reads the file, because the whole file is read into memory. It also rejects a file with more than `ImportCommand.MAX_ROWS` (5,000) rows before it checks any row, because each contact is compared with all contacts before it, so the time to import grows with the square of the number of rows. Nothing is imported in either case.
+* `ImportCommand` rejects a file with more than `ImportCommand.MAX_FILE_SIZE_BYTES` (5 MiB) before it reads the file, because the whole file is read into memory. It also rejects a file with more than `ImportCommand.MAX_ROWS` (5,000) non-blank rows before it checks any row, because each contact is compared with all contacts before it, so the time to import grows with the square of the number of rows. Nothing is imported in either case.
 * `GroupMembershipCommand#execute(Model)` names at most `GroupMembershipCommand.MAX_INDICES_SHOWN` (10) of the indices that are not in the displayed list, followed by how many more there are, so that a command with 100,000 missing indices does not produce a message that names all of them.
 
 #### Fuzz tests
