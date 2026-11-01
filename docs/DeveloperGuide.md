@@ -130,60 +130,23 @@ The command classes are organized as shown below. An abstract `XYZCommand` holds
 
 <puml src="diagrams/CommandClasses.puml" width="700" alt="The command classes" />
 
+Why the commands are designed in this way:
+
+* Two subclasses keep each `execute` method to one job, make a combination such as an index together with a name impossible to represent, and write the shared logic and messages once. The cost is that the parser must choose between two classes for one command word.
+* Both ways of identifying a contact are offered because the index is short to type after a `list`, while the name and class do not depend on what is displayed. `edit`, `tag` and `untag` accept only the index (`edit` needs `/name` and `/class` for the new values, and `tag` and `untag` take many members at once), and `viewA` and `viewG` only the name and class.
+* A search by name and class covers the whole address book, even if a search hides the contact, and compares the values as plain strings. A mistake therefore always gives `Contact not found`, and the rules for `add` can change without affecting the other commands.
+
 Here are the other classes in `Logic` (omitted from the class diagram above) that are used for parsing a user command:
 
 <puml src="diagrams/ParserClasses.puml" width="600"/>
 
 How the parsing works:
-
-* When called upon to parse a user command, the `AddressBookParser` class finds the `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) of the command word in the static `COMMAND_PARSERS` map. The parser instances in this map are created when `AddressBookParser` is initialized and are reused for commands, rather than constructed by each call to `parseCommand(String)`. The selected parser uses the other classes shown above to parse the user command and create an `XYZCommand` object (e.g., `AddCommand`), which the `AddressBookParser` returns as a `Command` object. Command words are matched ignoring case (only the English letters `A-Z` are converted, by `StringUtil#toAsciiLowerCase(String)`), so `LIST` and `viewa` are the commands `list` and `viewA`.
-* Some commands also have a shorter alias, which is a `COMMAND_ALIAS` constant of the command class: `att` for `attendance`, `va` for `viewA`, `vg` for `viewG`, `da` for `deleteA` and `dg` for `deleteG`. `AddressBookParser` has a map entry for each alias, with the same kind of parser as for the command word.
-* All `XYZCommandParser` classes implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing. `ExitCommand` and `HelpCommand` take no arguments, so their entries in the map are lambda expressions that ignore the arguments and create the command. `ClearCommand` has a `ClearCommandParser`, because `clear` deletes all contacts and therefore does not ignore extra text (see [Clearing all contacts](#clearing-all-contacts)).
-* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input, whatever the case of its letters, and stores the values in an `ArgumentMultimap`, which names every repeated prefix in its error message. `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)` rejects a word that looks like a prefix that the command does not accept, and `ParserUtil#requireNoStuckPrefixes(String)` rejects a prefix that is stuck to the text before it (see [Validation of names, classes and assessment names](#validation-of-names-classes-and-assessment-names-feature)). `ListCommandParser` and `ImportCommandParser` do neither, because they take the whole argument as one text, which is a keyword or a file path.
-* Some prefixes also have a shorter alias, which is kept in the `Prefix` and read by `ArgumentTokenizer` in the same way as the full prefix: `/n` for `/name`, `/c` for `/class`, `/m` for `/members`, `/as` for `/assessment`, `/st` for `/status` and `/sc` for `/score`.
-* A parser reports the first problem that it finds. Unrecognized and repeated parameters are always checked first.
-* `delete`, `attendance`, `grade`, `deleteA` and `deleteG` identify the contact either by an index or by `/name` and `/class`, so a command word does not always map to a single `Command` class (see the command classes above). For example, `DeleteCommandParser` returns a `DeleteByIndexCommand` when given an index, and a `DeleteByNameAndClassCommand` when given `/name` and `/class`. For `attendance` and `grade`, `ParserUtil#isIdentifiedByIndex(ArgumentMultimap)` tells the parser which way was used. The two ways are not allowed together.
-* `viewA` and `viewG` identify the contact by `/name` and `/class` only. `ViewAttendanceCommandParser` and `ViewGradeCommandParser` extend `NameAndClassCommandParser`, which does the parsing that they share. `tag` and `untag` take the same arguments, so `TagCommandParser` and `UntagCommandParser` extend `GroupMembershipCommandParser`, which does the parsing, and a subclass only passes its usage message and creates its command.
-* `ListCommandParser` returns a `ListCommand` that lists all contacts when the argument is empty, and otherwise a `ListCommand` that holds a `PersonMatchesKeyword` predicate. `EditCommandParser` creates an `EditCommand` that holds an `EditPersonDescriptor` with the details to change. `ImportCommandParser` takes the whole trimmed argument as the file path, and `ImportCommand` checks the file when it runs.
-* The name and class that `viewA`, `viewG`, `delete`, `attendance`, `grade`, `deleteA` and `deleteG` receive in the name-and-class form are plain strings that are not checked against the rules of `Name` and `ClassName`, so a name or class that no contact has is reported when the command runs.
-
-**Design considerations**
-
-**Aspect: How a command that identifies a contact in two ways is structured**
-
-* **Alternative 1 (current choice):** An abstract command (such as `DeleteCommand`) with one subclass for each way of identifying the contact, and the shared operation in the abstract class.
-  * Pros: Each `execute` method does one thing and can be tested on its own, an invalid combination, such as an index together with a name, cannot be represented, and the shared logic and messages are written once.
-  * Cons: One command word maps to two classes, so the parser must choose between them.
-* **Alternative 2:** A single command with an optional index and an optional name and class.
-  * Pros: Only one command class.
-  * Cons: `execute` must branch on which fields are set, and an invalid combination of fields is possible. This is how `attendance` and `grade` were first written.
-
-**Aspect: How the contact is identified**
-
-* **Alternative 1 (current choice):** `delete`, `attendance`, `grade`, `deleteA` and `deleteG` accept either the index in the displayed list or `/name NAME /class CLASS`. `edit`, `tag` and `untag` accept only the index, and `viewA` and `viewG` only the name and class.
-  * Pros: The index is short to type and is convenient after a `list`, and the name and class do not depend on what is displayed, which suits a contact that is hidden by a search. `edit` leaves `/name` and `/class` free to mean the new values, and `tag` and `untag` need only the index for many members at once.
-  * Cons: The index depends on the displayed list, so the wrong contact is changed if the list is not what the user expects. The name and class are long to type, and two forms must be parsed and explained.
-* **Alternative 2:** Name and class only.
-  * Pros: Does not depend on the displayed list.
-  * Cons: A long command for several members, and `edit` would need other parameters such as `/newname` for the new values.
-
-**Aspect: Which contacts a search by name and class covers**
-
-* **Alternative 1 (current choice):** The whole address book.
-  * Pros: Works whatever is displayed, so the user does not have to run `list` first.
-  * Cons: Can change a contact that is not currently displayed.
-* **Alternative 2:** Only the displayed contacts.
-  * Pros: Consistent with the index, and the affected contact is visible.
-  * Cons: Fails after a search that hides the contact, which defeats the purpose of using a name.
-
-**Aspect: Whether the name and class are validated**
-
-* **Alternative 1 (current choice):** They are only compared with the stored contacts, ignoring case and extra spaces.
-  * Pros: The same mistake always gives the same message, `Contact not found`, and the rules for `add` can change without affecting other commands.
-  * Cons: A name with a typo in a character that is not allowed gets no hint about the allowed format.
-* **Alternative 2:** Validate them with the rules for `add`.
-  * Pros: A name that can never exist is reported as a format error.
-  * Cons: Duplicates the validation rules, and the commands gave different messages for the same mistake, as `attendance` and `grade` did before.
+* When called upon to parse a user command, the `AddressBookParser` class finds the `XYZCommandParser` (`XYZ` is a placeholder for the specific command name, e.g., `AddCommandParser`) of the command word in the static `COMMAND_PARSERS` map. The parsers in this map are created once and reused. The parser creates an `XYZCommand` object (e.g., `AddCommand`), which `AddressBookParser` returns as a `Command` object. Command words are matched ignoring case (see `StringUtil#toAsciiLowerCase(String)`), so `LIST` and `viewa` are the commands `list` and `viewA`. Some commands also have an alias, which is a `COMMAND_ALIAS` constant of the command class (`att`, `va`, `vg`, `da` and `dg`) with its own entry in the map.
+* All `XYZCommandParser` classes implement the `Parser` interface so they can be treated similarly where appropriate, for example during testing. `help` and `exit` take no arguments, so their map entries are lambda expressions that ignore the arguments and create the command. `ClearCommandParser` rejects any text after `clear`, because `clear` deletes all contacts (see [Clearing all contacts](#clearing-all-contacts)).
+* Parameters are introduced by prefixes such as `/name`. `ArgumentTokenizer` recognizes a prefix that is preceded by a whitespace and followed by a whitespace or the end of the input, whatever the case of its letters, and stores the values in an `ArgumentMultimap`, which names every repeated prefix in its error message. Some prefixes also have a shorter alias, which is kept in the `Prefix` and read in the same way (`/n`, `/c`, `/m`, `/as`, `/st` and `/sc`).
+* `ParserUtil` has the checks that the parsers share: `ParserUtil#requireNoUnrecognizedPrefixes(String, String, Prefix...)` rejects a word that looks like a prefix that the command does not accept, and `ParserUtil#requireNoStuckPrefixes(String)` rejects a prefix that is stuck to the text before it (see [Validation of names, classes and assessment names](#validation-of-names-classes-and-assessment-names-feature)). A parser reports the first problem that it finds, and unrecognized and repeated parameters are always checked first. `ListCommandParser` and `ImportCommandParser` do neither check, because they take the whole argument as one text.
+* `delete`, `attendance`, `grade`, `deleteA` and `deleteG` identify the contact either by an index or by `/name` and `/class`, so their parsers return the by-index or the by-name-and-class command (see the command classes above). `viewA` and `viewG` use `/name` and `/class` only, and their parsers share the parsing in `NameAndClassCommandParser`. `tag` and `untag` take the same arguments, so their parsers share the parsing in `GroupMembershipCommandParser`. The name and class are plain strings that are not checked against the rules of `Name` and `ClassName`, so a name or class that no contact has is reported when the command runs.
+* The parsers of the other commands are described with their features, such as [Listing and searching contacts](#listing-and-searching-contacts-feature), [Editing a contact](#editing-a-contact-feature) and [Importing contacts from a file](#importing-contacts-from-a-file-feature).
 
 ### Model component
 **API** : [`Model.java`](https://github.com/AY2627S1-CS2103-F09-1/tp/tree/master/src/main/java/seedu/address/model/Model.java)
@@ -295,7 +258,7 @@ The contacts that match a keyword are displayed in the same order as in the whol
 
 #### Implementation
 
-The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand` (see the command classes in the [Logic component](#logic-component), which also explains why the command is structured in this way).
+The `delete` command removes one contact, identified either by its index in the displayed list or by its name and class. `DeleteCommandParser` returns a `DeleteByIndexCommand` or a `DeleteByNameAndClassCommand` (see the command classes in the [Logic component](#logic-component)).
 
 * `DeleteByIndexCommand#execute(Model)` rejects an index that is larger than the displayed list, then deletes the contact at that index.
 * `DeleteByNameAndClassCommand#execute(Model)` searches the whole address book, not the displayed list, using `Person#hasNameAndClass(String, String)`. It reports `Contact not found` if no contact matches.
