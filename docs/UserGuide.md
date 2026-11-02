@@ -368,7 +368,7 @@ Format: `import PATH`
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * If the file has an error, the whole import is cancelled at the first error, and no contact is added.
 * The imported contacts are shown at the top of the list, in the same order as in the file.
-* The file can be at most 5 MiB (about 5 megabytes), and can have at most 5,000 rows after the header row.
+* The file can be at most 5 MiB (about 5 megabytes), and can have at most 5,000 non-blank rows after the header row.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`.
 
@@ -404,7 +404,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | The file is larger than 5 MiB                                                                      | `File is too large. It can have at most 5 MiB`       |
 | The file is empty or contains only a header row                                                    | `File empty`                                         |
 | The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
-| The file has more than 5,000 rows after the header row                                            | `File has too many rows. It can have at most 5000 rows` |
+| The file has more than 5,000 non-blank rows after the header row                                   | `File has too many rows. It can have at most 5000 rows` |
 | A row has an invalid number of fields                                                              | `Invalid number of fields on row <row number>`       |
 | A contact duplicates an existing contact or an earlier imported contact                            | `Duplicate contact on row <row number>`              |
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
@@ -423,10 +423,10 @@ Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE` or `grade /name N
 * `NAME` and `CLASS` identify a contact directly, as explained in [Choosing a contact](#choosing-a-contact). Both `/name` and `/class` must be provided.
 * `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, such as `Assignment 1`, `Mid-term`, `Quiz #1` or `Test 1, Part A`. Unlike in a name, commas are allowed. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part of at most 4 digits, such as `97.5`, but not a sign, a percent symbol or any other characters.
-* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, so to change a score, delete the grade with [`deleteG`](#deleting-grades-deleteg) and record it again. Grades for different assessments are separate. Names that differ in more than case and spaces, such as `Quiz 1` and `Quiz1`, are different assessments.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, so to change a score, delete the grade with [`deleteG`](#deleting-grades-deleteg-or-dg) and record it again. Grades for different assessments are separate. Names that differ in more than case and spaces, such as `Quiz 1` and `Quiz1`, are different assessments.
 * Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
 * `/assessment` and `/score` can each be given at most once.
-* The card of a contact in the list shows only its 3 most recent grades, last recorded first, followed by a line such as `+2 older grade(s)` if there are more, as in the picture in [Recording attendance](#recording-attendance-attendance). Use `viewG` to see all of them.
+* The card of a contact in the list shows only its 3 most recent grades, last recorded first, followed by a line such as `+2 older grade(s)` if there are more, as in the picture in [Recording attendance](#recording-attendance-attendance-or-att). Use `viewG` to see all of them.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -521,7 +521,7 @@ Format: `attendance INDEX /date DATE /status STATUS` or `attendance /name NAME /
 * `NAME` and `CLASS` identify a contact directly, as explained in [Choosing a contact](#choosing-a-contact). Both `/name` and `/class` must be provided.
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future. A date before the year 2000 is recorded, but ClassMates adds a warning to the confirmation because it is most likely a typo.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
-* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, so to change a status, delete the record with [`deleteA`](#deleting-attendance-deletea) and record it again. Records for different dates are separate.
+* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, so to change a status, delete the record with [`deleteA`](#deleting-attendance-deletea-or-da) and record it again. Records for different dates are separate.
 * `/name`, `/class`, `/date` and `/status` can each be given at most once.
 * The card of a contact in the list shows only its 3 most recent attendance records, newest date first, followed by a line such as `+2 older record(s)` if there are more. Use `viewA` to see all of them. A contact without a record shows `Recent attendance: none`.
 
@@ -697,7 +697,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: The index refers to the contacts currently displayed. After a `list KEYWORD`, index 3 is the 3rd contact in the results, not in the full list. Run `list` first, or use `delete /name NAME /class CLASS`.
 
 **Q**: What should my CSV file for `import` look like?<br>
-**A**: The first row is a header with `name` and `class` columns and an optional `email` column. Each following row is one contact, for example `John Doe,A1,johnd@example.com`. See [Importing from external file](#importing-contacts-from-a-csv-file-import).
+**A**: The first row is a header with `name` and `class` columns and an optional `email` column. Each following row is one contact, for example `John Doe,A1,johnd@example.com`. See [Importing contacts from a CSV file](#importing-contacts-from-a-csv-file-import).
 
 **Q**: I imported a file, but no contact was added. Why?<br>
 **A**: No contact is added unless every row is valid. If any row is invalid or duplicates an existing contact, ClassMates shows the first problem with its row number and adds nothing. Fix that row and import again.
