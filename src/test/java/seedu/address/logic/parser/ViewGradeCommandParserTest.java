@@ -47,8 +47,10 @@ public class ViewGradeCommandParserTest {
     }
 
     @Test
-    public void parse_missingBothFields_reportsMissingName() {
-        assertParseFailure(parser, "", MESSAGE_MISSING_NAME);
+    public void parse_noArguments_reportsUsage() {
+        assertParseFailure(parser, "", String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewGradeCommand.MESSAGE_USAGE));
+        assertParseFailure(parser, "   ",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewGradeCommand.MESSAGE_USAGE));
     }
 
     @Test

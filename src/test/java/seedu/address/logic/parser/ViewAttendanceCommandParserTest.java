@@ -54,8 +54,11 @@ public class ViewAttendanceCommandParserTest {
     }
 
     @Test
-    public void parse_missingBothFields_reportsMissingName() {
-        assertParseFailure(parser, "", MESSAGE_MISSING_NAME);
+    public void parse_noArguments_reportsUsage() {
+        assertParseFailure(parser, "",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAttendanceCommand.MESSAGE_USAGE));
+        assertParseFailure(parser, "   ",
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ViewAttendanceCommand.MESSAGE_USAGE));
     }
 
     @Test
@@ -93,6 +96,12 @@ public class ViewAttendanceCommandParserTest {
     public void parse_unknownParameterAndRepeatedParameter_reportsUnknownParameter() {
         assertParseFailure(parser, " /name John Tan /name Jane Doe /class A1 /foo bar",
                 MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_repeatedParameterAndStuckParameter_reportsRepeatedParameter() {
+        assertParseFailure(parser, " /name John/name Mary /name Jane /class A1",
+                getErrorMessageForDuplicatePrefixes("/name"));
     }
 
     @Test

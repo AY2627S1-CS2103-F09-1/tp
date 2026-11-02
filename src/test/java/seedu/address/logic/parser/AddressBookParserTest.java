@@ -173,7 +173,8 @@ public class AddressBookParserTest {
 
     @Test
     public void parseCommand_importWithoutPath_throwsParseException() {
-        assertThrows(ParseException.class, "Specify file path", () ->
+        assertThrows(ParseException.class,
+                String.format(MESSAGE_INVALID_COMMAND_FORMAT, ImportCommand.MESSAGE_USAGE), () ->
                 parser.parseCommand(ImportCommand.COMMAND_WORD));
     }
 

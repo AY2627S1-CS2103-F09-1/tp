@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
@@ -25,6 +26,13 @@ public class AttendanceCommandParserTest {
     @Test
     public void parse_nullArgs_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
+
+    @Test
+    public void parse_noArguments_reportsUsage() {
+        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, AttendanceCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "", expected);
+        assertParseFailure(parser, "   ", expected);
     }
 
     @Test
@@ -152,12 +160,17 @@ public class AttendanceCommandParserTest {
         assertParseFailure(parser,
                 "1 /name Alex Yeoh /class A1 /date 16-09-2026 /status absent",
                 "Use either an index or name and class, not both.");
+        assertParseFailure(parser, "1 /name /date 16-09-2026 /status absent",
+                ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
     }
 
     @Test
     public void parse_invalidIndex_failure() {
         assertParseFailure(parser, "0 /date 16-09-2026 /status absent",
                 ParserUtil.MESSAGE_INVALID_INDEX);
+
+        // once all required values are present, the index is validated before the date and status
+        assertParseFailure(parser, "x /date invalid /status invalid", ParserUtil.MESSAGE_INVALID_INDEX);
     }
 
     @Test
@@ -222,6 +235,13 @@ public class AttendanceCommandParserTest {
         assertParseFailure(parser,
                 "/name Alex Yeoh /class A1 /class A2 " + "/date 16-09-2026 /status absent",
                 getErrorMessageForDuplicatePrefixes("/class"));
+    }
+
+    @Test
+    public void parse_repeatedParameterAndStuckParameter_reportsRepeatedParameter() {
+        assertParseFailure(parser,
+                "1/date 16-09-2026 /date 16-09-2026 /date 17-09-2026 /status absent",
+                getErrorMessageForDuplicatePrefixes("/date"));
     }
 
 }

@@ -41,7 +41,6 @@ public class EditCommandParserTest {
     @Test
     public void parse_missingParts_failure() {
         // no index specified
-        assertParseFailure(parser, VALID_NAME_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
         assertParseFailure(parser, NAME_DESC_AMY, MESSAGE_INVALID_FORMAT);
 
         // no field specified
@@ -49,6 +48,9 @@ public class EditCommandParserTest {
 
         // no index and no field specified
         assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+
+        // required parts are checked before the index value
+        assertParseFailure(parser, VALID_NAME_AMY, EditCommand.MESSAGE_NOT_EDITED);
     }
 
     @Test
@@ -60,10 +62,10 @@ public class EditCommandParserTest {
         assertParseFailure(parser, "0" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
 
         // invalid arguments being parsed as preamble
-        assertParseFailure(parser, "1 some random string", ParserUtil.MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "1 some random string" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
 
         // invalid prefix being parsed as preamble
-        assertParseFailure(parser, "1 i/ string", ParserUtil.MESSAGE_INVALID_INDEX);
+        assertParseFailure(parser, "1 i/ string" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
 
         // text before the index
         assertParseFailure(parser, "text 1" + NAME_DESC_AMY, ParserUtil.MESSAGE_INVALID_INDEX);
@@ -118,11 +120,17 @@ public class EditCommandParserTest {
     public void parse_prefixWithoutSpace_failure() {
         // the stuck parameter must not silently become part of the name or class
         assertParseFailure(parser, "1 /name John/class B",
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "name", "/class"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/class"));
         assertParseFailure(parser, "1 /class A1/name Bob",
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/name"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/name"));
         assertParseFailure(parser, "1 /class A1/NAME Bob",
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/NAME"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/NAME"));
+    }
+
+    @Test
+    public void parse_repeatedParameterAndStuckParameter_reportsRepeatedParameter() {
+        assertParseFailure(parser, "1 /name John/name Mary" + NAME_DESC_AMY,
+                getErrorMessageForDuplicatePrefixes("/name"));
     }
 
     @Test

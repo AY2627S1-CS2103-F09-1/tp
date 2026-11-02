@@ -229,14 +229,14 @@ public class ParserUtilTest {
                 -> ParserUtil.isIdentifiedByIndex(tokenize(" 1 /name Alex /class A1")));
         assertThrows(ParseException.class, MESSAGE_BOTH_CONTACT_IDENTIFIERS, ()
                 -> ParserUtil.isIdentifiedByIndex(tokenize(" 1 /class A1")));
+        assertThrows(ParseException.class, MESSAGE_BOTH_CONTACT_IDENTIFIERS, ()
+                -> ParserUtil.isIdentifiedByIndex(tokenize(" 1 /name")));
     }
 
     @Test
     public void isIdentifiedByIndex_noIdentifier_throwsParseException() {
         assertThrows(ParseException.class, MESSAGE_MISSING_CONTACT_IDENTIFIER, ()
                 -> ParserUtil.isIdentifiedByIndex(tokenize(" /date 16-09-2026")));
-        assertThrows(ParseException.class, MESSAGE_MISSING_CONTACT_IDENTIFIER, ()
-                -> ParserUtil.isIdentifiedByIndex(tokenize(" /name /class /date 16-09-2026")));
     }
 
     @Test
@@ -245,6 +245,8 @@ public class ParserUtilTest {
                 -> ParserUtil.isIdentifiedByIndex(tokenize(" /class A1")));
         assertThrows(ParseException.class, MESSAGE_MISSING_CLASS, ()
                 -> ParserUtil.isIdentifiedByIndex(tokenize(" /name Alex")));
+        assertThrows(ParseException.class, MESSAGE_MISSING_NAME, ()
+                -> ParserUtil.isIdentifiedByIndex(tokenize(" /name /class /date 16-09-2026")));
     }
 
     private static ArgumentMultimap tokenize(String args) {
