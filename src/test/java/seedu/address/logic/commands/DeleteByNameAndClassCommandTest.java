@@ -32,18 +32,21 @@ public class DeleteByNameAndClassCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Null name or class
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new DeleteByNameAndClassCommand(null, ALICE_CLASS));
         assertThrows(NullPointerException.class, () -> new DeleteByNameAndClassCommand(ALICE_NAME, null));
     }
 
+    // EP_2: Null model
     @Test
     public void execute_nullModel_throwsNullPointerException() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, ALICE_CLASS);
         assertThrows(NullPointerException.class, () -> deleteCommand.execute(null));
     }
 
+    // EP_3_1: Valid name and class, unfiltered list
     @Test
     public void execute_nameAndClassMatch_success() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, ALICE_CLASS);
@@ -58,6 +61,7 @@ public class DeleteByNameAndClassCommandTest {
         assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_3_2: Valid name and class, but with different case and extra spaces
     @Test
     public void execute_caseAndExtraSpacesIgnored_successShowsStoredNameAndClass() {
         DeleteByNameAndClassCommand deleteCommand =
@@ -71,6 +75,7 @@ public class DeleteByNameAndClassCommandTest {
                 "Alice Pauline in class A1 has been deleted", expectedModel);
     }
 
+    // EP_3_3: Valid name and class, same name in other class
     @Test
     public void execute_sameNameInOtherClass_deletesOnlyMatchingClass() {
         Person aliceInOtherClass = new PersonBuilder(ALICE).withClassName("B2").build();
@@ -86,6 +91,7 @@ public class DeleteByNameAndClassCommandTest {
         assertTrue(model.hasPerson(ALICE));
     }
 
+    // EP_3_4: Valid name and class, person hidden by filtered list
     @Test
     public void execute_personHiddenByFilter_success() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -106,6 +112,7 @@ public class DeleteByNameAndClassCommandTest {
         assertTrue(model.getFilteredPersonList().contains(ALICE));
     }
 
+    // EP_4_1: Name does not match
     @Test
     public void execute_noMatchingName_throwsCommandException() {
         DeleteByNameAndClassCommand deleteCommand =
@@ -113,24 +120,28 @@ public class DeleteByNameAndClassCommandTest {
         assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
-    @Test
-    public void execute_matchingNameButOtherClass_throwsCommandException() {
-        DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, "Z9");
-        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
-    }
-
+    // EP_4_2: Name does not match, but class does
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("Nobody Here", "A1");
         assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_4_3: Class does not match, but name does
+    @Test
+    public void execute_matchingNameButOtherClass_throwsCommandException() {
+        DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand(ALICE_NAME, "Z9");
+        assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
+    }
+
+    // EP_4_4: Name & class invalid
     @Test
     public void execute_invalidNameAndClass_throwsCommandExceptionNotFound() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("R@chel", "A1/B2");
         assertCommandFailure(deleteCommand, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_4_5: Name & class invalid, address book empty
     @Test
     public void execute_emptyAddressBook_throwsCommandException() {
         Model emptyModel = new ModelManager();
@@ -138,6 +149,7 @@ public class DeleteByNameAndClassCommandTest {
         assertCommandFailure(deleteCommand, emptyModel, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_returnsExpected() {
         DeleteByNameAndClassCommand deleteAliceCommand = new DeleteByNameAndClassCommand("Alice", "A1");
@@ -167,6 +179,7 @@ public class DeleteByNameAndClassCommandTest {
         assertFalse(deleteAliceCommand.equals(new DeleteByIndexCommand(INDEX_FIRST_PERSON)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_command_returnsExpectedFormat() {
         DeleteByNameAndClassCommand deleteCommand = new DeleteByNameAndClassCommand("Alice", "A1");
@@ -174,4 +187,5 @@ public class DeleteByNameAndClassCommandTest {
                 + "{name=Alice, className=A1}";
         assertEquals(expected, deleteCommand.toString());
     }
+
 }

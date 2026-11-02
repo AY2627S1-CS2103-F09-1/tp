@@ -41,6 +41,7 @@ public class DeleteGradeByNameAndClassCommandTest {
         model = getModelWithAliceGrades();
     }
 
+    // EP_1_1: Invalid constructor. Null name, null class, or null assessment
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -51,6 +52,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, null));
     }
 
+    // EP_1_2: Invalid constructor. Invalid assessment name (empty or whitespace)
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
@@ -59,6 +61,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 new DeleteGradeByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, "   "));
     }
 
+    // EP_2_1: Valid name, class and assessment. Unfiltered list
     @Test
     public void execute_nameAndClassMatch_success() {
         DeleteGradeByNameAndClassCommand command =
@@ -72,6 +75,7 @@ public class DeleteGradeByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_2: Valid name, class and assessment. Ignore case and extra spaces. Unfiltered list
     @Test
     public void execute_caseAndExtraSpacesIgnored_successShowsStoredDetails() {
         DeleteGradeByNameAndClassCommand command =
@@ -85,6 +89,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 expectedModel);
     }
 
+    // EP_2_3: Valid name, class and assessment. Same name in other class. Unfiltered list
     @Test
     public void execute_sameNameInOtherClass_deletesOnlyMatchingStudentGrade() {
         Person aliceInOtherClass = new PersonBuilder(ALICE).withClassName("B2").build().withGrade(GRADE);
@@ -108,6 +113,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 .findFirst().orElseThrow().getGradeRecords().size());
     }
 
+    // EP_2_4: Valid name, class and assessment. Filtered list
     @Test
     public void execute_personHiddenByFilter_success() {
         Person bensonWithGrade = BENSON.withGrade(GRADE);
@@ -129,6 +135,7 @@ public class DeleteGradeByNameAndClassCommandTest {
         assertTrue(model.getFilteredPersonList().contains(ALICE_WITH_GRADES));
     }
 
+    // EP_3_1: Name matches, class does not
     @Test
     public void execute_matchingNameButOtherClass_throwsCommandException() {
         // EP: [name matches, class does not]
@@ -137,6 +144,7 @@ public class DeleteGradeByNameAndClassCommandTest {
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_3_2: Class matches, name does not
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
         // EP: [name does not match, class matches] (complement of previous combination)
@@ -145,6 +153,7 @@ public class DeleteGradeByNameAndClassCommandTest {
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         DeleteGradeByNameAndClassCommand deleteAliceQuiz =
@@ -165,6 +174,7 @@ public class DeleteGradeByNameAndClassCommandTest {
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 1")));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteGradeByNameAndClassCommand command =
@@ -174,4 +184,5 @@ public class DeleteGradeByNameAndClassCommandTest {
 
         assertEquals(expected, command.toString());
     }
+
 }

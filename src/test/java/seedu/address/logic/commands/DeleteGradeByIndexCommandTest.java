@@ -36,6 +36,7 @@ public class DeleteGradeByIndexCommandTest {
         model = getModelWithAliceGrades();
     }
 
+    // EP_1_1: Invalid constructor. Null index or null assessment name
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new DeleteGradeByIndexCommand(null, "Quiz 1"));
@@ -43,6 +44,7 @@ public class DeleteGradeByIndexCommandTest {
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, null));
     }
 
+    // EP_1_2: Invalid constructor. Invalid assessment name
     @Test
     public void constructor_invalidAssessment_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
@@ -51,6 +53,33 @@ public class DeleteGradeByIndexCommandTest {
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "   "));
     }
 
+    // EP_2_1: Invalid index. Unfiltered list
+    // Boundary Value: list size + 1 (first index outside displayed-list partition)
+    @Test
+    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
+        Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
+        DeleteGradeByIndexCommand command =
+                new DeleteGradeByIndexCommand(outOfBoundsIndex, "Quiz 1");
+
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
+    }
+
+    // EP_2_2: Invalid index. Filtered list
+    @Test
+    public void execute_invalidIndexFilteredList_throwsCommandException() {
+        // Index valid in address book but in the invalid EP for filtered list
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+        assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
+
+        DeleteGradeByIndexCommand command =
+                new DeleteGradeByIndexCommand(INDEX_SECOND_PERSON, "Quiz 1");
+
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
+    }
+
+    // EP_3_1: Valid index. Unfiltered list
     @Test
     public void execute_validIndexUnfilteredList_success() {
         DeleteGradeByIndexCommand command =
@@ -64,17 +93,7 @@ public class DeleteGradeByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
-    @Test
-    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
-        // BVA: list size + 1 (first index outside displayed-list partition)
-        Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
-        DeleteGradeByIndexCommand command =
-                new DeleteGradeByIndexCommand(outOfBoundsIndex, "Quiz 1");
-
-        assertCommandFailure(command, model,
-                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
-    }
-
+    // EP_3_2: Valid index. Filtered list
     @Test
     public void execute_validIndexFilteredList_success() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -90,19 +109,7 @@ public class DeleteGradeByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
-    @Test
-    public void execute_invalidIndexFilteredList_throwsCommandException() {
-        // Index valid in address book but in the invalid EP for filtered list
-        showPersonAtIndex(model, INDEX_FIRST_PERSON);
-        assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
-
-        DeleteGradeByIndexCommand command =
-                new DeleteGradeByIndexCommand(INDEX_SECOND_PERSON, "Quiz 1");
-
-        assertCommandFailure(command, model,
-                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
-    }
-
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         DeleteGradeByIndexCommand deleteFirstQuiz =
@@ -119,6 +126,7 @@ public class DeleteGradeByIndexCommandTest {
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Exam")));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteGradeByIndexCommand command =
@@ -128,4 +136,5 @@ public class DeleteGradeByIndexCommandTest {
 
         assertEquals(expected, command.toString());
     }
+
 }

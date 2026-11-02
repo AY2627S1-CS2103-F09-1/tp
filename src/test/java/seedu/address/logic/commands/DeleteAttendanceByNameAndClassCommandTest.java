@@ -43,6 +43,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         model = getModelWithAliceAttendance();
     }
 
+    // EP_1: Invalid constructor inputs. Null name, class, or date
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -53,6 +54,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
                 new DeleteAttendanceByNameAndClassCommand(ALICE_NAME, ALICE_CLASS, null));
     }
 
+    // EP_2_1: Valid name and class. Unfiltered list
     @Test
     public void execute_nameAndClassMatch_success() {
         DeleteAttendanceByNameAndClassCommand command =
@@ -66,6 +68,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_1_1: Valid name and class. Unfiltered list. Case and extra spaces ignored.
     @Test
     public void execute_caseAndExtraSpacesIgnored_successShowsStoredDetails() {
         DeleteAttendanceByNameAndClassCommand command =
@@ -78,6 +81,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
                 "Attendance of absent for Alice Pauline on 16-09-2026 has been deleted", expectedModel);
     }
 
+    // EP_2_2: Valid name and class. Filtered list
     @Test
     public void execute_personHiddenByFilter_success() {
         Person bensonWithAttendance = BENSON.withAttendance(ATTENDANCE);
@@ -96,24 +100,25 @@ public class DeleteAttendanceByNameAndClassCommandTest {
                 "Attendance of absent for Benson Meier on 16-09-2026 has been deleted", expectedModel);
     }
 
+    // EP_3: Name does not match, class matches
     @Test
     public void execute_matchingClassButOtherName_throwsCommandException() {
-        // EP: [name does not match, class matches]
         DeleteAttendanceByNameAndClassCommand command =
                 new DeleteAttendanceByNameAndClassCommand("Nobody Here", ALICE_CLASS, DATE);
 
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_4: Name matches, class does not match
     @Test
     public void execute_matchingNameButOtherClass_throwsCommandException() {
-        // EP: [name matches, class does not] (complement of previous combination)
         DeleteAttendanceByNameAndClassCommand command =
                 new DeleteAttendanceByNameAndClassCommand(ALICE_NAME, "Z9", DATE);
 
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         DeleteAttendanceByNameAndClassCommand deleteAliceDate =
@@ -133,6 +138,7 @@ public class DeleteAttendanceByNameAndClassCommandTest {
         assertFalse(deleteAliceDate.equals(new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteAttendanceByNameAndClassCommand command =
@@ -142,4 +148,5 @@ public class DeleteAttendanceByNameAndClassCommandTest {
 
         assertEquals(expected, command.toString());
     }
+
 }
