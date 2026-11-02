@@ -134,6 +134,17 @@ public class LogicManagerTest {
     }
 
     @Test
+    public void execute_listWithEmailKeyword_showsOnlyMatchingContacts() throws Exception {
+        model.addPerson(AMY);
+        String email = AMY.getEmail().orElseThrow().toString();
+        Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
+        expectedModel.updateFilteredPersonList(new PersonMatchesKeyword(email));
+
+        assertCommandSuccess("list " + email, String.format(MESSAGE_PERSONS_LISTED_OVERVIEW, 1), expectedModel);
+        assertEquals(List.of(AMY), model.getFilteredPersonList());
+    }
+
+    @Test
     public void execute_listWithKeywordMatchingNobody_showsEmptyList() throws Exception {
         model.addPerson(AMY);
         Model expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());

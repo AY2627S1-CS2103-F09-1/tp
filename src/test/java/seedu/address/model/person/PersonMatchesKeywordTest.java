@@ -87,19 +87,29 @@ public class PersonMatchesKeywordTest {
     }
 
     @Test
-    public void test_keywordInEmail_returnsFalse() {
+    public void test_keywordInEmail_returnsTrue() {
         Person personWithEmail = new PersonBuilder().withName("Amy Bee").withClassName("A1")
                 .withEmail("secret@example.com").build();
 
-        assertFalse(new PersonMatchesKeyword("secret").test(personWithEmail));
-        assertFalse(new PersonMatchesKeyword("example.com").test(personWithEmail));
-        assertFalse(new PersonMatchesKeyword("secret@example.com").test(personWithEmail));
+        assertTrue(new PersonMatchesKeyword("secret").test(personWithEmail));
+        assertTrue(new PersonMatchesKeyword("EXAMPLE.COM").test(personWithEmail));
+        assertTrue(new PersonMatchesKeyword("secret@example.com").test(personWithEmail));
+    }
+
+    @Test
+    public void test_personWithoutEmail_doesNotMatchEmailKeyword() {
+        Person personWithoutEmail = new PersonBuilder().withName("Amy Bee").withClassName("A1")
+                .withoutEmail().build();
+
+        assertFalse(new PersonMatchesKeyword("example.com").test(personWithoutEmail));
     }
 
     @Test
     public void test_keywordWithSpecialCharacters_matchedLiterally() {
-        Person personWithSlash = new PersonBuilder().withName("Tan s/o Kumar").withClassName("A1").build();
-        Person personWithDot = new PersonBuilder().withName("Dr. Lee").withClassName("A1").build();
+        Person personWithSlash = new PersonBuilder().withName("Tan s/o Kumar").withClassName("A1")
+                .withoutEmail().build();
+        Person personWithDot = new PersonBuilder().withName("Dr. Lee").withClassName("A1")
+                .withoutEmail().build();
 
         // characters that are allowed in names are matched as typed
         assertTrue(new PersonMatchesKeyword("s/o").test(personWithSlash));

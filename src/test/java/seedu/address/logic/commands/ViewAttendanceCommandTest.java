@@ -4,6 +4,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static seedu.address.logic.commands.CommandResult.DisplayTarget.ATTENDANCE_HISTORY;
 import static seedu.address.testutil.TypicalPersons.getTypicalAddressBook;
 
 import java.time.LocalDate;
@@ -35,6 +36,7 @@ public class ViewAttendanceCommandTest {
 
         assertEquals("Here is the attendance for " + person.getName() + " from class " + person.getClassName()
                 + "\n23-Sep-2026  present\n16-Sep-2026  absent", result.getFeedbackToUser());
+        assertEquals(ATTENDANCE_HISTORY, result.getDisplayTarget());
     }
 
     @Test

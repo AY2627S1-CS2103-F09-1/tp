@@ -7,6 +7,7 @@ import static seedu.address.logic.parser.CliSyntax.PREFIX_EMAIL;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
 import static seedu.address.model.Model.PREDICATE_SHOW_ALL_PERSONS;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -43,7 +44,7 @@ public class EditCommand extends Command {
             + PREFIX_NAME + " John Tann "
             + PREFIX_CLASS + " A2";
 
-    public static final String MESSAGE_EDIT_PERSON_SUCCESS = "%1$s in class %2$s has been edited";
+    public static final String MESSAGE_EDIT_PERSON_SUCCESS = "%1$s in class %2$s has been edited: %3$s";
     public static final String MESSAGE_NOT_EDITED = "At least one detail to edit must be provided";
     public static final String MESSAGE_DUPLICATE_PERSON = AddCommand.MESSAGE_DUPLICATE_PERSON;
 
@@ -96,8 +97,25 @@ public class EditCommand extends Command {
 
         logger.info("Edited contact: " + personToEdit.getName() + " in " + personToEdit.getClassName()
                 + " is now " + editedPerson.getName() + " in " + editedPerson.getClassName());
+
+        List<String> changes = new ArrayList<>();
+
+        if (!personToEdit.getName().fullName.equals(editedPerson.getName().fullName)) {
+            changes.add("name " + personToEdit.getName() + " -> " + editedPerson.getName());
+        }
+
+        if (!personToEdit.getClassName().value.equals(editedPerson.getClassName().value)) {
+            changes.add("class " + personToEdit.getClassName() + " -> " + editedPerson.getClassName());
+        }
+
+        if (!personToEdit.getEmail().equals(editedPerson.getEmail())) {
+            String oldEmail = personToEdit.getEmail().map(Object::toString).orElse("(none)");
+            String newEmail = editedPerson.getEmail().map(Object::toString).orElse("(deleted)");
+            changes.add("email " + oldEmail + " -> " + newEmail);
+        }
+
         return new CommandResult(String.format(MESSAGE_EDIT_PERSON_SUCCESS,
-                editedPerson.getName(), editedPerson.getClassName()));
+                editedPerson.getName(), editedPerson.getClassName(), String.join(", ", changes)));
     }
 
     /**

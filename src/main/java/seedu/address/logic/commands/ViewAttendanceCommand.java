@@ -3,6 +3,7 @@ package seedu.address.logic.commands;
 import static java.util.Objects.requireNonNull;
 import static seedu.address.commons.util.CollectionUtil.requireAllNonNull;
 import static seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND;
+import static seedu.address.logic.commands.CommandResult.DisplayTarget.ATTENDANCE_HISTORY;
 
 import java.util.Comparator;
 import java.util.logging.Logger;
@@ -64,7 +65,9 @@ public class ViewAttendanceCommand extends Command {
         logger.info("Displayed attendance history for " + student.getName()
             + " in class " + student.getClassName());
 
-        return new CommandResult(String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), attendance));
+        return new CommandResult(
+                String.format(MESSAGE_SUCCESS, student.getName(), student.getClassName(), attendance),
+                ATTENDANCE_HISTORY);
     }
 
     @Override

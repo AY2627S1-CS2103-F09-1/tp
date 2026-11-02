@@ -143,6 +143,24 @@ public class DeleteCommandParserTest {
     }
 
     @Test
+    public void parse_parameterMissingSpaceBeforeIt_throwsParseException() {
+        assertParseFailure(parser, " /name John/class A1 /class A2",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/class"));
+        assertParseFailure(parser, " /name John Tan /class A1/name Mary",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/name"));
+
+        // matching is case-insensitive
+        assertParseFailure(parser, " /name John/CLASS A1 /class A2",
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/CLASS"));
+    }
+
+    @Test
+    public void parse_slashInsideName_returnsDeleteByNameAndClassCommand() {
+        assertParseSuccess(parser, " /name Kevin s/o Kumar /class A1",
+                new DeleteByNameAndClassCommand("Kevin s/o Kumar", "A1"));
+    }
+
+    @Test
     public void parse_indexMixedWithParameters_throwsParseException() {
         assertParseFailure(parser, "1 /name John Tan /class A1", MESSAGE_INVALID_FORMAT);
         assertParseFailure(parser, "1 /name John Tan", MESSAGE_INVALID_FORMAT);

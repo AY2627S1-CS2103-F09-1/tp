@@ -22,8 +22,6 @@ import seedu.address.commons.core.GuiSettings;
 import seedu.address.commons.core.LogsCenter;
 import seedu.address.logic.Logic;
 import seedu.address.logic.commands.CommandResult;
-import seedu.address.logic.commands.ViewAttendanceCommand;
-import seedu.address.logic.commands.ViewGradeCommand;
 import seedu.address.logic.commands.exceptions.CommandException;
 import seedu.address.logic.parser.exceptions.ParseException;
 
@@ -193,13 +191,11 @@ public class MainWindow extends UiPart<Stage> {
         try {
             CommandResult commandResult = logic.execute(commandText);
             logger.info("Result: " + commandResult.getFeedbackToUser());
-            String commandWord = commandText.trim().split("\\s+", 2)[0];
-
-            if (commandWord.equalsIgnoreCase(ViewAttendanceCommand.COMMAND_WORD)
-                || commandWord.equalsIgnoreCase(ViewGradeCommand.COMMAND_WORD)) {
-                showHistoryPopup(commandWord, commandResult.getFeedbackToUser());
-            } else {
-                resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+            switch (commandResult.getDisplayTarget()) {
+                case RESULT_DISPLAY -> resultDisplay.setFeedbackToUser(commandResult.getFeedbackToUser());
+                case ATTENDANCE_HISTORY -> showHistoryPopup("Attendance History", commandResult.getFeedbackToUser());
+                case GRADE_HISTORY -> showHistoryPopup("Grade History", commandResult.getFeedbackToUser());
+                default -> throw new AssertionError("Unknown display target: " + commandResult.getDisplayTarget());
             }
 
             if (commandResult.isShowHelp()) {
@@ -221,20 +217,13 @@ public class MainWindow extends UiPart<Stage> {
     /**
      * Shows attendance or grade history in a separate pop-up window.
      *
-     * @param commandWord command that generated the result
+     * @param title heading to show above the history
      * @param feedback text to display in the pop-up
      */
-    private void showHistoryPopup(String commandWord, String feedback) {
+    private void showHistoryPopup(String title, String feedback) {
         Stage popupStage = new Stage();
         popupStage.setMinWidth(400);
         popupStage.setMinHeight(300);
-        String title;
-
-        if (commandWord.equalsIgnoreCase(ViewAttendanceCommand.COMMAND_WORD)) {
-            title = "Attendance History";
-        } else {
-            title = "Grade History";
-        }
 
         popupStage.setTitle("ClassMates");
         popupStage.initOwner(primaryStage);

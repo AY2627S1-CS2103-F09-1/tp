@@ -72,6 +72,14 @@ public class AddCommandParserTest {
     }
 
     @Test
+    public void parse_fullWidthClass_success() {
+        Person expectedPerson = new PersonBuilder().withName("Charlie").withClassName("Ｔ２９")
+                .withoutEmail().build();
+
+        assertParseSuccess(parser, " /name Charlie /class Ｔ２９", new AddCommand(expectedPerson));
+    }
+
+    @Test
     public void parse_sameParameterInDifferentCases_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + " /NAME Amy Bee" + CLASS_DESC_BOB,
                 getErrorMessageForDuplicatePrefixes("/name"));

@@ -6,7 +6,7 @@
 
 # ClassMates User Guide
 
-ClassMates is a **desktop application for managing contacts, optimized for use through a Command Line Interface (CLI)** while retaining the benefits of a Graphical User Interface (GUI). If you type quickly, ClassMates can help you manage contacts faster than traditional GUI applications.
+ClassMates is a **desktop application for teaching assistants (TAs) to manage student contacts across classes, record attendance and track grades**. It is optimized for use through a Command Line Interface (CLI) while retaining the benefits of a Graphical User Interface (GUI), so TAs who type quickly can manage their student records faster than with a traditional GUI application.
 
 <!-- * Table of Contents -->
 <page-nav-print />
@@ -15,16 +15,17 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 ## Quick start
 
-1. Ensure that Java `25` or later is installed on your computer.<br>
+1. Ensure that Java `25` is installed on your computer.<br>
    **Mac users:** Ensure you have the precise JDK version prescribed [here](https://se-education.org/guides/tutorials/javaInstallationMac.html).
 
 1. Download the latest `.jar` file from [here](https://github.com/AY2627S1-CS2103-F09-1/tp/releases).
 
-1. Copy the file to the folder you want to use as the _home folder_ for your ClassMates.
+1. Copy the file to the folder you want to use as the _home folder_ for your ClassMates. The folder must not be write-protected as ClassMates creates and updates files in it.
 
-1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar classmates.jar`.<br>
+1. Open a terminal, `cd` to the folder containing the JAR file, and run `java -jar "classmates.jar"` rather than double-clicking the file.<br>
    A GUI similar to the one below should appear in a few seconds. Note how the app contains some sample data.<br>
-   ![Ui](images/Ui.png)
+   <img src="images/Ui.png" alt="The main window of ClassMates" width="600"><br>
+   The window has a command box at the top, a result box below it that shows the outcome of the last command, the list of contacts, and the location of the data file at the bottom.
 
 1. Type a command in the command box and press Enter to execute it. For example, type **`help`** and press Enter to open the help window.<br>
    Some example commands you can try, in this order. The later ones use the contact `John Doe` that the `add` command creates:
@@ -47,7 +48,7 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
    * `viewA /name John Doe /class A1` : Lists the attendance records of `John Doe` in class `A1`.
 
-   * `list John` : Lists the contacts whose name, class or groups contain `John`, which is now only `John Doe`.
+   * `list John` : Lists the contacts whose name, class, email or groups contain `John`, which is now only `John Doe`.
 
    * `delete /name John Doe /class A1` : Deletes the contact named `John Doe` in class `A1`.
 
@@ -106,22 +107,32 @@ ClassMates is a **desktop application for managing contacts, optimized for use t
 
 Many commands act on one contact. `edit`, `tag` and `untag` choose contacts by `INDEX`, and `viewG` and `viewA` choose a contact by `/name NAME /class CLASS`. `delete`, `grade`, `attendance`, `deleteG` and `deleteA` accept either form, but not both in the same command.
 
-* `INDEX` is the position of the contact in the contact list that is displayed now, so after `list Betsy` it is the position in the results, not in the full list. It must be a positive integer 1, 2, 3, ...
+* `INDEX` is the position of the contact in the contact list that is displayed now, so after `list David` it is the position in the results, not in the full list. It must be a positive integer 1, 2, 3, ...
 * `/name NAME /class CLASS` finds the contact with that name in that class among all contacts, even if only some of them are displayed. Case and extra spaces are ignored; for example, `/name john  tan /class a1` matches `John Tan` in class `A1`.
 * The name and class are not checked against the rules for adding a contact. A value that `add` would reject simply matches no contact.
 * If no contact matches, ClassMates shows `Contact not found`.
+
+For example, David Li is the 4th contact in the list that `list` shows, but the 1st contact in the list that `list David` shows. An index that you type refers to the list that is on the screen at that moment.
+
+After `list`:
+
+<img src="images/DisplayedListFull.png" alt="The list after list, in which David Li is the 4th contact" width="500">
+
+After `list David`:
+
+<img src="images/DisplayedListFiltered.png" alt="The list after list David, in which David Li is the 1st contact" width="500">
 
 ### Errors shared by several commands
 
 Besides the errors listed under each command, these errors can appear:
 
-Problem | Message | Commands
---------|---------|---------
-A parameter that the command does not accept is given, such as `/phone` | `Unknown parameter. Use` followed by the parameters that the command accepts and `A word that starts with / is always read as a parameter.`, such as `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.` | All commands that take parameters, except `list` and `import`
-A parameter is given more than once | `Each parameter can only be specified once. Repeated: PARAMETER`, naming each repeated parameter, such as `Repeated: /date, /status` | Same as above
-A parameter is stuck to the text before it, such as the `/score` in `/assessment Quiz/score 90` | `The command contains '/score', which looks like a parameter that is missing a space before it` | `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA` (`add` and `edit` have their own messages below)
-The index is larger than the number of contacts displayed | `The contact index provided is invalid. The displayed list has N contact(s), so the index must be from 1 to N.`, or `The contact index provided is invalid. No contacts are displayed.` if the list is empty | `edit`, `delete`, `grade`, `deleteG`, `attendance`, `deleteA`
-No contact has the given name and class | `Contact not found` | `delete`, `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA`
+| Problem                                                                                         | Message                                                                                                                                                                                                                                                 | Commands                                                                                                                 |
+|-------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|--------------------------------------------------------------------------------------------------------------------------|
+| A parameter that the command does not accept is given, such as `/phone`                         | `Unknown parameter. Use` followed by the parameters that the command accepts and `A word that starts with / is always read as a parameter.`, such as `Unknown parameter. Use /name or /class. A word that starts with / is always read as a parameter.` | All commands that take parameters, except `list` and `import`                                                            |
+| A parameter is given more than once                                                             | `Each parameter can only be specified once. Repeated: PARAMETER`, naming each repeated parameter, such as `Repeated: /date, /status`                                                                                                                    | Same as above                                                                                                            |
+| A parameter is stuck to the text before it, such as the `/score` in `/assessment Quiz/score 90` | `The command contains '/score', which looks like a parameter that is missing a space before it`                                                                                                                                                         | `delete`, `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA` (`add` and `edit` have their own messages below) |
+| The index is larger than the number of contacts displayed                                       | `The contact index provided is invalid. The displayed list has N contact(s), so the index must be from 1 to N.`, or `The contact index provided is invalid. No contacts are displayed.` if the list is empty                                            | `edit`, `delete`, `grade`, `deleteG`, `attendance`, `deleteA`                                                            |
+| No contact has the given name and class                                                         | `Contact not found`                                                                                                                                                                                                                                     | `delete`, `grade`, `viewG`, `deleteG`, `attendance`, `viewA`, `deleteA`                                                  |
 
 If more than one problem applies, only the first one that is found is shown. Problems with unknown or repeated parameters are always found first.
 
@@ -147,13 +158,13 @@ Format: `add /name NAME /class CLASS [/email EMAIL]`
   * Accented letters such as `é`, `ñ` and `ü` are allowed, as in `José Müller` or `Nguyễn Văn An`. Letters of other languages, such as Chinese or Cyrillic letters, are not accepted.
   * Commas are not allowed, because they separate the values in a CSV file.
   * A word that starts with `/` after a space is read as a parameter, so a `/` can be used inside a name, but not at the start of a word.
-* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can only contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`.
+* `CLASS` must start with a letter or a digit and can be at most 80 characters long. It can contain the English letters `A-Z` and `a-z`, digits, spaces, and the characters `-`, `.`, `_`, `/`, `(` and `)`, as in `Sec 3-2`, `CS2103_T11`, `T11/A` or `Sec 3 (Morning)`. The full-width forms of these characters are also accepted, for example `Ｔ２９`.
 * A name or class cannot contain a parameter name that is stuck to the text before it, such as `John/class A1`, as this is most likely a missing space. The parameter names that are checked are `/name`, `/class`, `/email`, `/tag`, `/group`, `/members`, `/date`, `/status`, `/assessment` and `/score`, in any case.
 * `EMAIL` is optional. If given, it can be at most 254 characters long and must be in the format `local-part@domain`, such as `johnd@example.com`.
   * The local part, before the `@`, can only contain letters, digits and the characters `+`, `_`, `.` and `-`. It cannot start or end with one of these characters, or have two of them in a row.
   * The domain, after the `@`, is made up of one or more words separated by periods, as in `example.com`. Each word can only contain letters, digits and hyphens, and cannot start or end with a hyphen. The last word must be at least 2 characters long.
 * A contact is identified by the name and class together. The same name can be added to different classes, but not twice to the same class.
-* Names and classes are compared ignoring case and extra spaces. For example, `john  tan` in class `a1` is treated as the same contact as `John Tan` in class `A1`. Different ways of typing the same letter are also treated as the same, such as `é` typed as one character or as `e` followed by an accent, and a full-width `Ａ` and a normal `A`. The same applies to assessment names.
+* Valid names and classes are compared ignoring case, extra spaces and equivalent Unicode forms. For example, `john  tan` in class `ａ１` is treated as the same contact as `John Tan` in class `A1`. This comparison also treats `é` typed as one character as equivalent to `e` followed by an accent. The same comparison rules apply to assessment names, although each field still has its own rules for which characters are accepted.
 * Only `/name`, `/class` and `/email` are accepted, and each can be given at most once.
 * The new contact is shown at the top of the list, and all contacts are shown, even if a search was displayed before.
 
@@ -171,11 +182,12 @@ The class is empty, too long or has characters that are not allowed | `Class nam
 The email is too long, not valid, or `/email` has nothing after it | `Email is too long` or a description of the valid email format
 The same name already exists in the same class | `NAME already exists in class CLASS`
 
-On success, ClassMates shows `NAME added to contacts`.
+On success, ClassMates shows `NAME in class CLASS added to contacts`.
 
 Examples:
-* `add /name John Doe /class A1 /email johnd@example.com` adds John Doe in class A1 with an email, and shows `John Doe added to contacts`.
+* `add /name John Doe /class A1 /email johnd@example.com` adds John Doe in class A1 with an email, and shows `John Doe in class A1 added to contacts`.
 * `add /name Betsy Crowe /class A2` adds Betsy Crowe in class A2 without an email.
+* If Charlie already exists in class `T29`, `add /name Charlie /class Ｔ２９` is rejected as a duplicate because `Ｔ２９` and `T29` are treated as the same class.
 
 ### Editing a contact: `edit`
 
@@ -214,7 +226,7 @@ Examples:
 * `edit 2 /email newmail@example.com` changes the email of the 2nd contact in the displayed list, and shows a message such as `Alex Yeoh in class A1 has been edited`.
 * `edit 1 /name John Tann /class A2` changes the name and the class of the 1st contact.
 * `edit 4 /email` removes the email of the 4th contact.
-* `list Betsy` followed by `edit 1 /class B1` changes the class of the 1st contact in the results of the `list Betsy` command.
+* `list David` followed by `edit 1 /class B1` changes the class of the 1st contact in the results of the `list David` command.
 
 ### Listing and searching contacts: `list`
 
@@ -223,12 +235,12 @@ Shows a list of all contacts in ClassMates, or only the contacts that match a ke
 Format: `list [KEYWORD]`
 
 * If `KEYWORD` is omitted, all contacts are shown.
-* If `KEYWORD` is given, only the contacts whose name, class or groups contain it are shown, and the message shows how many contacts were listed.
+* If `KEYWORD` is given, only the contacts whose name, class, email or groups contain it are shown, and the message shows how many contacts were listed.
 * The search is case-insensitive; for example, `john` matches `John`.
-* Partial matches are included; for example, `jo` matches `John` and `2103` matches the class `CS2103`.
+* Partial matches are included; for example, `jo` matches `John`, `2103` matches the class `CS2103` and `example.com` matches the email `johnd@example.com`.
 * The characters of `KEYWORD` must appear next to each other; for example, `rid` does not match the group `friend`.
 * Everything after `list` is treated as one keyword, so it can contain several words, such as a full name or a class. Extra spaces are ignored; for example, `list John   Doe` is the same as `list John Doe`.
-* The keyword must match within a single name, class or group; for example, it cannot match the end of a name and the start of a class, or run across two groups.
+* The keyword must match within a single name, class, email or group; for example, it cannot match the end of a name and the start of a class, or run across two groups.
 * `list` has no parameters, so text such as `/class A1` is searched for like any other text. It does not filter by class.
 * The search always covers all contacts in ClassMates, even if a previous search is still displayed.
 * If no contact matches, an empty list is shown.
@@ -236,8 +248,9 @@ Format: `list [KEYWORD]`
 
 Examples:
 * `list` shows all contacts and the message `Listed all contacts.`
-* `list John` shows `John Doe` and any contact in a class or in a group containing `john`, with a message such as `1 contact(s) listed!`
-* `list Group A` shows any contact whose name, class or group contains `Group A`.
+* `list John` shows `John Doe` and any contact whose name, class, email or group contains `john`, with a message such as `1 contact(s) listed!`
+* `list @example.com` shows any contact whose name or email contains `@example.com` as class and group are not permitted to contain `@`.
+* `list Group A` shows any contact whose name, class, email or group contains `Group A`.
 
 ### Deleting a contact: `delete`
 
@@ -261,8 +274,8 @@ The index is not a positive integer, or has other text with it, such as `delete 
 
 Examples:
 * `list` followed by `delete 2` deletes the 2nd contact in ClassMates.
-* `list Betsy` followed by `delete 1` deletes the 1st contact in the results of the `list Betsy` command.
-* `list Betsy` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list Betsy` command.
+* `list David` followed by `delete 1` deletes the 1st contact in the results of the `list David` command.
+* `list David` followed by `delete /name Alex Yeoh /class A1` deletes Alex Yeoh in class A1, even though Alex is not in the results of the `list David` command.
 
 ### Linking contacts to a group: `tag`
 
@@ -297,11 +310,13 @@ One or more of the contacts are already in the group | `One or more contacts are
 
 The entries of `/members` are checked from left to right. For example, for `/members 1,abc,,`, ClassMates reports `abc` and not the empty entry.<br>
 If several indices are repeated or not found, or several contacts are already in the group, all of them are listed in the message, separated by commas.<br>
-On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given.
+On success, ClassMates shows `Contacts successfully linked to group GROUP_NAME:` followed by the name and class of each linked contact, in the order that the indices were given. The group is shown as a label on each linked contact, as in the picture below, which shows the result of `tag /group Group A /members 1,2,3`.
+
+<img src="images/TagGroups.png" alt="Group A shown as a label on the first three contacts" width="600">
 
 Examples:
 * `tag /group Group A /members 1,3,5` links the 1st, 3rd and 5th contacts in the displayed list to `Group A`, and shows a message such as `Contacts successfully linked to group Group A: Betsy Crowe (A2), Bernice Yu (A1), David Li (A2)`.
-* `list Betsy` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `list Betsy` command to `Team 2`.
+* `list David` followed by `tag /group Team 2 /members 1` links the 1st contact in the results of the `list David` command to `Team 2`.
 
 ### Removing contacts from a group: `untag`
 
@@ -353,7 +368,7 @@ Format: `import PATH`
   * However, on Unix and macOS systems, only forward slash `/` is accepted.
 * If the file has an error, the whole import is cancelled at the first error, and no contact is added.
 * The imported contacts are shown at the top of the list, in the same order as in the file.
-* The file can be at most 5 MiB (about 5 megabytes), and can have at most 5,000 rows after the header row.
+* The file can be at most 5 MiB (about 5 megabytes), and can have at most 5,000 non-blank rows after the header row.
 
 On success, ClassMates shows `Imported NUMBER contacts from FILEPATH`.
 
@@ -389,7 +404,7 @@ If the command cannot be carried out, ClassMates shows one of these messages:
 | The file is larger than 5 MiB                                                                      | `File is too large. It can have at most 5 MiB`       |
 | The file is empty or contains only a header row                                                    | `File empty`                                         |
 | The CSV header is invalid or missing required columns                                              | `CSV header must contain 'name' and 'class' columns` |
-| The file has more than 5,000 rows after the header row                                            | `File has too many rows. It can have at most 5000 rows` |
+| The file has more than 5,000 non-blank rows after the header row                                   | `File has too many rows. It can have at most 5000 rows` |
 | A row has an invalid number of fields                                                              | `Invalid number of fields on row <row number>`       |
 | A contact duplicates an existing contact or an earlier imported contact                            | `Duplicate contact on row <row number>`              |
 | A row contains invalid contact data                                                                | `Invalid contact data on row <row number>`           |
@@ -408,10 +423,10 @@ Format: `grade INDEX /assessment ASSESSMENT_NAME /score SCORE` or `grade /name N
 * `NAME` and `CLASS` identify a contact directly, as explained in [Choosing a contact](#choosing-a-contact). Both `/name` and `/class` must be provided.
 * `ASSESSMENT_NAME` must be 1 to 80 characters long and can contain English letters (accented letters are allowed), digits, spaces and the symbols on a standard keyboard, such as `Assignment 1`, `Mid-term`, `Quiz #1` or `Test 1, Part A`. Unlike in a name, commas are allowed. Spaces at the start and end are ignored.
 * `SCORE` must be a number from 0 to 100, including 0 and 100. It can have a decimal part of at most 4 digits, such as `97.5`, but not a sign, a percent symbol or any other characters.
-* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, so to change a score, delete the grade with [`deleteG`](#deleting-grades-deleteg) and record it again. Grades for different assessments are separate. Names that differ in more than case and spaces, such as `Quiz 1` and `Quiz1`, are different assessments.
+* A contact can have only one grade for each assessment. Assessment names are compared ignoring case, so `Quiz 1` and `quiz 1` are the same assessment. An assessment that already has a grade for the contact cannot be recorded again, so to change a score, delete the grade with [`deleteG`](#deleting-grades-deleteg-or-dg) and record it again. Grades for different assessments are separate. Names that differ in more than case and spaces, such as `Quiz 1` and `Quiz1`, are different assessments.
 * Either `INDEX` or `/name NAME /class CLASS` must be used to identify the contact. Both formats cannot be used in the same command.
 * `/assessment` and `/score` can each be given at most once.
-* The card of a contact in the list shows only its 3 most recent grades, last recorded first, followed by a line such as `+2 older grade(s)` if there are more. Use `viewG` to see all of them.
+* The card of a contact in the list shows only its 3 most recent grades, last recorded first, followed by a line such as `+2 older grade(s)` if there are more, as in the picture in [Recording attendance](#recording-attendance-attendance-or-att). Use `viewG` to see all of them.
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -433,7 +448,7 @@ On success, ClassMates shows `Grade of SCORE recorded for ASSESSMENT_NAME for st
 
 Examples:
 * `grade 5 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for the 5th contact in the displayed list.
-* `list Betsy` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list Betsy` command.
+* `list David` followed by `grade 1 /assessment Quiz 2 /score 82.5` records a score of 82.5 for Quiz 2 for the 1st contact in the results of the `list David` command.
 * `grade /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97` records a score of 97 for Assignment 1 for Alex Yeoh from class A1.
 
 ### Viewing grades: `viewG` or `vg`
@@ -455,19 +470,13 @@ There is text before the first parameter, such as `viewG John /class A1` | `Inva
 `/name` is missing or has nothing after it | `Command requires a name`
 `/class` is missing or has nothing after it | `Command requires a class`
 
-On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Grade History`, followed by `Here are the grades for NAME from class CLASS` and one line for each grade.
+On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Grade History`, followed by `Here are the grades for NAME from class CLASS` and one line for each grade, as in the picture below.
 
-```
-Grade History
-
-Here are the grades for John Tan from class A1
-Quiz 2: 85
-Quiz 1: 80
-```
+<img src="images/ViewGradePopup.png" alt="The pop-up window of viewG" width="450">
 
 Examples:
-* `viewG /name John Tan /class A1` shows all grades for John Tan in class A1.
-* `viewG /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+* `viewG /name Alex Yeoh /class A1` shows all grades for Alex Yeoh in class A1, as in the picture above.
+* `viewG /class A1 /name Alex Yeoh` is equivalent; the parameters can be given in either order.
 
 ### Deleting grades: `deleteG` or `dg`
 
@@ -512,9 +521,13 @@ Format: `attendance INDEX /date DATE /status STATUS` or `attendance /name NAME /
 * `NAME` and `CLASS` identify a contact directly, as explained in [Choosing a contact](#choosing-a-contact). Both `/name` and `/class` must be provided.
 * `DATE` must be in the format `DD-MM-YYYY`, such as `16-09-2026`. It must be a real calendar date, so `30-02-2026` is not accepted, and each part must have the full number of digits, so `16-9-2026` is not accepted. It cannot be in the future. A date before the year 2000 is recorded, but ClassMates adds a warning to the confirmation because it is most likely a typo.
 * `STATUS` must be `present`, `absent` or `late`. Case is ignored, so `Absent` is the same as `absent`.
-* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, so to change a status, delete the record with [`deleteA`](#deleting-attendance-deletea) and record it again. Records for different dates are separate.
+* A contact can have only one attendance record for each date. A date that already has a record for the contact cannot be recorded again, so to change a status, delete the record with [`deleteA`](#deleting-attendance-deletea-or-da) and record it again. Records for different dates are separate.
 * `/name`, `/class`, `/date` and `/status` can each be given at most once.
-* The card of a contact in the list shows only its 3 most recent attendance records, newest date first, followed by a line such as `+2 older record(s)` if there are more. Use `viewA` to see all of them.
+* The card of a contact in the list shows only its 3 most recent attendance records, newest date first, followed by a line such as `+2 older record(s)` if there are more. Use `viewA` to see all of them. A contact without a record shows `Recent attendance: none`.
+
+In the picture below, Alex Yeoh has 5 attendance records and 5 grades, so only the 3 most recent of each are shown, followed by `+2 older record(s)` and `+2 older grade(s)`:
+
+<img src="images/ContactCards.png" alt="Contact cards with recent attendance and grades" width="600">
 
 If the command cannot be carried out, ClassMates shows one of these messages:
 
@@ -537,7 +550,7 @@ On success, ClassMates shows `Attendance for NAME on DATE recorded as STATUS.`, 
 
 Examples:
 * `attendance 5 /date 16-09-2026 /status absent` records the 5th contact in the displayed list as absent on 16 September 2026.
-* `list Betsy` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list Betsy` command as late on 16 September 2026.
+* `list David` followed by `attendance 1 /date 16-09-2026 /status late` records the 1st contact in the results of the `list David` command as late on 16 September 2026.
 * `attendance /name Alex Yeoh /class A1 /date 16-09-2026 /status absent` records Alex Yeoh from class A1 as absent on 16 September 2026.
 
 ### Viewing attendance: `viewA` or `va`
@@ -560,21 +573,15 @@ There is text before the first parameter, such as `viewA John /class A1` | `Inva
 `/name` is missing or has nothing after it | `Command requires a name`
 `/class` is missing or has nothing after it | `Command requires a class`
 
-On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Attendance History`, followed by `Here is the attendance for NAME from class CLASS` and one line for each record.
+On success, ClassMates opens a separate pop-up window titled `ClassMates`. The window contains the heading `Attendance History`, followed by `Here is the attendance for NAME from class CLASS` and one line for each record, as in the picture below.
 
-```
-Attendance History
-
-Here is the attendance for John Tan from class A1
-16-Sep-2026  absent
-14-Sep-2026  late
-```
+<img src="images/ViewAttendancePopup.png" alt="The pop-up window of viewA" width="450">
 
 If the contact has no records, the lines after the first are replaced by `No attendance records.`
 
 Examples:
-* `viewA /name John Tan /class A1` shows all attendance records for John Tan in class A1.
-* `viewA /class A1 /name John Tan` is equivalent; the parameters can be given in either order.
+* `viewA /name Alex Yeoh /class A1` shows all attendance records for Alex Yeoh in class A1, as in the picture above.
+* `viewA /class A1 /name Alex Yeoh` is equivalent; the parameters can be given in either order.
 
 ### Deleting attendance: `deleteA` or `da`
 
@@ -690,7 +697,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 **A**: The index refers to the contacts currently displayed. After a `list KEYWORD`, index 3 is the 3rd contact in the results, not in the full list. Run `list` first, or use `delete /name NAME /class CLASS`.
 
 **Q**: What should my CSV file for `import` look like?<br>
-**A**: The first row is a header with `name` and `class` columns and an optional `email` column. Each following row is one contact, for example `John Doe,A1,johnd@example.com`. See [Importing from external file](#importing-contacts-from-a-csv-file-import).
+**A**: The first row is a header with `name` and `class` columns and an optional `email` column. Each following row is one contact, for example `John Doe,A1,johnd@example.com`. See [Importing contacts from a CSV file](#importing-contacts-from-a-csv-file-import).
 
 **Q**: I imported a file, but no contact was added. Why?<br>
 **A**: No contact is added unless every row is valid. If any row is invalid or duplicates an existing contact, ClassMates shows the first problem with its row number and adds nothing. Fix that row and import again.
@@ -707,6 +714,7 @@ Furthermore, certain edits can cause ClassMates to behave in unexpected ways (e.
 
 1. **When using multiple screens**, if you move the application to a secondary screen, and later switch to using only the primary screen, the GUI will open off-screen. The remedy is to delete the `preferences.json` file created by the application before running the application again.
 2. **If you minimize the Help Window** and then run the `help` command (or use the `Help` menu, or the keyboard shortcut `F1`) again, the original Help Window will remain minimized, and no new Help Window will appear. The remedy is to manually restore the minimized Help Window.
+3. **Do not open multiple instances of ClassMates at the same time.** Multiple instances use the same data file but do not synchronize their changes, so one instance can overwrite changes saved by another. Close the running instance before opening ClassMates again.
 
 --------------------------------------------------------------------------------------------------------------------
 
