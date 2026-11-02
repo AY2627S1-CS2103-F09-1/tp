@@ -45,7 +45,7 @@ public class AttendanceByNameAndClassCommandTest {
                 new AttendanceByNameAndClassCommand("Amy", "A1", DATE, null));
     }
 
-    // EP_2: Student exists
+    // EP_2_1: Student exists
     @Test
     public void execute_validNameAndClass_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(0);
@@ -59,7 +59,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
-    // EP_2: Student exists, name and class ignore case and spacces
+    // EP_2_2: Student exists, name and class ignore case and spacces
     @Test
     public void execute_nameAndClassWithDifferentCaseAndSpaces_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(0);
@@ -74,7 +74,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
-    // EP_2_1: Student exists, not in filtered list
+    // EP_2_3: Student exists, not in filtered list
     @Test
     public void execute_personNotDisplayed_recordsAttendance() {
         Person hiddenPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());

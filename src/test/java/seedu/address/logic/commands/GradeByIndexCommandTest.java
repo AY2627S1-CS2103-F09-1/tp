@@ -32,12 +32,14 @@ public class GradeByIndexCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Test for constructor with null parameters
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new GradeByIndexCommand(null, GRADE));
         assertThrows(NullPointerException.class, () -> new GradeByIndexCommand(INDEX_FIRST_PERSON, null));
     }
 
+    // EP_2_1: Valid index, unfiltered list
     @Test
     public void execute_validIndexUnfilteredList_recordsGrade() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -51,6 +53,7 @@ public class GradeByIndexCommandTest {
                 expectedModel);
     }
 
+    // EP_2_2: Valid index, filtered list
     @Test
     public void execute_validIndexFilteredList_recordsGradeOfDisplayedPerson() {
         showPersonAtIndex(model, INDEX_SECOND_PERSON);
@@ -66,6 +69,7 @@ public class GradeByIndexCommandTest {
                 expectedModel);
     }
 
+    // EP_2_3: Valid index, unfiltered list, grade with trailing zeros
     @Test
     public void execute_scoreWithTrailingZeros_messageHidesZeros() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -80,6 +84,7 @@ public class GradeByIndexCommandTest {
                 expectedModel);
     }
 
+    // EP_3_1: Invalid Index, unfiltered list
     @Test
     public void execute_invalidIndexUnfilteredList_throwsCommandException() {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
@@ -88,6 +93,7 @@ public class GradeByIndexCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
+    // EP_3_2: Invalid Index, filtered list
     @Test
     public void execute_invalidIndexFilteredList_throwsCommandException() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -97,6 +103,7 @@ public class GradeByIndexCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
+    // EP_4_1: Duplicate assessment name
     @Test
     public void execute_duplicateAssessment_throwsCommandException() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -106,6 +113,7 @@ public class GradeByIndexCommandTest {
                 String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
+    // EP_4_2: Duplicate assessment name, different case and spaces
     @Test
     public void execute_duplicateAssessmentDifferentCaseAndSpaces_throwsCommandException() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -118,6 +126,7 @@ public class GradeByIndexCommandTest {
                 String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
+    // EP_5: Valid grade
     @Test
     public void execute_validGrade_gradeIsPresentInModel() throws Exception {
         new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE).execute(model);
@@ -126,6 +135,7 @@ public class GradeByIndexCommandTest {
         assertTrue(updatedPerson.hasGradeFor(GRADE));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         GradeByIndexCommand command = new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE);
@@ -141,6 +151,7 @@ public class GradeByIndexCommandTest {
                 new Grade("Assignment 1", BigDecimal.ONE))));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         GradeByIndexCommand command = new GradeByIndexCommand(INDEX_FIRST_PERSON, GRADE);

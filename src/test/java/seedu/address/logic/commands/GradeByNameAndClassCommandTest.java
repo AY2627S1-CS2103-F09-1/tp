@@ -32,6 +32,7 @@ public class GradeByNameAndClassCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Null constructors
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new GradeByNameAndClassCommand(null, "A1", GRADE));
@@ -39,6 +40,7 @@ public class GradeByNameAndClassCommandTest {
         assertThrows(NullPointerException.class, () -> new GradeByNameAndClassCommand("Amy", "A1", null));
     }
 
+    // EP_2_1: Student exists
     @Test
     public void execute_validNameAndClass_recordsGrade() {
         Person person = model.getFilteredPersonList().get(0);
@@ -53,6 +55,7 @@ public class GradeByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_2: Student exists, name and class ignore case and spaces
     @Test
     public void execute_nameAndClassWithDifferentCaseAndSpaces_recordsGrade() {
         Person person = model.getFilteredPersonList().get(0);
@@ -68,6 +71,7 @@ public class GradeByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_3: Student exists, not in filtered list
     @Test
     public void execute_personNotDisplayed_recordsGrade() {
         Person hiddenPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -86,6 +90,7 @@ public class GradeByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_3_1: Name or class not valid for a contact
     @Test
     public void execute_nameOrClassNotValidForAContact_throwsContactNotFound() {
         assertCommandFailure(new GradeByNameAndClassCommand("Not, A Name", "A1", GRADE), model,
@@ -94,6 +99,7 @@ public class GradeByNameAndClassCommandTest {
                 Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_3_2: Valid-looking name/class with no matching student
     @Test
     public void execute_unknownNameAndClass_throwsCommandException() {
         GradeByNameAndClassCommand command = new GradeByNameAndClassCommand("Unknown Student", "A1", GRADE);
@@ -101,6 +107,7 @@ public class GradeByNameAndClassCommandTest {
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_4: Invalid assessment, duplicate
     @Test
     public void execute_duplicateAssessment_throwsCommandException() {
         Person person = model.getFilteredPersonList().get(0);
@@ -113,6 +120,7 @@ public class GradeByNameAndClassCommandTest {
                 String.format(GradeCommand.MESSAGE_DUPLICATE_GRADE, person.getName(), "10", "Assignment 1"));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         GradeByNameAndClassCommand command = new GradeByNameAndClassCommand("Amy", "A1", GRADE);
@@ -129,6 +137,7 @@ public class GradeByNameAndClassCommandTest {
                 new Grade("Assignment 1", BigDecimal.ONE))));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         GradeByNameAndClassCommand command = new GradeByNameAndClassCommand("Alex Yeoh", "A1", GRADE);

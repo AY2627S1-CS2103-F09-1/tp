@@ -19,6 +19,8 @@ public class ArgumentTokenizerTest {
     private final Prefix dashT = new Prefix("-t");
     private final Prefix hatQ = new Prefix("^Q");
 
+    // EP_1: Empty or whitespace only argument string produces no values
+    // Boundary Value: empty string / whitespace only string
     @Test
     public void tokenize_emptyArgsString_noValues() {
         String argsString = "  ";
@@ -58,6 +60,7 @@ public class ArgumentTokenizerTest {
         assertFalse(argMultimap.getValue(prefix).isPresent());
     }
 
+    // EP_2: No recognized prefixes are supplied
     @Test
     public void tokenize_noPrefixes_allTakenAsPreamble() {
         String argsString = "  some random string /t tag with leading and trailing spaces ";
@@ -68,6 +71,8 @@ public class ArgumentTokenizerTest {
 
     }
 
+    // EP_3_1: One recognized argument is extracted after a preamble
+    // EP_3_2: One recognized argument is extracted with no preamble
     @Test
     public void tokenize_oneArgument_extractsPreambleAndArgument() {
         // Preamble present
@@ -84,6 +89,10 @@ public class ArgumentTokenizerTest {
 
     }
 
+    // EP_4_1: Multiple different recognized arguments are extracted
+    // EP_4_2: An omitted prefix has no value
+    // EP_4_3: Reusing the tokenizer does not retain values from the previous call
+    // EP_4_4: A prefix not supplied to the tokenizer remains part of the preamble
     @Test
     public void tokenize_multipleArguments_extractsEachArgument() {
         // Only two arguments are present
@@ -120,6 +129,7 @@ public class ArgumentTokenizerTest {
         assertPreamblePresent(argMultimap, argsString); // Unknown prefix is taken as part of preamble
     }
 
+    // EP_5: Repeated prefixes retain every value, including empty values
     @Test
     public void tokenize_repeatedArguments_keepsEveryValue() {
         // Two arguments repeated, some have empty values
@@ -131,6 +141,7 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, hatQ, "", "");
     }
 
+    // EP_6: A prefix joined to surrounding text is not recognized as a separate argument
     @Test
     public void tokenize_joinedArguments_doesNotRecognizeThem() {
         String argsString = "SomePreambleStringp/ pSlash joined-tjoined -t not joined^Qjoined";
@@ -141,6 +152,8 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, hatQ);
     }
 
+    // EP_7_1: A longer token beginning with a known prefix is not recognized
+    // EP_7_2: A value joined directly to a known prefix is not recognized
     @Test
     public void tokenize_prefixNotFollowedByWhitespace_notRecognized() {
         Prefix slashName = new Prefix("/name");
@@ -158,6 +171,7 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, slashName);
     }
 
+    // EP_7_3: An invalid prefix like token before a valid prefix does not prevent the valid one from being recognized
     @Test
     public void tokenize_invalidOccurrenceBeforeValidOccurrence_validOccurrenceRecognized() {
         Prefix slashName = new Prefix("/name");
@@ -168,6 +182,9 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, slashName, "John");
     }
 
+    // EP_8_1: A prefix followed by a tab is recognized
+    // EP_8_2: A prefix at the end of the input is recognized with an empty value
+    // Boundary Value: prefix followed by whitespace / prefix at end of input
     @Test
     public void tokenize_prefixFollowedByWhitespaceOrEnd_recognized() {
         Prefix slashName = new Prefix("/name");
@@ -185,6 +202,7 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, slashName, "");
     }
 
+    // EP_9: Input containing only recognized prefixes has no unrecognized prefixes
     @Test
     public void findUnrecognizedPrefixes_onlyRecognizedPrefixes_returnsEmpty() {
         Prefix slashName = new Prefix("/name");
@@ -195,6 +213,7 @@ public class ArgumentTokenizerTest {
                 .isEmpty());
     }
 
+    // EP_10: Unknown prefix like tokens are returned as unrecognized
     @Test
     public void findUnrecognizedPrefixes_unknownPrefix_returnsUnknownPrefixes() {
         Prefix slashName = new Prefix("/name");
@@ -207,6 +226,7 @@ public class ArgumentTokenizerTest {
                 ArgumentTokenizer.findUnrecognizedPrefixes(" /name John /phone 123"));
     }
 
+    // EP_11: Multiple unknown prefixes are returned in encounter order, including repeats
     @Test
     public void findUnrecognizedPrefixes_multipleUnknownPrefixes_returnsInOrderWithRepeats() {
         Prefix slashName = new Prefix("/name");
@@ -216,6 +236,8 @@ public class ArgumentTokenizerTest {
                         " /phone 1 /name John /address x /phone 2", slashName));
     }
 
+    // EP_12_1: A longer token beginning with a known prefix is returned as a whole unknown token
+    // EP_12_2: A value joined directly to a known prefix is returned as a whole unknown token
     @Test
     public void findUnrecognizedPrefixes_prefixJoinedToOtherText_returnsWholeToken() {
         Prefix slashName = new Prefix("/name");
@@ -227,6 +249,7 @@ public class ArgumentTokenizerTest {
         assertEquals(List.of("/nameJohn"), ArgumentTokenizer.findUnrecognizedPrefixes(" /nameJohn", slashName));
     }
 
+    // EP_13: Known prefixes are matched without regard to capitalization
     @Test
     public void findUnrecognizedPrefixes_caseDiffers_returnsEmptyList() {
         Prefix slashName = new Prefix("/name");
@@ -234,6 +257,7 @@ public class ArgumentTokenizerTest {
         assertEquals(List.of(), ArgumentTokenizer.findUnrecognizedPrefixes(" /Name John /NAME Tan", slashName));
     }
 
+    // EP_14: A token with extra characters after a differently capitalized prefix is still unrecognized
     @Test
     public void findUnrecognizedPrefixes_caseDiffersInTokenWithOtherText_returnsWholeToken() {
         Prefix slashName = new Prefix("/name");
@@ -241,6 +265,7 @@ public class ArgumentTokenizerTest {
         assertEquals(List.of("/NAMES"), ArgumentTokenizer.findUnrecognizedPrefixes(" /NAMES John", slashName));
     }
 
+    // EP_15: Prefix matching does not treat visually similar letters from other languages as English letters
     @Test
     public void findUnrecognizedPrefixes_letterOfAnotherLanguage_returnsToken() {
         // the Kelvin sign and the dotless i fold to English letters in some Unicode rules, but are not matched
@@ -250,6 +275,7 @@ public class ArgumentTokenizerTest {
                 ArgumentTokenizer.findUnrecognizedPrefixes(" /t\u0131p", new Prefix("/tip")));
     }
 
+    // EP_16: Prefix capitalisation variants are stored under the supplied prefix
     @Test
     public void tokenize_prefixInAnyCase_valueIsStoredUnderGivenPrefix() {
         Prefix slashName = new Prefix("/name");
@@ -263,6 +289,7 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, slashClass, "A1");
     }
 
+    // EP_17: A differently capitalised prefix joined to text is not recognised
     @Test
     public void tokenize_prefixInDifferentCaseButJoinedToText_isNotAPrefix() {
         Prefix slashName = new Prefix("/name");
@@ -273,6 +300,7 @@ public class ArgumentTokenizerTest {
         assertPreamblePresent(argMultimap, "/NAMEJohn /Names Tan");
     }
 
+    // EP_18: A lone slash is an unrecognized prefix like token
     @Test
     public void findUnrecognizedPrefixes_loneSlash_returnsToken() {
         Prefix slashName = new Prefix("/name");
@@ -280,6 +308,8 @@ public class ArgumentTokenizerTest {
         assertEquals(List.of("/"), ArgumentTokenizer.findUnrecognizedPrefixes(" /name Tan / Kumar", slashName));
     }
 
+    // EP_19_1: A slash inside a value is not treated as a prefix
+    // EP_19_2: A slash inside a token is not treated as a prefix
     @Test
     public void findUnrecognizedPrefixes_slashNotAtStartOfToken_returnsEmpty() {
         Prefix slashName = new Prefix("/name");
@@ -288,6 +318,7 @@ public class ArgumentTokenizerTest {
         assertTrue(ArgumentTokenizer.findUnrecognizedPrefixes(" /name John/Doe", slashName).isEmpty());
     }
 
+    // EP_20: A prefix like token after non space whitespace is detected as unrecognised
     @Test
     public void findUnrecognizedPrefixes_nonSpaceWhitespaceBeforeToken_returnsToken() {
         Prefix slashName = new Prefix("/name");
@@ -296,6 +327,7 @@ public class ArgumentTokenizerTest {
                 ArgumentTokenizer.findUnrecognizedPrefixes(" /name John\t/phone 123", slashName));
     }
 
+    // EP_21: A recognised alias is stored under its full prefix
     @Test
     public void tokenize_aliasOfPrefix_valueIsStoredUnderFullPrefix() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -308,6 +340,7 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, slashClass, "A1");
     }
 
+    // EP_22: Full prefix and alias values are collected together and treated as duplicates
     @Test
     public void tokenize_fullFormAndAliasOfSamePrefix_valuesAreCollectedTogether() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -318,6 +351,7 @@ public class ArgumentTokenizerTest {
         assertThrows(ParseException.class, () -> argMultimap.verifyNoDuplicatePrefixesFor(slashName));
     }
 
+    // EP_23: Prefix aliases are matched without regard to capitalisation
     @Test
     public void tokenize_aliasInAnyCase_valueIsStoredUnderFullPrefix() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -329,6 +363,8 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, slashClass, "A1");
     }
 
+    // EP_24: An alias at the end of the input is recognised with an empty value
+    // Boundary Value: alias at end of input
     @Test
     public void tokenize_aliasWithoutValue_valueIsEmpty() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -338,6 +374,7 @@ public class ArgumentTokenizerTest {
         assertArgumentPresent(argMultimap, slashName, "");
     }
 
+    // EP_25: The full form of another prefix is not treated as this prefix's alias
     @Test
     public void tokenize_fullFormOfAnotherPrefix_isNotReadAsAlias() {
         Prefix slashClass = new Prefix("/class", "/n");
@@ -348,6 +385,7 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, slashClass);
     }
 
+    // EP_26: An alias joined to preceding text is not recognised
     @Test
     public void tokenize_aliasJoinedToText_isNotAPrefix() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -358,6 +396,7 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, slashName);
     }
 
+    // EP_27: An alias not supplied to the tokenizer is not recognised
     @Test
     public void tokenize_aliasOfPrefixThatIsNotGiven_isNotRecognized() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -368,6 +407,7 @@ public class ArgumentTokenizerTest {
         assertArgumentAbsent(argMultimap, slashName);
     }
 
+    // EP_28: A known alias is accepted, while an unknown prefix remains unrecognised
     @Test
     public void findUnrecognizedPrefixes_aliasOfKnownPrefix_isKnown() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -377,6 +417,7 @@ public class ArgumentTokenizerTest {
                 ArgumentTokenizer.findUnrecognizedPrefixes(" /n John /C A1 /x 1", slashName, slashClass));
     }
 
+    // EP_29: An alias whose prefix was not supplied is returned as unrecognised
     @Test
     public void findUnrecognizedPrefixes_aliasOfPrefixThatIsNotKnown_returnsToken() {
         Prefix slashName = new Prefix("/name", "/n");
@@ -384,6 +425,7 @@ public class ArgumentTokenizerTest {
         assertEquals(List.of("/c"), ArgumentTokenizer.findUnrecognizedPrefixes(" /n John /c A1", slashName));
     }
 
+    // EP_30: Prefix equality is based on matching values, not object identity or type
     @Test
     public void equals_variousPrefixes_returnsExpected() {
         Prefix aaa = new Prefix("aaa");

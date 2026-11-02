@@ -229,6 +229,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_9: Changing case of the name
     @Test
     public void execute_changeCaseOfOwnName_success() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -247,6 +248,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // Tags not affected
     @Test
     public void execute_contactWithTags_tagsAreKept() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
@@ -267,6 +269,7 @@ public class EditCommandTest {
         assertEquals(personToEdit.getTags(), actualPerson.getTags());
     }
 
+    // Records not affected
     @Test
     public void execute_contactWithRecords_recordsAreKept() {
         Person originalPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -295,6 +298,7 @@ public class EditCommandTest {
         assertEquals(personWithRecords.getGradeRecords(), actualPerson.getGradeRecords());
     }
 
+    // EP_10_1: Editing a person to have the same name and class as another person. Unfiltered list
     @Test
     public void execute_duplicatePersonUnfilteredList_failure() {
         Person firstPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -306,6 +310,7 @@ public class EditCommandTest {
                 firstPerson.getName(), firstPerson.getClassName()));
     }
 
+    // EP_10_2: Editing a person to have the same name and class as another person. Filtered list
     @Test
     public void execute_duplicatePersonFilteredList_failure() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -319,6 +324,7 @@ public class EditCommandTest {
                 personInList.getName(), personInList.getClassName()));
     }
 
+    // EP_10_3: Editing class of a person to have the same name and class as another person
     @Test
     public void execute_changeOnlyClassIntoDuplicate_failure() {
         Person amyInA1 = new PersonBuilder().withName("Amy Bee").withClassName("A1").build();
@@ -336,6 +342,7 @@ public class EditCommandTest {
                 String.format(EditCommand.MESSAGE_DUPLICATE_PERSON, "Amy Bee", "a1"));
     }
 
+    // EP_11_1: Invalid person index. Unfiltered list
     @Test
     public void execute_invalidPersonIndexUnfilteredList_failure() {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
@@ -346,10 +353,7 @@ public class EditCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
-    /**
-     * Edit filtered list where index is larger than size of filtered list,
-     * but smaller than size of address book
-     */
+    // EP_11_2: Invalid person index. Filtered list
     @Test
     public void execute_invalidPersonIndexFilteredList_failure() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -364,6 +368,7 @@ public class EditCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_returnsExpected() {
         final EditCommand standardCommand = new EditCommand(INDEX_FIRST_PERSON, DESC_AMY);
@@ -389,6 +394,7 @@ public class EditCommandTest {
         assertFalse(standardCommand.equals(new EditCommand(INDEX_FIRST_PERSON, DESC_BOB)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_command_returnsExpectedFormat() {
         Index index = Index.fromOneBased(1);

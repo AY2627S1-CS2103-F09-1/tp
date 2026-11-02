@@ -47,6 +47,9 @@ public class AddCommandParserTest {
 
     private AddCommandParser parser = new AddCommandParser();
 
+    // EP_1_1: Valid required and optional fields
+    // EP_1_2: Valid input with whitespace-only preamble
+    // EP_1_3: Valid input with parameters in a different order
     @Test
     public void parse_allFieldsPresent_success() {
         Person expectedPerson = new PersonBuilder(BOB).withTags().build();
@@ -63,6 +66,7 @@ public class AddCommandParserTest {
                 new AddCommand(expectedPerson));
     }
 
+    // EP_1_4: Valid prefixes with mixed capitalization
     @Test
     public void parse_prefixesInAnyCase_success() {
         Person expectedPerson = new PersonBuilder(BOB).withTags().build();
@@ -71,6 +75,7 @@ public class AddCommandParserTest {
                 + " /eMAIL " + VALID_EMAIL_BOB, new AddCommand(expectedPerson));
     }
 
+    // EP_1_5: Valid full-width characters in the class name
     @Test
     public void parse_fullWidthClass_success() {
         Person expectedPerson = new PersonBuilder().withName("Charlie").withClassName("Ｔ２９")
@@ -79,18 +84,7 @@ public class AddCommandParserTest {
         assertParseSuccess(parser, " /name Charlie /class Ｔ２９", new AddCommand(expectedPerson));
     }
 
-    @Test
-    public void parse_sameParameterInDifferentCases_failure() {
-        assertParseFailure(parser, NAME_DESC_BOB + " /NAME Amy Bee" + CLASS_DESC_BOB,
-                getErrorMessageForDuplicatePrefixes("/name"));
-    }
-
-    @Test
-    public void parse_optionalFieldMissing_success() {
-        Person expectedPerson = new PersonBuilder(AMY).withTags().withoutEmail().build();
-        assertParseSuccess(parser, NAME_DESC_AMY + CLASS_DESC_AMY, new AddCommand(expectedPerson));
-    }
-
+    // EP_1_6: Valid name and class containing allowed punctuation
     @Test
     public void parse_nameWithAllowedSymbols_success() {
         Person expectedPerson = new PersonBuilder().withName("Mary-Ann O'Neil Tan s/o Kumar Jr.")
@@ -99,6 +93,7 @@ public class AddCommandParserTest {
                 new AddCommand(expectedPerson));
     }
 
+    // EP_1_7: Valid name and class containing digits, symbols, and accented characters
     @Test
     public void parse_nameClassWithDigitsSymbolsAndAccents_success() {
         Person expectedPerson = new PersonBuilder().withName("José Müller (Joe) #2 Jr.")
@@ -107,6 +102,21 @@ public class AddCommandParserTest {
                 new AddCommand(expectedPerson));
     }
 
+    // EP_2: Duplicate parameter prefixes
+    @Test
+    public void parse_sameParameterInDifferentCases_failure() {
+        assertParseFailure(parser, NAME_DESC_BOB + " /NAME Amy Bee" + CLASS_DESC_BOB,
+                getErrorMessageForDuplicatePrefixes("/name"));
+    }
+
+    // EP_3: Valid input with the optional email omitted
+    @Test
+    public void parse_optionalFieldMissing_success() {
+        Person expectedPerson = new PersonBuilder(AMY).withTags().withoutEmail().build();
+        assertParseSuccess(parser, NAME_DESC_AMY + CLASS_DESC_AMY, new AddCommand(expectedPerson));
+    }
+
+    // EP_4: A prefix is attached to the preceding value without a separating space
     @Test
     public void parse_prefixWithoutSpace_failure() {
         // a parameter stuck to the previous value must not silently become part of it
@@ -116,12 +126,14 @@ public class AddCommandParserTest {
                 String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/email"));
     }
 
+    // EP_5_1: Name missing
     @Test
     public void parse_missingName_failure() {
         assertParseFailure(parser, CLASS_DESC_BOB + EMAIL_DESC_BOB, MESSAGE_MISSING_NAME);
         assertParseFailure(parser, CLASS_DESC_BOB, MESSAGE_MISSING_NAME);
     }
 
+    // EP_5_2: Class missing
     @Test
     public void parse_missingClass_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + EMAIL_DESC_BOB, MESSAGE_MISSING_CLASS);
@@ -131,12 +143,14 @@ public class AddCommandParserTest {
         assertParseFailure(parser, NAME_DESC_BOB + VALID_CLASS_BOB, MESSAGE_MISSING_CLASS);
     }
 
+    // EP_5_3: Both required fields are missing
     @Test
     public void parse_missingNameAndClass_reportsMissingNameOnly() {
         assertParseFailure(parser, "", MESSAGE_MISSING_NAME);
         assertParseFailure(parser, EMAIL_DESC_BOB, MESSAGE_MISSING_NAME);
     }
 
+    // EP_6: Non-whitespace text appears before the first recognized parameter
     @Test
     public void parse_nonEmptyPreamble_failure() {
         assertParseFailure(parser, PREAMBLE_NON_EMPTY + NAME_DESC_BOB + CLASS_DESC_BOB + EMAIL_DESC_BOB,
@@ -150,6 +164,7 @@ public class AddCommandParserTest {
                 MESSAGE_INVALID_FORMAT);
     }
 
+    // EP_7: Unrecognized parameter
     @Test
     public void parse_unrecognizedParameter_failure() {
         // parameters that were removed from the contact
@@ -173,6 +188,7 @@ public class AddCommandParserTest {
                 new AddCommand(expectedPerson));
     }
 
+    // EP_2: A parameter is repeated, including repeated invalid values and repeated groups of fields
     @Test
     public void parse_repeatedParameter_failure() {
         String validString = NAME_DESC_BOB + CLASS_DESC_BOB + EMAIL_DESC_BOB;
@@ -207,6 +223,9 @@ public class AddCommandParserTest {
                 getErrorMessageForDuplicatePrefixes("/email"));
     }
 
+    // EP_10_1: Name contains disallowed characters
+    // EP_10_2: Name is empty
+    // EP_10_3: Name exceeds its maximum length
     @Test
     public void parse_invalidName_failure() {
         assertParseFailure(parser, INVALID_NAME_DESC + CLASS_DESC_BOB + EMAIL_DESC_BOB,
@@ -220,6 +239,9 @@ public class AddCommandParserTest {
         assertParseFailure(parser, tooLongNameDesc + CLASS_DESC_BOB, Name.MESSAGE_TOO_LONG);
     }
 
+    // EP_11_1: Class contains disallowed characters
+    // EP_11_2: Class is empty
+    // EP_11_3: Class exceeds its maximum length
     @Test
     public void parse_invalidClass_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + INVALID_CLASS_DESC + EMAIL_DESC_BOB,
@@ -234,6 +256,9 @@ public class AddCommandParserTest {
         assertParseFailure(parser, NAME_DESC_BOB + tooLongClassDesc, ClassName.MESSAGE_TOO_LONG);
     }
 
+    // EP_12_1: Email has invalid format
+    // EP_12_2: Email prefix is present but has no value
+    // EP_12_3: Email exceeds its maximum length
     @Test
     public void parse_invalidEmail_failure() {
         assertParseFailure(parser, NAME_DESC_BOB + CLASS_DESC_BOB + INVALID_EMAIL_DESC,
@@ -248,11 +273,13 @@ public class AddCommandParserTest {
         assertParseFailure(parser, NAME_DESC_BOB + CLASS_DESC_BOB + tooLongEmailDesc, Email.MESSAGE_TOO_LONG);
     }
 
+    // EP_13: Null parser input
     @Test
     public void parse_nullArgs_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
     }
 
+    // EP_14: Multiple invalid field values
     @Test
     public void parse_multipleInvalidValues_reportsNameThenClassThenEmail() {
         assertParseFailure(parser, INVALID_NAME_DESC + INVALID_CLASS_DESC + INVALID_EMAIL_DESC,
@@ -261,6 +288,7 @@ public class AddCommandParserTest {
                 ClassName.MESSAGE_CONSTRAINTS);
     }
 
+    // EP_15: Multiple parsing problems
     @Test
     public void parse_multipleProblems_reportsInDocumentedOrder() {
         // unrecognized parameter comes before repeated parameter
@@ -282,4 +310,5 @@ public class AddCommandParserTest {
         // a missing class comes before an invalid name
         assertParseFailure(parser, INVALID_NAME_DESC, MESSAGE_MISSING_CLASS);
     }
+
 }
