@@ -23,6 +23,7 @@ public class ViewAttendanceCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1_1: Student exists and has attendance records
     @Test
     public void execute_studentWithRecords_returnsAllRecordsChronologically() throws Exception {
         Person person = model.getAddressBook().getPersonList().get(0);
@@ -39,6 +40,7 @@ public class ViewAttendanceCommandTest {
         assertEquals(ATTENDANCE_HISTORY, result.getDisplayTarget());
     }
 
+    // EP_1_2: Student exists but has no attendance records
     @Test
     public void execute_studentWithoutRecords_showsEmptyMessage() throws Exception {
         Person person = model.getAddressBook().getPersonList().get(0);
@@ -51,6 +53,7 @@ public class ViewAttendanceCommandTest {
                 + "\n" + ViewAttendanceCommand.MESSAGE_NO_ATTENDANCE, result.getFeedbackToUser());
     }
 
+    // EP_1_3: Student exists, case and extra space differences
     @Test
     public void execute_caseAndExtraSpacesDiffer_findsStudent() throws Exception {
         Person person = new PersonBuilder().withName("John Tan").withClassName("A1").build();
@@ -63,24 +66,7 @@ public class ViewAttendanceCommandTest {
                 + ViewAttendanceCommand.MESSAGE_NO_ATTENDANCE, command.execute(testModel).getFeedbackToUser());
     }
 
-    @Test
-    public void execute_unknownStudent_throwsCommandException() {
-        ViewAttendanceCommand command = new ViewAttendanceCommand("Unknown Student", "A1");
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
-
-        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
-    }
-
-    @Test
-    public void execute_nameAndClassNotValidForAdding_throwsContactNotFound() {
-        ViewAttendanceCommand command = new ViewAttendanceCommand("@@@", "!!!");
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
-
-        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
-    }
-
+    // EP_1_4: Student exists, same name, different class
     @Test
     public void execute_sameNameDifferentClass_selectsRequestedClass() throws Exception {
         Person otherClassPerson = new PersonBuilder().withName("Alex Tan").withClassName("A2").build()
@@ -101,6 +87,27 @@ public class ViewAttendanceCommandTest {
         assertFalse(output.contains("absent"));
     }
 
+    // EP_2_1: Unknown student, ordinary name and class match no contact
+    @Test
+    public void execute_unknownStudent_throwsCommandException() {
+        ViewAttendanceCommand command = new ViewAttendanceCommand("Unknown Student", "A1");
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+    }
+
+    // EP_2_2: Unknown student, name and class contain special characters
+    @Test
+    public void execute_nameAndClassNotValidForAdding_throwsContactNotFound() {
+        ViewAttendanceCommand command = new ViewAttendanceCommand("@@@", "!!!");
+
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
+    }
+
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");
@@ -113,6 +120,7 @@ public class ViewAttendanceCommandTest {
         assertFalse(command.equals(new ViewAttendanceCommand("Alex Tan", "A2")));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         ViewAttendanceCommand command = new ViewAttendanceCommand("Alex Tan", "A1");

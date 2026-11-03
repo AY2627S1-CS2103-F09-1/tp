@@ -27,6 +27,7 @@ public class DeleteGradeCommandTest {
         model = getModelWithAliceGrades();
     }
 
+    // EP_1: Invalid constructor. Null index or null assessment name
     @Test
     public void deleteGrade_nullArgument_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -37,12 +38,14 @@ public class DeleteGradeCommandTest {
                 DeleteGradeCommand.deleteGrade(model, ALICE_WITH_GRADES, null));
     }
 
+    // EP_2: Person not in model
     @Test
     public void deleteGrade_personNotInModel_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
                 DeleteGradeCommand.deleteGrade(new ModelManager(), ALICE_WITH_GRADES, "Quiz 1"));
     }
 
+    // EP_3: Person update fails to remove grade
     @Test
     public void deleteGrade_personDoesNotRemoveGrade_throwsAssertionError() {
         Person personThatKeepsGrade = new Person(ALICE_WITH_GRADES.getName(),
@@ -60,23 +63,14 @@ public class DeleteGradeCommandTest {
                 DeleteGradeCommand.deleteGrade(modelWithFaultyPerson, personThatKeepsGrade, "Quiz 1"));
     }
 
-    @Test
-    public void deleteGrade_existingGrade_removesGradeAndShowsStoredDetails() throws CommandException {
-        CommandResult result = DeleteGradeCommand.deleteGrade(model, ALICE_WITH_GRADES, "QUIZ   1");
-
-        Model expectedModel = new ModelManager(getModelWithAliceGrades().getAddressBook(), new UserPrefs());
-        expectedModel.setPerson(ALICE_WITH_GRADES, ALICE.withGrade(OTHER_GRADE));
-        assertEquals(expectedModel, model);
-        assertEquals("Grade of 90.5 for Quiz 1 for student Alice Pauline in class A1 has been deleted",
-                result.getFeedbackToUser());
-    }
-
+    // EP_4: Person exists but grade does not exist in model
     @Test
     public void deleteGrade_gradeNotFound_throwsCommandException() {
         assertThrows(CommandException.class, DeleteGradeCommand.MESSAGE_GRADE_NOT_FOUND, () ->
                 DeleteGradeCommand.deleteGrade(model, ALICE_WITH_GRADES, "Assignment 1"));
     }
 
+    // EP_5: Model update fails
     @Test
     public void deleteGrade_modelDoesNotStoreChangedContact_throwsAssertionError() {
         // White-box negative test for model-update-failed partition targeted by the postcondition
@@ -90,4 +84,17 @@ public class DeleteGradeCommandTest {
         assertThrows(AssertionError.class, () ->
                 DeleteGradeCommand.deleteGrade(modelThatKeepsContacts, ALICE_WITH_GRADES, "Quiz 1"));
     }
+
+    // EP_6: Person and grade exist in model, successfully removes grade
+    @Test
+    public void deleteGrade_existingGrade_removesGradeAndShowsStoredDetails() throws CommandException {
+        CommandResult result = DeleteGradeCommand.deleteGrade(model, ALICE_WITH_GRADES, "QUIZ   1");
+
+        Model expectedModel = new ModelManager(getModelWithAliceGrades().getAddressBook(), new UserPrefs());
+        expectedModel.setPerson(ALICE_WITH_GRADES, ALICE.withGrade(OTHER_GRADE));
+        assertEquals(expectedModel, model);
+        assertEquals("Grade of 90.5 for Quiz 1 for student Alice Pauline in class A1 has been deleted",
+                result.getFeedbackToUser());
+    }
+
 }

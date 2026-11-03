@@ -41,17 +41,20 @@ public class ListCommandTest {
         expectedModel = new ModelManager(model.getAddressBook(), new UserPrefs());
     }
 
+    // EP_1: List already unfiltered
     @Test
     public void execute_listIsNotFiltered_showsSameList() {
         assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SUCCESS, expectedModel);
     }
 
+    // EP_2: List filtered
     @Test
     public void execute_listIsFiltered_showsEverything() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
         assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SUCCESS, expectedModel);
     }
 
+    // EP_3_1: List filtered by keyword, keyword matches name
     @Test
     public void execute_keywordMatchesName_showsMatchingPersons() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("meier");
@@ -62,6 +65,7 @@ public class ListCommandTest {
         assertEquals(Arrays.asList(BENSON, DANIEL), model.getFilteredPersonList());
     }
 
+    // EP_3_2: List filtered by keyword, keyword matches tag
     @Test
     public void execute_keywordMatchesTag_showsMatchingPersons() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("frien");
@@ -72,6 +76,7 @@ public class ListCommandTest {
         assertEquals(Arrays.asList(ALICE, BENSON, DANIEL), model.getFilteredPersonList());
     }
 
+    // EP_3_3: List filtered by keyword, keyword matches class name
     @Test
     public void execute_keywordMatchesClassName_showsMatchingPersons() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("a1");
@@ -82,6 +87,7 @@ public class ListCommandTest {
         assertEquals(getTypicalAddressBook().getPersonList(), model.getFilteredPersonList());
     }
 
+    // EP_3_4: List filtered by keyword, keyword matches email
     @Test
     public void execute_keywordMatchesEmail_showsMatchingPersons() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("ALICE@EXAMPLE.COM");
@@ -92,6 +98,7 @@ public class ListCommandTest {
         assertEquals(Collections.singletonList(ALICE), model.getFilteredPersonList());
     }
 
+    // EP_3_5: List filtered by keyword, keyword matches nobody
     @Test
     public void execute_keywordMatchesNobody_showsEmptyList() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("zzz");
@@ -102,6 +109,7 @@ public class ListCommandTest {
         assertEquals(Collections.emptyList(), model.getFilteredPersonList());
     }
 
+    // EP_3_6: List filtered by keyword, filtered list
     @Test
     public void execute_keywordWhenListIsFiltered_searchesWholeAddressBook() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -132,11 +140,13 @@ public class ListCommandTest {
         assertCommandSuccess(new ListCommand(), model, ListCommand.MESSAGE_SUCCESS, expectedModel);
     }
 
+    // EP_4_1: Invalid constructor arguments, null predicate
     @Test
     public void constructor_nullPredicate_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new ListCommand(null));
     }
 
+    // EP_4_2: Invalid constructor arguments, null model
     @Test
     public void execute_nullModel_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new ListCommand().execute(null));
@@ -144,6 +154,7 @@ public class ListCommandTest {
                 new ListCommand(new PersonMatchesKeyword("meier")).execute(null));
     }
 
+    // EP_5: Model hides matching persons
     @Test
     public void execute_modelHidesMatchingPersons_throwsAssertionError() {
         Model modelThatHidesEveryone = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
@@ -159,6 +170,7 @@ public class ListCommandTest {
                 new ListCommand(new PersonMatchesKeyword("meier")).execute(modelThatHidesEveryone));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_returnsExpected() {
         ListCommand listAllCommand = new ListCommand();
@@ -189,6 +201,7 @@ public class ListCommandTest {
         assertFalse(listMeierCommand.equals(listFriendCommand));
     }
 
+    // Command equality behavior
     @Test
     public void hashCode_equalCommands_haveSameHashCode() {
         assertEquals(new ListCommand().hashCode(), new ListCommand().hashCode());
@@ -196,6 +209,7 @@ public class ListCommandTest {
                 new ListCommand(new PersonMatchesKeyword(" MEIER ")).hashCode());
     }
 
+    // Command equality behavior
     @Test
     public void toString_command_returnsExpectedFormat() {
         PersonMatchesKeyword predicate = new PersonMatchesKeyword("meier");

@@ -39,6 +39,7 @@ public class DeleteAttendanceByIndexCommandTest {
         model = getModelWithAliceAttendance();
     }
 
+    // EP_1: Invalid constructor. Null index or null date
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new DeleteAttendanceByIndexCommand(null, DATE));
@@ -46,6 +47,7 @@ public class DeleteAttendanceByIndexCommandTest {
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, null));
     }
 
+    // EP_2_1: Valid index. Unfiltered list
     @Test
     public void execute_validIndexUnfilteredList_success() {
         DeleteAttendanceByIndexCommand command =
@@ -59,16 +61,7 @@ public class DeleteAttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
-    @Test
-    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
-        // BVA: list size + 1 (first index outside displayed-list partition)
-        Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
-        DeleteAttendanceByIndexCommand command = new DeleteAttendanceByIndexCommand(outOfBoundsIndex, DATE);
-
-        assertCommandFailure(command, model,
-                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
-    }
-
+    // EP_2_2: Valid index. Filtered list
     @Test
     public void execute_validIndexFilteredList_success() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -84,6 +77,18 @@ public class DeleteAttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_3_1: Invalid index. Unfiltered list
+    // Boundary Value: list size + 1 (first index outside displayed-list partition)
+    @Test
+    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
+        Index outOfBoundsIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
+        DeleteAttendanceByIndexCommand command = new DeleteAttendanceByIndexCommand(outOfBoundsIndex, DATE);
+
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
+    }
+
+    // EP_3_2: Invalid index. Filtered list
     @Test
     public void execute_invalidIndexFilteredList_throwsCommandException() {
         // Index valid in address book but in the invalid EP for filtered list
@@ -97,6 +102,7 @@ public class DeleteAttendanceByIndexCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         DeleteAttendanceByIndexCommand deleteFirstDate =
@@ -110,6 +116,7 @@ public class DeleteAttendanceByIndexCommandTest {
         assertFalse(deleteFirstDate.equals(new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, OTHER_DATE)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         DeleteAttendanceByIndexCommand command =

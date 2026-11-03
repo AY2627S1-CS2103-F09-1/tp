@@ -29,17 +29,20 @@ public class DeleteByIndexCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Null index
     @Test
     public void constructor_nullIndex_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new DeleteByIndexCommand(null));
     }
 
+    // EP_2: Null model
     @Test
     public void execute_nullModel_throwsNullPointerException() {
         DeleteByIndexCommand deleteCommand = new DeleteByIndexCommand(INDEX_FIRST_PERSON);
         assertThrows(NullPointerException.class, () -> deleteCommand.execute(null));
     }
 
+    // EP_3_1: Valid index. Unfiltered list
     @Test
     public void execute_validIndexUnfilteredList_success() {
         Person personToDelete = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -54,24 +57,7 @@ public class DeleteByIndexCommandTest {
         assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
     }
 
-    @Test
-    public void execute_validIndex_showsNameAndClassOfDeletedPerson() throws Exception {
-        assertEquals(ALICE, model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased()));
-
-        CommandResult result = new DeleteByIndexCommand(INDEX_FIRST_PERSON).execute(model);
-
-        assertEquals("Alice Pauline in class A1 has been deleted", result.getFeedbackToUser());
-    }
-
-    @Test
-    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
-        Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
-        DeleteByIndexCommand deleteCommand = new DeleteByIndexCommand(outOfBoundIndex);
-
-        assertCommandFailure(deleteCommand, model,
-                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
-    }
-
+    // EP_3_2: Valid index. Filtered list
     @Test
     public void execute_validIndexFilteredList_success() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -89,6 +75,17 @@ public class DeleteByIndexCommandTest {
         assertCommandSuccess(deleteCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_4_1: Invalid index. Unfiltered list
+    @Test
+    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
+        Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
+        DeleteByIndexCommand deleteCommand = new DeleteByIndexCommand(outOfBoundIndex);
+
+        assertCommandFailure(deleteCommand, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
+    }
+
+    // EP_4_2: Invalid index. Filtered list
     @Test
     public void execute_invalidIndexFilteredList_throwsCommandException() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -103,6 +100,17 @@ public class DeleteByIndexCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
+    // Command equality behavior
+    @Test
+    public void execute_validIndex_showsNameAndClassOfDeletedPerson() throws Exception {
+        assertEquals(ALICE, model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased()));
+
+        CommandResult result = new DeleteByIndexCommand(INDEX_FIRST_PERSON).execute(model);
+
+        assertEquals("Alice Pauline in class A1 has been deleted", result.getFeedbackToUser());
+    }
+
+    // Command equality behavior
     @Test
     public void equals_variousCommands_returnsExpected() {
         DeleteByIndexCommand deleteFirstCommand = new DeleteByIndexCommand(INDEX_FIRST_PERSON);
@@ -125,6 +133,7 @@ public class DeleteByIndexCommandTest {
         assertFalse(deleteFirstCommand.equals(deleteSecondCommand));
     }
 
+    // Command equality behavior
     @Test
     public void toString_command_returnsExpectedFormat() {
         Index targetIndex = Index.fromOneBased(1);

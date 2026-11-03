@@ -33,6 +33,7 @@ public class AttendanceByIndexCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Test for constructor with null parameters
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -43,6 +44,7 @@ public class AttendanceByIndexCommandTest {
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE, null));
     }
 
+    // EP_2_1: Valid index, unfiltered list
     @Test
     public void execute_validIndexUnfilteredList_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -57,6 +59,7 @@ public class AttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_2: Valid index, filtered list
     @Test
     public void execute_validIndexFilteredList_recordsAttendanceOfDisplayedPerson() {
         showPersonAtIndex(model, INDEX_SECOND_PERSON);
@@ -72,6 +75,32 @@ public class AttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_3_1: Invalid Index, unfiltered list
+    @Test
+    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
+        Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
+        AttendanceByIndexCommand command =
+                new AttendanceByIndexCommand(outOfBoundIndex, DATE, Attendance.Status.PRESENT);
+
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
+    }
+
+    // EP_3_2: Invalid Index, filtered list
+    @Test
+    public void execute_invalidIndexFilteredList_throwsCommandException() {
+        showPersonAtIndex(model, INDEX_FIRST_PERSON);
+        assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
+
+        AttendanceByIndexCommand command =
+                new AttendanceByIndexCommand(INDEX_SECOND_PERSON, DATE, Attendance.Status.PRESENT);
+
+        assertCommandFailure(command, model,
+                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
+    }
+
+    // EP_4_1: Valid date, today's date
+    // Boundary Value: Today's date is a valid date for recording attendance
     @Test
     public void execute_todayDate_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -88,6 +117,7 @@ public class AttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_4_2: Valid date, zero year
     @Test
     public void execute_yearZeroDate_messageShowsYearZero() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -104,6 +134,7 @@ public class AttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_4_3: Valid date, year before earliest expected year
     @Test
     public void execute_yearBeforeEarliestExpectedYear_recordsAttendanceWithWarning() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -120,6 +151,8 @@ public class AttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_4_4: Valid date, earliest expected year
+    // Boundary Value: The earliest expected year does not give warning
     @Test
     public void execute_earliestExpectedYear_recordsAttendanceWithoutWarning() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -134,28 +167,7 @@ public class AttendanceByIndexCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
-    @Test
-    public void execute_invalidIndexUnfilteredList_throwsCommandException() {
-        Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
-        AttendanceByIndexCommand command =
-                new AttendanceByIndexCommand(outOfBoundIndex, DATE, Attendance.Status.PRESENT);
-
-        assertCommandFailure(command, model,
-                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
-    }
-
-    @Test
-    public void execute_invalidIndexFilteredList_throwsCommandException() {
-        showPersonAtIndex(model, INDEX_FIRST_PERSON);
-        assertTrue(INDEX_SECOND_PERSON.getZeroBased() < model.getAddressBook().getPersonList().size());
-
-        AttendanceByIndexCommand command =
-                new AttendanceByIndexCommand(INDEX_SECOND_PERSON, DATE, Attendance.Status.PRESENT);
-
-        assertCommandFailure(command, model,
-                Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
-    }
-
+    // EP_5: Invalid future date
     @Test
     public void execute_futureDate_throwsCommandException() {
         AttendanceByIndexCommand command = new AttendanceByIndexCommand(
@@ -164,6 +176,7 @@ public class AttendanceByIndexCommandTest {
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_FUTURE_DATE);
     }
 
+    // EP_5_1: Invalid future date, invalid index
     @Test
     public void execute_futureDateAndInvalidIndex_reportsFutureDate() {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
@@ -173,6 +186,7 @@ public class AttendanceByIndexCommandTest {
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_FUTURE_DATE);
     }
 
+    // EP_6: Duplicate date
     @Test
     public void execute_duplicateDate_throwsCommandException() {
         Person person = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -185,6 +199,22 @@ public class AttendanceByIndexCommandTest {
                 person.getName(), "16-09-2026", Attendance.Status.PRESENT));
     }
 
+    // EP_7: Valid attendance record
+    @Test
+    public void execute_validAttendance_recordIsPresentInModel() throws Exception {
+        LocalDate date = LocalDate.of(2026, 9, 16);
+
+        AttendanceByIndexCommand command =
+            new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.PRESENT);
+
+        command.execute(model);
+
+        Person updatedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
+        assertTrue(updatedPerson.hasAttendanceOn(date));
+        assertEquals(Attendance.Status.PRESENT, updatedPerson.getAttendanceOn(date).orElseThrow().getStatus());
+    }
+
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         AttendanceByIndexCommand command =
@@ -205,6 +235,7 @@ public class AttendanceByIndexCommandTest {
                 new AttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE, Attendance.Status.ABSENT)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         AttendanceByIndexCommand command =
@@ -213,20 +244,6 @@ public class AttendanceByIndexCommandTest {
                 + "{targetIndex=" + INDEX_FIRST_PERSON + ", date=" + DATE + ", status=present}";
 
         assertEquals(expected, command.toString());
-    }
-
-    @Test
-    public void execute_validAttendance_recordIsPresentInModel() throws Exception {
-        LocalDate date = LocalDate.of(2026, 9, 16);
-
-        AttendanceByIndexCommand command =
-            new AttendanceByIndexCommand(INDEX_FIRST_PERSON, date, Attendance.Status.PRESENT);
-
-        command.execute(model);
-
-        Person updatedPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
-        assertTrue(updatedPerson.hasAttendanceOn(date));
-        assertEquals(Attendance.Status.PRESENT, updatedPerson.getAttendanceOn(date).orElseThrow().getStatus());
     }
 
 }

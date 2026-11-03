@@ -25,11 +25,13 @@ import seedu.address.testutil.PersonBuilder;
 
 public class AddCommandTest {
 
+    // EP_1: Test for constructor with null person
     @Test
     public void constructor_nullPerson_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> new AddCommand(null));
     }
 
+    // EP_2: Person does not exist
     @Test
     public void execute_personAcceptedByModel_addSuccessful() throws Exception {
         ModelStubAcceptingPersonAdded modelStub = new ModelStubAcceptingPersonAdded();
@@ -43,12 +45,14 @@ public class AddCommandTest {
         assertEquals(List.of(validPerson), modelStub.personsAdded);
     }
 
+    // EP_3: Execute with null model
     @Test
     public void execute_nullModel_throwsNullPointerException() {
         AddCommand addCommand = new AddCommand(new PersonBuilder().build());
         assertThrows(NullPointerException.class, () -> addCommand.execute(null));
     }
 
+    // EP_4: Model does not store person
     @Test
     public void execute_modelDoesNotStorePerson_throwsAssertionError() {
         AddCommand addCommand = new AddCommand(new PersonBuilder().build());
@@ -58,6 +62,7 @@ public class AddCommandTest {
         assertThrows(AssertionError.class, () -> addCommand.execute(modelStub));
     }
 
+    // EP_5: Person already exists
     @Test
     public void execute_duplicatePerson_throwsCommandException() {
         Person validPerson = new PersonBuilder().build();
@@ -71,6 +76,7 @@ public class AddCommandTest {
         assertEquals("Amy Bee already exists in class A1", expectedMessage);
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_returnsExpected() {
         Person alice = new PersonBuilder().withName("Alice").build();
@@ -95,6 +101,7 @@ public class AddCommandTest {
         assertFalse(addAliceCommand.equals(addBobCommand));
     }
 
+    // Command equality behavior
     @Test
     public void toString_addCommand_returnsExpectedFormat() {
         AddCommand addCommand = new AddCommand(ALICE);

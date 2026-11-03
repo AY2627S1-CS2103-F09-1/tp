@@ -16,6 +16,42 @@ import seedu.address.testutil.EditPersonDescriptorBuilder;
 
 public class EditPersonDescriptorTest {
 
+    // EP_1: Copying a descriptor with email cleared
+    @Test
+    public void copyConstructor_emailRemoved_copyHasEmailRemoved() {
+        EditPersonDescriptor original = new EditPersonDescriptorBuilder().withoutEmail().build();
+
+        assertTrue(new EditPersonDescriptor(original).isEmailCleared());
+    }
+
+    // EP_2: No fields specified
+    @Test
+    public void isAnyFieldEdited_noField_returnsFalse() {
+        assertFalse(new EditPersonDescriptor().isAnyFieldEdited());
+    }
+
+    //EP_3: At least one field specified
+    @Test
+    public void isAnyFieldEdited_eachField_returnsTrue() {
+        assertTrue(new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build().isAnyFieldEdited());
+        assertTrue(new EditPersonDescriptorBuilder().withClassName(VALID_CLASS_BOB).build().isAnyFieldEdited());
+        assertTrue(new EditPersonDescriptorBuilder().withEmail(VALID_EMAIL_BOB).build().isAnyFieldEdited());
+        assertTrue(new EditPersonDescriptorBuilder().withoutEmail().build().isAnyFieldEdited());
+    }
+
+    // Command equality behavior
+    @Test
+    public void toString_descriptor_returnsExpectedFormat() {
+        EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
+        String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
+                + editPersonDescriptor.getName().orElse(null) + ", className="
+                + editPersonDescriptor.getClassName().orElse(null) + ", email="
+                + editPersonDescriptor.getEmail().orElse(null) + ", isEmailCleared="
+                + editPersonDescriptor.isEmailCleared() + "}";
+        assertEquals(expected, editPersonDescriptor.toString());
+    }
+
+    // Command equality behavior
     @Test
     public void equals_variousDescriptors_returnsExpected() {
         // same values -> returns true
@@ -51,39 +87,10 @@ public class EditPersonDescriptorTest {
         assertFalse(DESC_AMY.equals(editedAmy));
     }
 
+    // Command equality behavior
     @Test
     public void hashCode_sameValues_sameHashCode() {
         assertEquals(DESC_AMY.hashCode(), new EditPersonDescriptor(DESC_AMY).hashCode());
     }
 
-    @Test
-    public void copyConstructor_emailRemoved_copyHasEmailRemoved() {
-        EditPersonDescriptor original = new EditPersonDescriptorBuilder().withoutEmail().build();
-
-        assertTrue(new EditPersonDescriptor(original).isEmailCleared());
-    }
-
-    @Test
-    public void isAnyFieldEdited_noField_returnsFalse() {
-        assertFalse(new EditPersonDescriptor().isAnyFieldEdited());
-    }
-
-    @Test
-    public void isAnyFieldEdited_eachField_returnsTrue() {
-        assertTrue(new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build().isAnyFieldEdited());
-        assertTrue(new EditPersonDescriptorBuilder().withClassName(VALID_CLASS_BOB).build().isAnyFieldEdited());
-        assertTrue(new EditPersonDescriptorBuilder().withEmail(VALID_EMAIL_BOB).build().isAnyFieldEdited());
-        assertTrue(new EditPersonDescriptorBuilder().withoutEmail().build().isAnyFieldEdited());
-    }
-
-    @Test
-    public void toString_descriptor_returnsExpectedFormat() {
-        EditPersonDescriptor editPersonDescriptor = new EditPersonDescriptor();
-        String expected = EditPersonDescriptor.class.getCanonicalName() + "{name="
-                + editPersonDescriptor.getName().orElse(null) + ", className="
-                + editPersonDescriptor.getClassName().orElse(null) + ", email="
-                + editPersonDescriptor.getEmail().orElse(null) + ", isEmailCleared="
-                + editPersonDescriptor.isEmailCleared() + "}";
-        assertEquals(expected, editPersonDescriptor.toString());
-    }
 }

@@ -30,6 +30,7 @@ public class DeleteAttendanceCommandTest {
         model = getModelWithAliceAttendance();
     }
 
+    // EP_1: Invalid constructor. Null model, null person, or null date
     @Test
     public void deleteAttendance_nullArgument_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -40,12 +41,14 @@ public class DeleteAttendanceCommandTest {
                 DeleteAttendanceCommand.deleteAttendance(model, ALICE_WITH_ATTENDANCE, null));
     }
 
+    // EP_2: Person not in model
     @Test
     public void deleteAttendance_personNotInModel_throwsAssertionError() {
         assertThrows(AssertionError.class, () ->
                 DeleteAttendanceCommand.deleteAttendance(new ModelManager(), ALICE_WITH_ATTENDANCE, DATE));
     }
 
+    // EP_3: withoutAttendance leaves the record unchanged
     @Test
     public void deleteAttendance_personDoesNotRemoveRecord_throwsAssertionError() {
         Person personThatKeepsAttendance = new Person(ALICE_WITH_ATTENDANCE.getName(),
@@ -64,6 +67,14 @@ public class DeleteAttendanceCommandTest {
                 modelWithFaultyPerson, personThatKeepsAttendance, DATE));
     }
 
+    // EP_4: Record does not exist for the requested date
+    @Test
+    public void deleteAttendance_recordNotFound_throwsCommandException() {
+        assertThrows(CommandException.class, DeleteAttendanceCommand.MESSAGE_ATTENDANCE_NOT_FOUND, () ->
+                DeleteAttendanceCommand.deleteAttendance(model, ALICE_WITH_ATTENDANCE, DATE.minusDays(1)));
+    }
+
+    // EP_5_1: Record exists and is removed successfully
     @Test
     public void deleteAttendance_existingRecord_removesRecordAndShowsStoredDetails() throws CommandException {
         CommandResult result = DeleteAttendanceCommand.deleteAttendance(model, ALICE_WITH_ATTENDANCE, DATE);
@@ -75,26 +86,8 @@ public class DeleteAttendanceCommandTest {
                 result.getFeedbackToUser());
     }
 
-    @Test
-    public void deleteAttendance_recordNotFound_throwsCommandException() {
-        assertThrows(CommandException.class, DeleteAttendanceCommand.MESSAGE_ATTENDANCE_NOT_FOUND, () ->
-                DeleteAttendanceCommand.deleteAttendance(model, ALICE_WITH_ATTENDANCE, DATE.minusDays(1)));
-    }
-
-    @Test
-    public void deleteAttendance_modelDoesNotStoreChangedContact_throwsAssertionError() {
-        // White-box negative test for model-update-failed partition targeted by the postcondition
-        Model modelThatKeepsContacts = new ModelManager(model.getAddressBook(), new UserPrefs()) {
-            @Override
-            public void setPerson(Person target, Person editedPerson) {
-                // Intentionally does nothing to simulate a model that silently ignores the update.
-            }
-        };
-
-        assertThrows(AssertionError.class, () -> DeleteAttendanceCommand.deleteAttendance(
-                modelThatKeepsContacts, ALICE_WITH_ATTENDANCE, DATE));
-    }
-
+    // EP_5_2: Record exists and is removed successfully
+    // Boundary Value: date is the earliest date supported by LocalDate
     @Test
     public void deleteAttendance_yearZeroDate_messageShowsPaddedYear() throws CommandException {
         // Year zero is lower boundary supported by LocalDate and exercises date formatting
@@ -109,4 +102,20 @@ public class DeleteAttendanceCommandTest {
         assertEquals("Attendance of late for Alice Pauline on 01-01-0000 has been deleted",
                 result.getFeedbackToUser());
     }
+
+    // EP_6: Model update fails silently. setPerson ignores the change
+    @Test
+    public void deleteAttendance_modelDoesNotStoreChangedContact_throwsAssertionError() {
+        // White-box negative test for model-update-failed partition targeted by the postcondition
+        Model modelThatKeepsContacts = new ModelManager(model.getAddressBook(), new UserPrefs()) {
+            @Override
+            public void setPerson(Person target, Person editedPerson) {
+                // Intentionally does nothing to simulate a model that silently ignores the update.
+            }
+        };
+
+        assertThrows(AssertionError.class, () -> DeleteAttendanceCommand.deleteAttendance(
+                modelThatKeepsContacts, ALICE_WITH_ATTENDANCE, DATE));
+    }
+
 }

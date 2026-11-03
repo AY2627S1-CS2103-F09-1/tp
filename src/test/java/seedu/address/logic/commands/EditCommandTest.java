@@ -45,6 +45,44 @@ public class EditCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1_1: Invalid constructor. Null index or null descriptor
+    @Test
+    public void constructor_nullArguments_throwsNullPointerException() {
+        assertThrows(NullPointerException.class, () -> new EditCommand(null, DESC_AMY));
+        assertThrows(NullPointerException.class, () -> new EditCommand(INDEX_FIRST_PERSON, null));
+    }
+
+    // EP_1_2: Invalid constructor. No detail to edit
+    @Test
+    public void constructor_noDetailToEdit_throwsIllegalArgumentException() {
+        assertThrows(IllegalArgumentException.class, EditCommand.MESSAGE_NOT_EDITED, () ->
+                new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptor()));
+    }
+
+    // EP_1_3: Model is null
+    @Test
+    public void execute_nullModel_throwsNullPointerException() {
+        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, DESC_AMY);
+        assertThrows(NullPointerException.class, () -> editCommand.execute(null));
+    }
+
+    // EP_2: Model update fails
+    @Test
+    public void execute_modelDoesNotStoreEditedContact_throwsAssertionError() {
+        Model modelThatKeepsContacts = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
+            @Override
+            public void setPerson(Person target, Person editedPerson) {
+                // Intentionally does nothing, to simulate a model that fails to store the contact
+            }
+        };
+        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
+                new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build());
+
+        // Gradle runs the tests with assertions enabled
+        assertThrows(AssertionError.class, () -> editCommand.execute(modelThatKeepsContacts));
+    }
+
+    // EP_3_1: Valid edit changing name, class, and email. Unfiltered list
     @Test
     public void execute_allFieldsSpecifiedUnfilteredList_success() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -65,6 +103,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_3_2: Valid partial edit. Unfiltered list
     @Test
     public void execute_someFieldsSpecifiedUnfilteredList_success() {
         Index indexLastPerson = Index.fromOneBased(model.getFilteredPersonList().size());
@@ -84,71 +123,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
-    @Test
-    public void constructor_nullArguments_throwsNullPointerException() {
-        assertThrows(NullPointerException.class, () -> new EditCommand(null, DESC_AMY));
-        assertThrows(NullPointerException.class, () -> new EditCommand(INDEX_FIRST_PERSON, null));
-    }
-
-    @Test
-    public void constructor_noDetailToEdit_throwsIllegalArgumentException() {
-        assertThrows(IllegalArgumentException.class, EditCommand.MESSAGE_NOT_EDITED, () ->
-                new EditCommand(INDEX_FIRST_PERSON, new EditPersonDescriptor()));
-    }
-
-    @Test
-    public void hasSameTagsAndRecords_sameTagsAndRecords_returnsTrue() {
-        Person person = new PersonBuilder().withTags("friends").build();
-        Person renamed = new PersonBuilder(person).withName(VALID_NAME_BOB).build();
-
-        assertTrue(EditCommand.hasSameTagsAndRecords(person, renamed));
-    }
-
-    @Test
-    public void hasSameTagsAndRecords_differentTags_returnsFalse() {
-        Person person = new PersonBuilder().withTags("friends").build();
-
-        assertFalse(EditCommand.hasSameTagsAndRecords(person, person.withTag(new Tag("Group A"))));
-    }
-
-    @Test
-    public void hasSameTagsAndRecords_differentAttendanceRecords_returnsFalse() {
-        Person person = new PersonBuilder().build();
-        Person withAttendance = person
-                .withAttendance(new Attendance(LocalDate.of(2024, 1, 1), Attendance.Status.PRESENT));
-
-        assertFalse(EditCommand.hasSameTagsAndRecords(person, withAttendance));
-    }
-
-    @Test
-    public void hasSameTagsAndRecords_differentGradeRecords_returnsFalse() {
-        Person person = new PersonBuilder().build();
-        Person withGrade = person.withGrade(new Grade("Quiz 1", BigDecimal.valueOf(80)));
-
-        assertFalse(EditCommand.hasSameTagsAndRecords(person, withGrade));
-    }
-
-    @Test
-    public void execute_nullModel_throwsNullPointerException() {
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON, DESC_AMY);
-        assertThrows(NullPointerException.class, () -> editCommand.execute(null));
-    }
-
-    @Test
-    public void execute_modelDoesNotStoreEditedContact_throwsAssertionError() {
-        Model modelThatKeepsContacts = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
-            @Override
-            public void setPerson(Person target, Person editedPerson) {
-                // Intentionally does nothing, to simulate a model that fails to store the contact
-            }
-        };
-        EditCommand editCommand = new EditCommand(INDEX_FIRST_PERSON,
-                new EditPersonDescriptorBuilder().withName(VALID_NAME_BOB).build());
-
-        // Gradle runs the tests with assertions enabled
-        assertThrows(AssertionError.class, () -> editCommand.execute(modelThatKeepsContacts));
-    }
-
+    // EP_3_3: Valid edit changing name and class. Filtered list
     @Test
     public void execute_filteredList_success() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -168,6 +143,43 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_4: Tags and records unchanged. Helper returns true
+    @Test
+    public void hasSameTagsAndRecords_sameTagsAndRecords_returnsTrue() {
+        Person person = new PersonBuilder().withTags("friends").build();
+        Person renamed = new PersonBuilder(person).withName(VALID_NAME_BOB).build();
+
+        assertTrue(EditCommand.hasSameTagsAndRecords(person, renamed));
+    }
+
+    // EP_5: Tags changed. Helper returns false
+    @Test
+    public void hasSameTagsAndRecords_differentTags_returnsFalse() {
+        Person person = new PersonBuilder().withTags("friends").build();
+
+        assertFalse(EditCommand.hasSameTagsAndRecords(person, person.withTag(new Tag("Group A"))));
+    }
+
+    // EP_6: Attendance records changed. Helper returns false
+    @Test
+    public void hasSameTagsAndRecords_differentAttendanceRecords_returnsFalse() {
+        Person person = new PersonBuilder().build();
+        Person withAttendance = person
+                .withAttendance(new Attendance(LocalDate.of(2024, 1, 1), Attendance.Status.PRESENT));
+
+        assertFalse(EditCommand.hasSameTagsAndRecords(person, withAttendance));
+    }
+
+    // EP_7: Grade records changed. Helper returns false
+    @Test
+    public void hasSameTagsAndRecords_differentGradeRecords_returnsFalse() {
+        Person person = new PersonBuilder().build();
+        Person withGrade = person.withGrade(new Grade("Quiz 1", BigDecimal.valueOf(80)));
+
+        assertFalse(EditCommand.hasSameTagsAndRecords(person, withGrade));
+    }
+
+    // EP_8_1: Optional email present. Removing it succeeds.
     @Test
     public void execute_removeEmail_success() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_THIRD_PERSON.getZeroBased());
@@ -185,6 +197,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_8_2: Optional email already absent. Removing it succeeds.
     @Test
     public void execute_removeEmailOfContactWithoutEmail_success() {
         Person personToEdit = new PersonBuilder(model.getFilteredPersonList().get(0)).withoutEmail().build();
@@ -216,6 +229,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // EP_9: Changing case of the name
     @Test
     public void execute_changeCaseOfOwnName_success() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -234,6 +248,7 @@ public class EditCommandTest {
         assertCommandSuccess(editCommand, model, expectedMessage, expectedModel);
     }
 
+    // Tags not affected
     @Test
     public void execute_contactWithTags_tagsAreKept() {
         Person personToEdit = model.getFilteredPersonList().get(INDEX_SECOND_PERSON.getZeroBased());
@@ -254,6 +269,7 @@ public class EditCommandTest {
         assertEquals(personToEdit.getTags(), actualPerson.getTags());
     }
 
+    // Records not affected
     @Test
     public void execute_contactWithRecords_recordsAreKept() {
         Person originalPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -282,6 +298,7 @@ public class EditCommandTest {
         assertEquals(personWithRecords.getGradeRecords(), actualPerson.getGradeRecords());
     }
 
+    // EP_10_1: Editing a person to have the same name and class as another person. Unfiltered list
     @Test
     public void execute_duplicatePersonUnfilteredList_failure() {
         Person firstPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -293,6 +310,7 @@ public class EditCommandTest {
                 firstPerson.getName(), firstPerson.getClassName()));
     }
 
+    // EP_10_2: Editing a person to have the same name and class as another person. Filtered list
     @Test
     public void execute_duplicatePersonFilteredList_failure() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -306,6 +324,7 @@ public class EditCommandTest {
                 personInList.getName(), personInList.getClassName()));
     }
 
+    // EP_10_3: Editing class of a person to have the same name and class as another person
     @Test
     public void execute_changeOnlyClassIntoDuplicate_failure() {
         Person amyInA1 = new PersonBuilder().withName("Amy Bee").withClassName("A1").build();
@@ -323,6 +342,7 @@ public class EditCommandTest {
                 String.format(EditCommand.MESSAGE_DUPLICATE_PERSON, "Amy Bee", "a1"));
     }
 
+    // EP_11_1: Invalid person index. Unfiltered list
     @Test
     public void execute_invalidPersonIndexUnfilteredList_failure() {
         Index outOfBoundIndex = Index.fromOneBased(model.getFilteredPersonList().size() + 1);
@@ -333,10 +353,7 @@ public class EditCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
-    /**
-     * Edit filtered list where index is larger than size of filtered list,
-     * but smaller than size of address book
-     */
+    // EP_11_2: Invalid person index. Filtered list
     @Test
     public void execute_invalidPersonIndexFilteredList_failure() {
         showPersonAtIndex(model, INDEX_FIRST_PERSON);
@@ -351,6 +368,7 @@ public class EditCommandTest {
                 Messages.getInvalidDisplayedIndexMessage(model.getFilteredPersonList().size()));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_returnsExpected() {
         final EditCommand standardCommand = new EditCommand(INDEX_FIRST_PERSON, DESC_AMY);
@@ -376,6 +394,7 @@ public class EditCommandTest {
         assertFalse(standardCommand.equals(new EditCommand(INDEX_FIRST_PERSON, DESC_BOB)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_command_returnsExpectedFormat() {
         Index index = Index.fromOneBased(1);

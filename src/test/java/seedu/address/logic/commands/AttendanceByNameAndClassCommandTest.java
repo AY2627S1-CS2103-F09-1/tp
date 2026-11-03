@@ -32,6 +32,7 @@ public class AttendanceByNameAndClassCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Null constructors
     @Test
     public void constructor_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () ->
@@ -44,6 +45,7 @@ public class AttendanceByNameAndClassCommandTest {
                 new AttendanceByNameAndClassCommand("Amy", "A1", DATE, null));
     }
 
+    // EP_2_1: Student exists
     @Test
     public void execute_validNameAndClass_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(0);
@@ -57,6 +59,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_2: Student exists, name and class ignore case and spacces
     @Test
     public void execute_nameAndClassWithDifferentCaseAndSpaces_recordsAttendance() {
         Person person = model.getFilteredPersonList().get(0);
@@ -71,6 +74,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_2_3: Student exists, not in filtered list
     @Test
     public void execute_personNotDisplayed_recordsAttendance() {
         Person hiddenPerson = model.getFilteredPersonList().get(INDEX_FIRST_PERSON.getZeroBased());
@@ -90,6 +94,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandSuccess(command, model, expectedMessage, expectedModel);
     }
 
+    // EP_3_1: Name or class cannot match a valid contact
     @Test
     public void execute_nameOrClassNotValidForAContact_throwsContactNotFound() {
         AttendanceByNameAndClassCommand invalidName = new AttendanceByNameAndClassCommand(
@@ -101,6 +106,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandFailure(invalidClass, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_3_2: Valid-looking name/class with no matching student
     @Test
     public void execute_unknownNameAndClass_throwsCommandException() {
         AttendanceByNameAndClassCommand command = new AttendanceByNameAndClassCommand(
@@ -109,6 +115,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandFailure(command, model, Messages.MESSAGE_CONTACT_NOT_FOUND);
     }
 
+    // EP_4_1: Invalid date, future
     @Test
     public void execute_futureDate_throwsCommandException() {
         AttendanceByNameAndClassCommand command = new AttendanceByNameAndClassCommand(
@@ -117,6 +124,7 @@ public class AttendanceByNameAndClassCommandTest {
         assertCommandFailure(command, model, AttendanceCommand.MESSAGE_FUTURE_DATE);
     }
 
+    // EP_4_2: Invalid date, duplicate
     @Test
     public void execute_duplicateDate_throwsCommandException() {
         Person person = model.getFilteredPersonList().get(0);
@@ -129,6 +137,7 @@ public class AttendanceByNameAndClassCommandTest {
                 person.getName(), "16-09-2026", Attendance.Status.PRESENT));
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         AttendanceByNameAndClassCommand command =
@@ -150,6 +159,7 @@ public class AttendanceByNameAndClassCommandTest {
                 new AttendanceByNameAndClassCommand("Amy", "A1", DATE, Attendance.Status.ABSENT)));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         AttendanceByNameAndClassCommand command =

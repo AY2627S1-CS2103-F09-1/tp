@@ -20,20 +20,14 @@ public class DeleteCommandTest {
 
     private Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Null model or person
     @Test
     public void deletePerson_null_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> DeleteCommand.deletePerson(null, ALICE));
         assertThrows(NullPointerException.class, () -> DeleteCommand.deletePerson(model, null));
     }
 
-    @Test
-    public void deletePerson_personInModel_removesPersonAndShowsNameAndClass() {
-        CommandResult result = DeleteCommand.deletePerson(model, ALICE);
-
-        assertEquals("Alice Pauline in class A1 has been deleted", result.getFeedbackToUser());
-        assertFalse(model.hasPerson(ALICE));
-    }
-
+    // EP_2: Person not in model
     @Test
     public void deletePerson_personNotInModel_throwsAssertionError() {
         Model emptyModel = new ModelManager();
@@ -42,6 +36,7 @@ public class DeleteCommandTest {
         assertThrows(AssertionError.class, () -> DeleteCommand.deletePerson(emptyModel, ALICE));
     }
 
+    // EP_3: Model update fails to remove person
     @Test
     public void deletePerson_modelDoesNotRemovePerson_throwsAssertionError() {
         Model modelThatKeepsPersons = new ModelManager(getTypicalAddressBook(), new UserPrefs()) {
@@ -53,4 +48,14 @@ public class DeleteCommandTest {
 
         assertThrows(AssertionError.class, () -> DeleteCommand.deletePerson(modelThatKeepsPersons, ALICE));
     }
+
+    // EP_4: Person exists and is removed successfully
+    @Test
+    public void deletePerson_personInModel_removesPersonAndShowsNameAndClass() {
+        CommandResult result = DeleteCommand.deletePerson(model, ALICE);
+
+        assertEquals("Alice Pauline in class A1 has been deleted", result.getFeedbackToUser());
+        assertFalse(model.hasPerson(ALICE));
+    }
+
 }

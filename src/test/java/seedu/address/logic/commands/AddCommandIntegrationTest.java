@@ -27,6 +27,7 @@ public class AddCommandIntegrationTest {
         model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
     }
 
+    // EP_1: Person does not exist
     @Test
     public void execute_newPerson_success() {
         Person validPerson = new PersonBuilder().build();
@@ -39,6 +40,7 @@ public class AddCommandIntegrationTest {
                 expectedModel);
     }
 
+    // EP_1_1: Person does not exist, list is not filtered
     @Test
     public void execute_newPerson_showsNewPersonAtTopOfList() throws Exception {
         Person previousFirstPerson = model.getFilteredPersonList().get(0);
@@ -50,6 +52,7 @@ public class AddCommandIntegrationTest {
         assertEquals(previousFirstPerson, model.getFilteredPersonList().get(1));
     }
 
+    // EP_1_2: Person does not exist, list is filtered
     @Test
     public void execute_newPersonWhileListIsFiltered_showsNewPersonAtTopOfFullList() throws Exception {
         Person previousFirstPerson = model.getFilteredPersonList().get(0);
@@ -62,6 +65,7 @@ public class AddCommandIntegrationTest {
         assertEquals(previousFirstPerson, model.getFilteredPersonList().get(1));
     }
 
+    // EP_1_0_1: Person does not exist, no email provided
     @Test
     public void execute_newPersonWithoutEmail_success() {
         Person validPerson = new PersonBuilder().withoutEmail().build();
@@ -74,36 +78,7 @@ public class AddCommandIntegrationTest {
                 expectedModel);
     }
 
-    @Test
-    public void execute_duplicatePerson_throwsCommandException() {
-        Person personInList = model.getAddressBook().getPersonList().get(0);
-        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, personInList.getName(),
-                personInList.getClassName());
-        assertCommandFailure(new AddCommand(personInList), model, expectedMessage);
-    }
-
-    @Test
-    public void execute_sameNameAndClassInDifferentCase_throwsCommandException() {
-        Person personInList = model.getAddressBook().getPersonList().get(0);
-        Person duplicatePerson = new PersonBuilder(personInList)
-                .withName(personInList.getName().toString().toUpperCase())
-                .withClassName(personInList.getClassName().toString().toLowerCase())
-                .build();
-        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
-                duplicatePerson.getClassName());
-        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
-    }
-
-    @Test
-    public void execute_sameClassInFullWidth_throwsCommandException() {
-        Person personInList = model.getAddressBook().getPersonList().get(0);
-        Person duplicatePerson = new PersonBuilder(personInList).withClassName("Ａ１").build();
-        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
-                duplicatePerson.getClassName());
-
-        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
-    }
-
+    // EP_1_0_0_1: Person does not exist, same name but different class
     @Test
     public void execute_sameNameDifferentClass_success() {
         Person personInList = model.getAddressBook().getPersonList().get(0);
@@ -116,6 +91,39 @@ public class AddCommandIntegrationTest {
                 String.format(AddCommand.MESSAGE_SUCCESS, samePersonInOtherClass.getName(),
                         samePersonInOtherClass.getClassName()),
                 expectedModel);
+    }
+
+    // EP_2: Person already exists
+    @Test
+    public void execute_duplicatePerson_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, personInList.getName(),
+                personInList.getClassName());
+        assertCommandFailure(new AddCommand(personInList), model, expectedMessage);
+    }
+
+    // EP_2_1: Person already exists, same name and class but different case
+    @Test
+    public void execute_sameNameAndClassInDifferentCase_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person duplicatePerson = new PersonBuilder(personInList)
+                .withName(personInList.getName().toString().toUpperCase())
+                .withClassName(personInList.getClassName().toString().toLowerCase())
+                .build();
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
+                duplicatePerson.getClassName());
+        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
+    }
+
+    // EP_2_2: Person already exists, same name and class but full width
+    @Test
+    public void execute_sameClassInFullWidth_throwsCommandException() {
+        Person personInList = model.getAddressBook().getPersonList().get(0);
+        Person duplicatePerson = new PersonBuilder(personInList).withClassName("Ａ１").build();
+        String expectedMessage = String.format(AddCommand.MESSAGE_DUPLICATE_PERSON, duplicatePerson.getName(),
+                duplicatePerson.getClassName());
+
+        assertCommandFailure(new AddCommand(duplicatePerson), model, expectedMessage);
     }
 
 }

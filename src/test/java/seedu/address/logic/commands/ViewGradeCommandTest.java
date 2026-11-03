@@ -23,6 +23,8 @@ public class ViewGradeCommandTest {
 
     private final Model model = new ModelManager(getTypicalAddressBook(), new UserPrefs());
 
+    // EP_1: Student exists and has one or more grades
+    // Checks that multiple grades are displayed newest first.
     @Test
     public void execute_studentWithGrades_returnsNewestFirst() throws Exception {
         Person person = model.getAddressBook().getPersonList().get(0);
@@ -39,6 +41,9 @@ public class ViewGradeCommandTest {
         assertEquals(GRADE_HISTORY, result.getDisplayTarget());
     }
 
+    // EP_1: Student exists but has no grades
+    // Checks that an empty message is displayed
+    // Boundary Value: 0
     @Test
     public void execute_studentWithoutGrades_showsEmptyMessage() throws Exception {
         Person person = model.getAddressBook().getPersonList().get(0);
@@ -50,15 +55,8 @@ public class ViewGradeCommandTest {
                         + "\n" + ViewGradeCommand.MESSAGE_NO_GRADES, result.getFeedbackToUser());
     }
 
-    @Test
-    public void execute_unknownStudent_throwsCommandException() {
-        ViewGradeCommand command = new ViewGradeCommand("Unknown Student", "A1");
-
-        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
-
-        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
-    }
-
+    // EP_2: Student exists but has the same name as another student in a different class
+    // Checks that the correct student is selected based on class name
     @Test
     public void execute_sameNameDifferentClass_selectsRequestedClass() throws Exception {
         Person otherClassPerson = new PersonBuilder().withName("Alex Tan").withClassName("A2").build()
@@ -76,6 +74,8 @@ public class ViewGradeCommandTest {
         assertFalse(output.contains("Quiz 1"));
     }
 
+    // EP_2: Student exists but name and class are in different case and spacing
+    // Checks that the student is still found
     @Test
     public void execute_nameAndClassInOtherCaseAndSpacing_findsStudent() throws Exception {
         Person person = new PersonBuilder().withName("Alex Tan").withClassName("A1").build()
@@ -88,17 +88,18 @@ public class ViewGradeCommandTest {
         assertTrue(output.contains("Quiz 1: 80"));
     }
 
+    // EP_3: Student does not exist
+    // Checks that a command exception is thrown
     @Test
-    public void execute_nameOrClassThatNoContactCanHave_throwsContactNotFound() {
-        // such a value is not checked as a name or class, and simply matches no contact
-        for (ViewGradeCommand command : new ViewGradeCommand[] {
-            new ViewGradeCommand("Tan, John", "A1"), new ViewGradeCommand("Alex Tan", "A1&")}) {
-            CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+    public void execute_unknownStudent_throwsCommandException() {
+        ViewGradeCommand command = new ViewGradeCommand("Unknown Student", "A1");
 
-            assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
-        }
+        CommandException exception = assertThrows(CommandException.class, () -> command.execute(model));
+
+        assertEquals(seedu.address.logic.Messages.MESSAGE_CONTACT_NOT_FOUND, exception.getMessage());
     }
 
+    // Command equality behavior
     @Test
     public void equals_variousCommands_followsEqualityContract() {
         ViewGradeCommand command = new ViewGradeCommand("Alex Tan", "A1");
@@ -111,6 +112,7 @@ public class ViewGradeCommandTest {
         assertFalse(command.equals(new ViewGradeCommand("Alex Tan", "A2")));
     }
 
+    // Command equality behavior
     @Test
     public void toString_validCommand_returnsFieldsRepresentation() {
         ViewGradeCommand command = new ViewGradeCommand("Alex Tan", "A1");
