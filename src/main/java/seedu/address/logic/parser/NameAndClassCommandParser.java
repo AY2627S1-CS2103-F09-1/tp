@@ -35,19 +35,22 @@ public abstract class NameAndClassCommandParser<T extends Command> implements Pa
      * Parses the given {@code String} of arguments and returns the command for execution. The name and class
      * are not checked against the rules for adding a contact, so a name or class that no contact has is
      * reported when the command runs.
-     * Problems are reported in this order: unrecognized parameters, repeated parameters, text before the first
-     * parameter, missing name, and missing class.
+     * Problems are reported in this order: no arguments, unrecognized parameters, repeated parameters, parameter
+     * missing a space before it, text before the first parameter, missing name, and missing class.
      *
      * @throws ParseException if the user input does not conform to the expected format
      */
     @Override
     public T parse(String args) throws ParseException {
         requireNonNull(args);
+        if (args.isBlank()) {
+            throw new ParseException(invalidFormatMessage);
+        }
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER, PREFIX_NAME, PREFIX_CLASS);
-        ParserUtil.requireNoStuckPrefixes(args);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         if (!argMultimap.getPreamble().isEmpty()) {
             throw new ParseException(invalidFormatMessage);

@@ -5,6 +5,7 @@ import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS;
 
 import seedu.address.logic.commands.DeleteByIndexCommand;
 import seedu.address.logic.commands.DeleteByNameAndClassCommand;
@@ -27,12 +28,14 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
      * Parses the given {@code String} of arguments in the context of the DeleteCommand
      * and returns a DeleteCommand object for execution. The person to delete is identified either by an
      * index alone, or by the name and class parameters alone.
-     * Problems are reported in this order: unrecognized parameters, repeated parameters, a parameter that is
-     * missing a space before it, an index mixed with parameters, a missing or invalid index, missing name and
-     * missing class.
+     * Problems are reported in this order: no arguments, unrecognized parameters, repeated parameters, a parameter
+     * missing a space before it, index mixed with parameters, missing or invalid index, missing name and missing class.
      * @throws ParseException if the user input does not conform to the expected format
      */
     public DeleteCommand parse(String args) throws ParseException {
+        if (args.isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
+        }
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER, PREFIX_NAME, PREFIX_CLASS);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS);
@@ -45,7 +48,7 @@ public class DeleteCommandParser implements Parser<DeleteCommand> {
             return parseIndex(argMultimap.getPreamble());
         }
         if (!argMultimap.getPreamble().isEmpty()) {
-            throw new ParseException(INVALID_FORMAT_MESSAGE);
+            throw new ParseException(MESSAGE_BOTH_CONTACT_IDENTIFIERS);
         }
         return parseNameAndClass(argMultimap);
     }

@@ -134,9 +134,9 @@ public class TagCommandParserTest {
     }
 
     @Test
-    public void parse_noArguments_reportsMissingGroupOnly() {
-        assertParseFailure(parser, "", MESSAGE_MISSING_GROUP);
-        assertParseFailure(parser, "     ", MESSAGE_MISSING_GROUP);
+    public void parse_noArguments_reportsUsage() {
+        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "     ", MESSAGE_INVALID_FORMAT);
     }
 
     @Test
@@ -244,5 +244,9 @@ public class TagCommandParserTest {
         // invalid entry before repeated index
         assertParseFailure(parser, GROUP_DESC + " /members 1,1,x",
                 String.format(MESSAGE_INVALID_MEMBER_INDEX, "x"));
+
+        // a repeated parameter is reported before a parameter that is missing a preceding space
+        assertParseFailure(parser, " /group Group/group Other" + GROUP_DESC + MEMBERS_DESC,
+                getErrorMessageForDuplicatePrefixes("/group"));
     }
 }

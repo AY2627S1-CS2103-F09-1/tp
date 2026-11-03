@@ -37,6 +37,12 @@ public class DeleteAttendanceCommandParserTest {
     }
 
     @Test
+    public void parse_noArguments_reportsUsage() {
+        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "   ", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_validIndex_success() {
         assertParseSuccess(parser, "1 /date 16-09-2026",
                 new DeleteAttendanceByIndexCommand(INDEX_FIRST_PERSON, DATE));
@@ -73,7 +79,8 @@ public class DeleteAttendanceCommandParserTest {
 
     @Test
     public void parse_mixedIdentificationForms_failure() {
-        assertParseFailure(parser, "1 /name John Tan /class A1 /date 16-09-2026", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 /name John Tan /class A1 /date 16-09-2026",
+                ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
     }
 
     @Test
@@ -110,5 +117,16 @@ public class DeleteAttendanceCommandParserTest {
         assertParseFailure(parser, "1 /date 16-09-2026 /date 17-09-2026",
                 getErrorMessageForDuplicatePrefixes("/date"));
         assertParseFailure(parser, "1 /date 16-09-2026 /status present", MESSAGE_UNKNOWN_PARAMETER);
+    }
+
+    @Test
+    public void parse_repeatedParameterAndStuckParameter_reportsRepeatedParameter() {
+        assertParseFailure(parser, "1/date 16-09-2026 /date 16-09-2026 /date 17-09-2026",
+                getErrorMessageForDuplicatePrefixes("/date"));
+    }
+
+    @Test
+    public void parse_missingValuesBeforeInvalidValues_failure() {
+        assertParseFailure(parser, "abc", MESSAGE_MISSING_DATE);
     }
 }

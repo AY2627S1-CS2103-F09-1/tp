@@ -27,24 +27,31 @@ public class AddCommandParser implements Parser<AddCommand> {
             "Unknown parameter. Use " + PREFIX_NAME + ", " + PREFIX_CLASS + " or " + PREFIX_EMAIL
             + ParserUtil.MESSAGE_SLASH_WORD_HINT;
 
+    private static final String INVALID_FORMAT_MESSAGE =
+            String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE);
+
     /**
      * Parses the given {@code String} of arguments in the context of the AddCommand
      * and returns an AddCommand object for execution.
-     * Problems are reported in this order: unrecognized parameters, repeated parameters, text before the
-     * first parameter, missing name, missing class, and finally invalid values.
+     * Problems are reported in the order: no arguments, unrecognized parameters, repeated parameters, a parameter
+     * missing a space before it, text before the first parameter, missing name, missing class and invalid values.
      * @throws ParseException if the user input does not conform to the expected format
      */
     public AddCommand parse(String args) throws ParseException {
         requireNonNull(args);
+        if (args.isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
+        }
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL);
 
         ArgumentMultimap argMultimap =
                 ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_EMAIL);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         if (!argMultimap.getPreamble().isEmpty()) {
-            throw new ParseException(String.format(MESSAGE_INVALID_COMMAND_FORMAT, AddCommand.MESSAGE_USAGE));
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
         }
 
         String nameValue = argMultimap.getValue(PREFIX_NAME)

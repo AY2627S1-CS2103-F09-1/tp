@@ -32,37 +32,44 @@ public class EditCommandParser implements Parser<EditCommand> {
     /**
      * Parses the given {@code String} of arguments in the context of the EditCommand
      * and returns an EditCommand object for execution.
-     * Problems are reported in this order: unrecognized parameters, repeated parameters, an invalid index,
-     * an invalid name, class or email, and finally that no detail is given. A name or class without a value
-     * is invalid, and an email without a value removes the email.
+     * Problems are reported in this order: no arguments, unrecognized parameters, repeated parameters, parameter
+     * missing a space before it, missing index, no detail to edit, invalid index and invalid name, class or email.
+     * A name or class without a value is invalid, and an email without a value removes the email.
      * @throws ParseException if the user input does not conform to the expected format
      */
+    @Override
     public EditCommand parse(String args) throws ParseException {
         requireNonNull(args);
+        if (args.isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
+        }
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER, EDIT_PREFIXES);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, EDIT_PREFIXES);
         argMultimap.verifyNoDuplicatePrefixesFor(EDIT_PREFIXES);
+        ParserUtil.requireNoStuckPrefixes(args);
 
-        Index index = parseIndex(argMultimap.getPreamble());
-        EditPersonDescriptor editPersonDescriptor = parseDescriptor(argMultimap);
-        if (!editPersonDescriptor.isAnyFieldEdited()) {
+        String preamble = argMultimap.getPreamble();
+        if (preamble.isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
+        }
+        if (!hasDetail(argMultimap)) {
             throw new ParseException(EditCommand.MESSAGE_NOT_EDITED);
         }
 
+        Index index = ParserUtil.parseIndex(preamble);
+        EditPersonDescriptor editPersonDescriptor = parseDescriptor(argMultimap);
         return new EditCommand(index, editPersonDescriptor);
     }
 
     /**
-     * Returns the index in {@code preamble}.
-     * @throws ParseException if {@code preamble} is empty, with the invalid command format message, or is
-     *         not a positive integer
+     * Returns whether at least one editable parameter was given. A parameter without a value still counts as
+     * given, since an empty email removes it and an empty name or class has its own validation message.
      */
-    private static Index parseIndex(String preamble) throws ParseException {
-        if (preamble.isBlank()) {
-            throw new ParseException(INVALID_FORMAT_MESSAGE);
-        }
-        return ParserUtil.parseIndex(preamble);
+    private static boolean hasDetail(ArgumentMultimap argMultimap) {
+        return argMultimap.getValue(PREFIX_NAME).isPresent()
+                || argMultimap.getValue(PREFIX_CLASS).isPresent()
+                || argMultimap.getValue(PREFIX_EMAIL).isPresent();
     }
 
     /**

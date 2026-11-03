@@ -23,7 +23,8 @@ public class ImportCommandParserTest {
         ImportCommandParser parser = new ImportCommandParser();
         ParseException exception = assertThrows(ParseException.class, () -> parser.parse("   "));
 
-        assertEquals("Specify file path", exception.getMessage());
+        assertEquals(String.format(MESSAGE_INVALID_COMMAND_FORMAT, ImportCommand.MESSAGE_USAGE),
+                exception.getMessage());
     }
 
     @Test

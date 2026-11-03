@@ -81,7 +81,7 @@ public class UntagCommandParserTest {
     public void parse_missingParameters_failure() {
         assertParseFailure(parser, MEMBERS_DESC, MESSAGE_MISSING_GROUP);
         assertParseFailure(parser, GROUP_DESC, MESSAGE_MISSING_MEMBERS);
-        assertParseFailure(parser, "", MESSAGE_MISSING_GROUP);
+        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
 
         // parameters without a value
         assertParseFailure(parser, " /group" + MEMBERS_DESC, MESSAGE_MISSING_GROUP);

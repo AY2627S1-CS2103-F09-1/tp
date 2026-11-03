@@ -111,9 +111,9 @@ public class AddCommandParserTest {
     public void parse_prefixWithoutSpace_failure() {
         // a parameter stuck to the previous value must not silently become part of it
         assertParseFailure(parser, NAME_DESC_BOB + "/class B2" + CLASS_DESC_AMY,
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "name", "/class"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/class"));
         assertParseFailure(parser, NAME_DESC_BOB + CLASS_DESC_BOB + "/email bob@example.com",
-                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "class", "/email"));
+                String.format(ParserUtil.MESSAGE_PREFIX_WITHOUT_SPACE, "command", "/email"));
     }
 
     @Test
@@ -132,8 +132,13 @@ public class AddCommandParserTest {
     }
 
     @Test
-    public void parse_missingNameAndClass_reportsMissingNameOnly() {
-        assertParseFailure(parser, "", MESSAGE_MISSING_NAME);
+    public void parse_noArguments_reportsUsage() {
+        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "   ", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
+    public void parse_missingNameAndClassWithEmail_reportsMissingNameOnly() {
         assertParseFailure(parser, EMAIL_DESC_BOB, MESSAGE_MISSING_NAME);
     }
 
@@ -271,6 +276,10 @@ public class AddCommandParserTest {
 
         // repeated parameter comes before text before the first parameter
         assertParseFailure(parser, PREAMBLE_NON_EMPTY + NAME_DESC_BOB + NAME_DESC_AMY,
+                getErrorMessageForDuplicatePrefixes("/name"));
+
+        // repeated parameter comes before a parameter that is missing a preceding space
+        assertParseFailure(parser, NAME_DESC_BOB + "/class B2" + NAME_DESC_AMY + CLASS_DESC_BOB,
                 getErrorMessageForDuplicatePrefixes("/name"));
 
         // text before the first parameter comes before a missing parameter
