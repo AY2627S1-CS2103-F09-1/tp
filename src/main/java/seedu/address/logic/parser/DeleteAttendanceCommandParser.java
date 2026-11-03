@@ -8,8 +8,7 @@ import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_CLASS;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_DATE;
 import static seedu.address.logic.parser.CliSyntax.PREFIX_NAME;
-
-import java.time.LocalDate;
+import static seedu.address.logic.parser.ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS;
 
 import seedu.address.commons.core.index.Index;
 import seedu.address.logic.commands.DeleteAttendanceByIndexCommand;
@@ -29,15 +28,23 @@ public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCom
     private static final String INVALID_FORMAT_MESSAGE =
             String.format(MESSAGE_INVALID_COMMAND_FORMAT, DeleteAttendanceCommand.MESSAGE_USAGE);
 
+    /**
+     * Parses delete-attendance arguments. Problems are reported in this order: no arguments, unrecognized
+     * parameters, repeated parameters, parameter missing a space before it, index mixed with name/class parameters,
+     * missing required parameters and invalid values in usage order.
+     */
     @Override
     public DeleteAttendanceCommand parse(String args) throws ParseException {
         requireNonNull(args);
+        if (args.isBlank()) {
+            throw new ParseException(INVALID_FORMAT_MESSAGE);
+        }
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE);
-        ParserUtil.requireNoStuckPrefixes(args);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_NAME, PREFIX_CLASS, PREFIX_DATE);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         boolean hasNameOrClass = argMultimap.getValue(PREFIX_NAME).isPresent()
                 || argMultimap.getValue(PREFIX_CLASS).isPresent();
@@ -45,7 +52,7 @@ public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCom
             return parseByIndex(argMultimap);
         }
         if (!argMultimap.getPreamble().isEmpty()) {
-            throw new ParseException(INVALID_FORMAT_MESSAGE);
+            throw new ParseException(MESSAGE_BOTH_CONTACT_IDENTIFIERS);
         }
         return parseByNameAndClass(argMultimap);
     }
@@ -60,8 +67,9 @@ public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCom
         if (argMultimap.getPreamble().isBlank()) {
             throw new ParseException(INVALID_FORMAT_MESSAGE);
         }
+        String date = ParserUtil.getNonBlankValue(argMultimap, PREFIX_DATE, MESSAGE_MISSING_DATE);
         Index index = ParserUtil.parseIndex(argMultimap.getPreamble());
-        return new DeleteAttendanceByIndexCommand(index, parseDate(argMultimap));
+        return new DeleteAttendanceByIndexCommand(index, ParserUtil.parseDate(date));
     }
 
     /**
@@ -74,16 +82,7 @@ public class DeleteAttendanceCommandParser implements Parser<DeleteAttendanceCom
             throws ParseException {
         String name = ParserUtil.getNonBlankValue(argMultimap, PREFIX_NAME, MESSAGE_MISSING_NAME);
         String className = ParserUtil.getNonBlankValue(argMultimap, PREFIX_CLASS, MESSAGE_MISSING_CLASS);
-        return new DeleteAttendanceByNameAndClassCommand(name, className, parseDate(argMultimap));
-    }
-
-    /**
-     * Returns the parsed attendance date in {@code argMultimap}.
-     *
-     * @throws ParseException If the date is invalid or missing.
-     */
-    private static LocalDate parseDate(ArgumentMultimap argMultimap) throws ParseException {
         String date = ParserUtil.getNonBlankValue(argMultimap, PREFIX_DATE, MESSAGE_MISSING_DATE);
-        return ParserUtil.parseDate(date);
+        return new DeleteAttendanceByNameAndClassCommand(name, className, ParserUtil.parseDate(date));
     }
 }

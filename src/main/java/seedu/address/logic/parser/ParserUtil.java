@@ -160,28 +160,28 @@ public final class ParserUtil {
      * Returns true if the contact is identified by the index before the first parameter, and false if it is
      * identified by the {@code /name} and {@code /class} parameters.
      *
-     * @throws ParseException If both an index and a name or class are given, if neither is given, or if only
-     *         one of the name and class is given.
+     * @throws ParseException If both an index and a name or class parameter are given, if neither form is
+     *         given, or if only one of the name and class has a non-blank value.
      */
     public static boolean isIdentifiedByIndex(ArgumentMultimap argMultimap) throws ParseException {
         requireNonNull(argMultimap);
         boolean hasIndex = !argMultimap.getPreamble().isBlank();
-        boolean hasName = argMultimap.getValue(PREFIX_NAME).filter(value -> !value.isBlank()).isPresent();
-        boolean hasClass = argMultimap.getValue(PREFIX_CLASS).filter(value -> !value.isBlank()).isPresent();
+        Optional<String> name = argMultimap.getValue(PREFIX_NAME);
+        Optional<String> className = argMultimap.getValue(PREFIX_CLASS);
 
-        if (hasIndex && (hasName || hasClass)) {
+        if (hasIndex && (name.isPresent() || className.isPresent())) {
             throw new ParseException(MESSAGE_BOTH_CONTACT_IDENTIFIERS);
         }
         if (hasIndex) {
             return true;
         }
-        if (!hasName && !hasClass) {
+        if (name.isEmpty() && className.isEmpty()) {
             throw new ParseException(MESSAGE_MISSING_CONTACT_IDENTIFIER);
         }
-        if (!hasName) {
+        if (name.isEmpty() || name.get().isBlank()) {
             throw new ParseException(MESSAGE_MISSING_NAME);
         }
-        if (!hasClass) {
+        if (className.isEmpty() || className.get().isBlank()) {
             throw new ParseException(MESSAGE_MISSING_CLASS);
         }
         return false;

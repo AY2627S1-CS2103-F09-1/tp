@@ -33,6 +33,12 @@ public class DeleteGradeCommandParserTest {
 
     // EP_2: Valid grade deletion identified by index
     @Test
+    public void parse_noArguments_reportsUsage() {
+        assertParseFailure(parser, "", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "   ", MESSAGE_INVALID_FORMAT);
+    }
+
+    @Test
     public void parse_validIndex_success() {
         assertParseSuccess(parser, "1 /assessment Quiz 1",
                 new DeleteGradeByIndexCommand(INDEX_FIRST_PERSON, "Quiz 1"));
@@ -79,7 +85,8 @@ public class DeleteGradeCommandParserTest {
     // EP_7: Index and name with class are supplied together
     @Test
     public void parse_mixedIdentificationForms_failure() {
-        assertParseFailure(parser, "1 /name John Tan /class A1 /assessment Quiz 1", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 /name John Tan /class A1 /assessment Quiz 1",
+                ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
     }
 
     // EP_8_1: Index is zero
@@ -132,4 +139,14 @@ public class DeleteGradeCommandParserTest {
         assertParseFailure(parser, "1 /assessment Quiz /score 90", MESSAGE_UNKNOWN_PARAMETER);
     }
 
+    @Test
+    public void parse_repeatedParameterAndStuckParameter_reportsRepeatedParameter() {
+        assertParseFailure(parser, "1/assessment Quiz /assessment Quiz /assessment Exam",
+                getErrorMessageForDuplicatePrefixes("/assessment"));
+    }
+
+    @Test
+    public void parse_missingValuesBeforeInvalidValues_failure() {
+        assertParseFailure(parser, "abc", MESSAGE_MISSING_ASSESSMENT);
+    }
 }

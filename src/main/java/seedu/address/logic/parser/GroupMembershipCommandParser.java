@@ -28,8 +28,8 @@ public abstract class GroupMembershipCommandParser<T extends GroupMembershipComm
     private final String invalidFormatMessage;
 
     /**
-     * Creates a parser for a command whose usage is {@code commandUsage}, which is shown when there is text
-     * before the first parameter.
+     * Creates a parser for a command whose usage is {@code commandUsage}, which is shown when no arguments are
+     * given or when there is text before the first parameter.
      */
     protected GroupMembershipCommandParser(String commandUsage) {
         invalidFormatMessage = String.format(MESSAGE_INVALID_COMMAND_FORMAT, commandUsage);
@@ -38,18 +38,22 @@ public abstract class GroupMembershipCommandParser<T extends GroupMembershipComm
     /**
      * Parses the given {@code String} of arguments in the context of the command
      * and returns a command object for execution.
-     * Problems are reported in this order: unrecognized parameters, repeated parameters, text before the
-     * first parameter, missing group name, missing members, an invalid group name, and finally invalid members.
-     * A parameter that is given without a value counts as missing.
+     * Problems are reported in this order: no arguments, unrecognized parameters, repeated parameters, parameter
+     * missing a space before it, text before the first parameter, missing group name, missing members, invalid group
+     * name and invalid members. A parameter that is given without a value counts as missing.
      * @throws ParseException if the user input does not conform to the expected format
      */
     @Override
     public T parse(String args) throws ParseException {
+        if (args.isBlank()) {
+            throw new ParseException(invalidFormatMessage);
+        }
         ParserUtil.requireNoUnrecognizedPrefixes(args, MESSAGE_UNKNOWN_PARAMETER,
                 PREFIX_GROUP, PREFIX_MEMBERS);
 
         ArgumentMultimap argMultimap = ArgumentTokenizer.tokenize(args, PREFIX_GROUP, PREFIX_MEMBERS);
         argMultimap.verifyNoDuplicatePrefixesFor(PREFIX_GROUP, PREFIX_MEMBERS);
+        ParserUtil.requireNoStuckPrefixes(args);
 
         if (!argMultimap.getPreamble().isEmpty()) {
             throw new ParseException(invalidFormatMessage);

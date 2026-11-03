@@ -1,6 +1,7 @@
 package seedu.address.logic.parser;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static seedu.address.logic.Messages.MESSAGE_INVALID_COMMAND_FORMAT;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_CLASS;
 import static seedu.address.logic.Messages.MESSAGE_MISSING_NAME;
 import static seedu.address.logic.Messages.getErrorMessageForDuplicatePrefixes;
@@ -25,6 +26,13 @@ public class GradeCommandParserTest {
     @Test
     public void parse_nullArgs_throwsNullPointerException() {
         assertThrows(NullPointerException.class, () -> parser.parse(null));
+    }
+
+    @Test
+    public void parse_noArguments_reportsUsage() {
+        String expected = String.format(MESSAGE_INVALID_COMMAND_FORMAT, GradeCommand.MESSAGE_USAGE);
+        assertParseFailure(parser, "", expected);
+        assertParseFailure(parser, "   ", expected);
     }
 
     @Test
@@ -170,6 +178,8 @@ public class GradeCommandParserTest {
         assertParseFailure(parser,
                 "1 /name Alex Yeoh /class A1 /assessment Assignment 1 /score 97",
                 "Use either an index or name and class, not both.");
+        assertParseFailure(parser, "1 /name /assessment Quiz /score 90",
+                ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
     }
 
     @Test
@@ -203,6 +213,9 @@ public class GradeCommandParserTest {
     @Test
     public void parse_invalidIndex_failure() {
         assertParseFailure(parser, "0 /assessment Quiz /score 90", ParserUtil.MESSAGE_INVALID_INDEX);
+
+        // once all required values are present, the index is validated before the assessment and score
+        assertParseFailure(parser, "x /assessment 期末 /score invalid", ParserUtil.MESSAGE_INVALID_INDEX);
     }
 
     @Test
@@ -217,6 +230,13 @@ public class GradeCommandParserTest {
     public void parse_duplicateAssessmentAndScorePrefixes_failure() {
         assertParseFailure(parser, "1 /assessment Quiz /assessment Exam " + "/score 90 /score 95",
             getErrorMessageForDuplicatePrefixes("/assessment", "/score"));
+    }
+
+    @Test
+    public void parse_repeatedParameterAndStuckParameter_reportsRepeatedParameter() {
+        assertParseFailure(parser,
+                "1/assessment Quiz /assessment Quiz /assessment Exam /score 90",
+                getErrorMessageForDuplicatePrefixes("/assessment"));
     }
 
 }

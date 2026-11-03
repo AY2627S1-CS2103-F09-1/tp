@@ -207,12 +207,13 @@ public class DeleteCommandParserTest {
     // EP_14_4: Non index text appears before the name and class parameters
     @Test
     public void parse_indexMixedWithParameters_throwsParseException() {
-        assertParseFailure(parser, "1 /name John Tan /class A1", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "1 /name John Tan", MESSAGE_INVALID_FORMAT);
-        assertParseFailure(parser, "1 /class A1", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 /name John Tan /class A1", ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
+        assertParseFailure(parser, "1 /name John Tan", ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
+        assertParseFailure(parser, "1 /class A1", ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
 
         // text before the first parameter that is not an index
-        assertParseFailure(parser, "John Tan /name John Tan /class A1", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "John Tan /name John Tan /class A1",
+                ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
     }
 
     // EP_15_1: Unrecognised parameter error takes priority over repeated parameter error
@@ -226,8 +227,12 @@ public class DeleteCommandParserTest {
         // repeated parameter comes before an index mixed with parameters
         assertParseFailure(parser, "1 /name John /name Mary", getErrorMessageForDuplicatePrefixes("/name"));
 
+        // repeated parameter comes before a parameter that is missing a preceding space
+        assertParseFailure(parser, " /name John/class A1 /name Mary /class A2",
+                getErrorMessageForDuplicatePrefixes("/name"));
+
         // an index mixed with parameters comes before a missing parameter
-        assertParseFailure(parser, "1 /name John Tan", MESSAGE_INVALID_FORMAT);
+        assertParseFailure(parser, "1 /name John Tan", ParserUtil.MESSAGE_BOTH_CONTACT_IDENTIFIERS);
     }
 
 }
